@@ -10,75 +10,63 @@ time_t timestart;
 
 void parse_input(char * line, msg_t * data)
 {
+	memset(data, 0, sizeof(msg_t));
 	char * spos_a = index(line, ' ')+1;
 	int a_length = (spos_a != NULL)?(spos_a - line - 1):0;
 	char * spos_b = index(spos_a, ' ')+1;
 	int b_length = (spos_b != NULL)?(spos_b - spos_a - 1):0;
 	if (line[0] == ':')
 	{
+		int tlen = (a_length-1 < SND_FLD)?a_length-1:SND_FLD;
+		strncpy(data->sender, line+1, tlen);
 
-		data->sender = malloc(a_length);
-		data->sender[a_length-1] = '\0';
-		strncpy(data->sender, line+1, a_length-1);
-
-		data->command = malloc(b_length + 1);
-		data->command[b_length] = '\0';
-		strncpy(data->command, spos_a, b_length);
+		tlen = (b_length < CMD_FLD)?b_length:CMD_FLD;
+		strncpy(data->command, spos_a, tlen);
 	}
 	else
 	{
-		data->sender = NULL;
-
-		data->command = malloc(a_length + 1);
-		data->command[a_length] = '\0';
-		strncpy(data->command, line, a_length);
+		int tlen = (a_length < CMD_FLD)?a_length:CMD_FLD;
+		strncpy(data->command, line, tlen);
 	}
-
-	if (strcasecmp(data->command, "QUIT") == 0 || strcasecmp(data->command, "ERROR") == 0)
-		data->target = NULL;
-	else if (strcasecmp(data->command, "JOIN") == 0 || strcasecmp(data->command, "NICK") == 0)
+	
+	if (is_value(data->command, "JOIN") || is_value(data->command, "NICK"))
 	{
-		data->message = NULL;
 		spos_b++;
-		data->target = malloc(strlen(spos_b) + 1);
-		data->target[strlen(spos_b)] = '\0';
-		strcpy(data->target, spos_b);
+		int tlen = (strlen(spos_b) < TGT_LEN)?strlen(spos_b):TGT_LEN;
+		strncpy(data->target, spos_b, tlen);
 		return;
 	}
-	else if (strcasecmp(data->command, "PART") == 0)
+	else if (is_value(data->command, "PART"))
 	{
 		char * end = index(line+2, ':');
 		int length = strlen(spos_b);
-		if (end == NULL)
-			data->message = NULL;
-		else
+		if (end != NULL)
 		{
-			data->message = dup_string(end+1);
+			int tlen = (strlen(end+1) < MSG_LEN)?strlen(end+1):MSG_LEN;
+			strncpy(data->message, end+1, tlen);
 			length = end - spos_b - 1;
 		}
-		data->target = malloc(length+1);
-		data->target[length] = '\0';
-		strncpy(data->target, spos_b, length);
+		int tlen = (length < TGT_LEN)?length:TGT_LEN;
+		strncpy(data->target, spos_b, tlen);
 		return;
 	}
 	else
 	{
 		char * spos_c = index(spos_b, ' ')+1;
 		int c_length = (spos_c != NULL)?(spos_c - spos_b - 1):0;
-		data->target = malloc(c_length + 1);
-		data->target[c_length] = '\0';
-		strncpy(data->target, spos_b, c_length);
+		int tlen = (c_length < TGT_LEN)?c_length:TGT_LEN;
+		strncpy(data->target, spos_b, tlen);
 	}
 
 	int offset = 0;
 	int extra = 0;
-	if (data->sender != NULL)
+	if (strlen(data->sender) != 0)
 	{
 		offset += strlen(data->sender);
 		extra++;
 	}
 	offset += strlen(data->command) + 1;
-	if (data->target != NULL)
+	if (strlen(data->target) != 0)
 	{
 		offset += strlen(data->target);
 		extra++;
@@ -87,12 +75,9 @@ void parse_input(char * line, msg_t * data)
 	{
 		char * mpos = index(line + offset, ' ') + 1;
 		if (mpos[0] == ':') mpos++;
-		data->message = malloc(strlen(mpos) + 1);
-		data->message[strlen(mpos)] = '\0';
-		strncpy(data->message, mpos, strlen(mpos));
+		int tlen = (strlen(mpos) < MSG_LEN)?strlen(mpos):MSG_LEN;
+		strncpy(data->message, mpos, tlen);
 	}
-	else
-		data->message = NULL;
 }
 
 void free_msg(msg_t * data)
