@@ -41,22 +41,6 @@ typedef struct {
 } module_t;
 
 typedef struct {
-	llist_t * irc_list;
-	irccfg_t m_irccfg;
-	char ** admin; //TODO: Change this
-	pid_t parent_pid;
-	pid_t lib_pid;
-	int logfd;
-	int _daemon;
-	int _log;
-	int _raw;
-	int _run;
-	FILE * _ircerr;
-	FILE * _ircout;
-	FILE * _ircraw;
-} globals_t;
-
-typedef struct {
 	char sender[SND_FLD+1];
 	char target[TGT_FLD+1];
 	char command[CMD_FLD+1];
@@ -85,5 +69,21 @@ typedef struct {
 	char command[MSG_FLD+1];
 	char args[MSG_FLD+1];
 } bot_t;
+
+typedef struct {
+	llist_t * irc_list;
+	irccfg_t m_irccfg;
+	char ** admin; //TODO: Change this
+	pid_t parent_pid;
+	pid_t lib_pid;
+	int logfd;
+	int _daemon;
+	int _log;
+	int _raw;
+	int _run;
+	FILE * _ircerr;
+	FILE * _ircout;
+	FILE * _ircraw;
+} globals_t;
 
 #endif /* DATATYPE_H_ */
