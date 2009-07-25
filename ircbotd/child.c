@@ -97,7 +97,6 @@ int set_up_children(int * cpfds)
 
 int set_up_lib_thread(int * cpfds)
 {
-	int sizetmp;
 	pid_t pid;
 	if ((pid = fork()) == 0)
 	{
@@ -106,11 +105,13 @@ int set_up_lib_thread(int * cpfds)
 		close_log();
 		open_log();
 		set_signals(_LIB);
-		lib_loop(globals.config, globals.size);
-		sizetmp = globals.size;
-		while (sizetmp--) close(globals.config[sizetmp].wfd);
+		lib_loop(globals.irc_list);
+		
+		llist_t * iterator = globals.irc_list;
+		while (iterator != NULL)
+			close((irccfg_t *)(globals.irc_list->item)->wfd);
 		close(cpfds[R]);
-		free_ninfo(globals.config, globals.size);
+		clear_list(globals.irc_list);
 		close_log();
 		return EXIT_SUCCESS;
 	}
