@@ -20,24 +20,6 @@
 
 #include "const.h"
 #include "llist.h"
-#include "ircfunc.h"
-
-typedef struct {
-	char * conf_file;
-	int verbose;
-	int daemon;
-	int version;
-	int help;
-	int log;
-	int raw;
-} args_t;
-
-typedef struct {
-	char sender[SND_FLD+1];
-	char target[TGT_FLD+1];
-	char command[CMD_FLD+1];
-	char message[MSG_FLD+1];
-} msg_t;
 
 typedef struct {
 	unsigned int enabled:1;
@@ -56,6 +38,30 @@ typedef struct {
 	int rfd;
 	int wfd;
 } irccfg_t;
+
+typedef struct {
+	char command[MSG_FLD+1];
+	char args[MSG_FLD+1];
+} bot_t;
+
+#include "ircfunc.h"
+
+typedef struct {
+	char * conf_file;
+	int verbose;
+	int daemon;
+	int version;
+	int help;
+	int log;
+	int raw;
+} args_t;
+
+typedef struct {
+	char sender[SND_FLD+1];
+	char target[TGT_FLD+1];
+	char command[CMD_FLD+1];
+	char message[MSG_FLD+1];
+} msg_t;
 
 typedef struct {
 	llist_t * irc_list;
@@ -82,9 +88,6 @@ typedef struct {
 	char name[CFG_FLD+1];
 } module_t;
 
-typedef struct {
-	char command[MSG_FLD+1];
-	char args[MSG_FLD+1];
-} bot_t;
+
 
 #endif /* DATATYPE_H_ */
