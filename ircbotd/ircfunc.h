@@ -11,4 +11,7 @@ void print_usage(char * app_name);
 void print_version(char * app_name);
 void irc_printf(unsigned int type, char * string, ... );
 
+char * dup_string(char * string);
+char * dup_nstring(char * string, int length);
+
 #endif //IRCFUNC_H_

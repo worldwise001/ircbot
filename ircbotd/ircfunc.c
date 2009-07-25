@@ -112,5 +112,27 @@ void _timetostr(char * buffer, time_t time)
 	int years = days / 365;
 	days = days % 365;
 	snprintf(buffer, CFG_FLD, "%d years, %d days, %d hours, %d minutes, %d seconds", years, days, hours, minutes, seconds);
-}  
+}
+
+char * dup_string(char * string)
+{
+	char * str = NULL;
+	if (string == NULL) string = "";
+	if ((str = malloc(strlen(string) + 1)) == NULL)
+		return NULL;
+	str = strncpy(str, string, strlen(string));
+	str[strlen(string)] = '\0';
+	return str;
+}
+
+char * dup_nstring(char * string, int length)
+{
+	char * str = NULL;
+	if (string == NULL) string = "";
+	if ((str = malloc(length + 1)) == NULL)
+		return NULL;
+	strncpy(str, string, length);
+	str[length] = '\0';
+	return str;
+}
 

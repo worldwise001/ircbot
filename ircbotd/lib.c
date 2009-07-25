@@ -186,7 +186,7 @@ int lib_loop()
 	time(&timestart);
 	pid_t pid;
 	msg_t data;
-	irccfg_t * m_irccfg = NULL;
+	irccfg_t * m_irccfg = (irccfg_t *)(globals.irc_list->item);
 	memset(&data, 0, sizeof(msg_t));
 	char * buffer[5];
 	int i;
@@ -194,12 +194,12 @@ int lib_loop()
 	if (load_module(NULL) == -1)
 		irc_printf(IRCERR, "Error loading modules\n");
 	irc_printf(IRCOUT,"Starting loop\n");
-	int rfd = (irccfg_t *)(globals.irc_list->item)->rfd;
+	int rfd = m_irccfg->rfd;
+	m_irccfg = NULL;
 	while (globals._run)
 	{
 		pid = 0;
 		memset(&data, 0, sizeof(msg_t));
-		cur_conf = NULL;
 		buffer[0] = get_next_line(rfd);
 		buffer[1] = get_next_line(rfd);
 		buffer[2] = get_next_line(rfd);
@@ -285,9 +285,11 @@ int lib_loop()
 						struct utsname auname;
 						memset(&auname, 0, sizeof(auname));
 						uname(&auname);
-						char * version = dup_string(auname.release);
+						
+						char version[CFG_FLD+1];
+						strncpy(version, auname.release, CFG_FLD);
+						version[CFG_FLD] = '\0';
 						respond(m_irccfg, "PRIVMSG %s :I am %s of %s, %s Adjunct of Unimatrix %s\n", target, m_irccfg->nick, m_irccfg->serv, nary, version);
-						free(version);
 					}
 					else if (is_value(msg_ptr, "status report"))
 					{
@@ -453,13 +455,15 @@ int lib_loop()
 				{
 					time_t temp;
 					time(&temp);
-					char timebuff[80];
-					memset(timebuff, 0, 80);
-					_timetostr(timebuff, 80, temp-timestart);
+					char timebuff[CFG_FLD+1];
+					memset(timebuff, 0, CFG_FLD+1);
+					_timetostr(timebuff, temp-timestart);
 					respond(m_irccfg, "PRIVMSG %s :%s since startup\n", target, timebuff);
 				}
 				else if (is_value(result.command, "status"))
 				{
+					respond(m_irccfg, "PRIVMSG %s :%sstatus is disabled\n", target, SENTINEL);
+					/*
 					if (result.args != NULL)
 					{
 						char * acopy = dup_string(result.args);
@@ -480,6 +484,7 @@ int lib_loop()
 						respond(m_irccfg, "PRIVMSG %s :I am connected to %d networks:\n", target, globals.size);
 						respond(m_irccfg, "PRIVMSG %s :For detailed status, type %sstatus <id>\n", target, SENTINEL);
 					}
+					*/
 				}
 			}
 		}
@@ -497,7 +502,7 @@ int lib_loop()
 			}
 		}
 		module_t * m_iterator = modlist;
-		void (*parse)(const info_t *, const msg_t *);
+		void (*parse)(const irccfg_t *, const msg_t *);
 		while (m_iterator != NULL)
 		{
 			parse = m_iterator->parse;
@@ -516,6 +521,7 @@ int lib_loop()
 		m_irccfg = (irccfg_t *)(iterator->item);
 		close(m_irccfg->rfd);
 		close(m_irccfg->wfd);
+		iterator = iterator->next;
 	}
 	clear_list(globals.irc_list);
 	globals.irc_list = NULL;
