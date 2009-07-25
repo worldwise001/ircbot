@@ -63,8 +63,8 @@
 #define FALSE 0
 
 //output/error identifiers
-#define _IRCOUT 0
-#define _IRCERR 1
+#define IRCOUT 0
+#define IRCERR 1
 
 #endif //CONST_H_
 
