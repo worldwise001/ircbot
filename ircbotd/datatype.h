@@ -19,6 +19,7 @@
 #include <sys/types.h>
 
 #include "const.h"
+#include "llist.h"
 
 typedef struct {
 	char * conf_file;
