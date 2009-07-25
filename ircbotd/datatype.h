@@ -82,4 +82,9 @@ typedef struct {
 	char name[CFG_FLD+1];
 } module_t;
 
+typedef struct {
+	char command[MSG_FLD+1];
+	char args[MSG_FLD+1];
+} bot_t;
+
 #endif /* DATATYPE_H_ */
