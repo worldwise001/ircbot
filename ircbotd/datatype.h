@@ -33,14 +33,6 @@ typedef struct {
 } args_t;
 
 typedef struct {
-	char * filename;
-	void * dlhandle;
-	void (*parse)(const info_t * config, const msg_t * data);
-	char commands[CFG_FLD+1];
-	char name[CFG_FLD+1];
-} module_t;
-
-typedef struct {
 	char sender[SND_FLD+1];
 	char target[TGT_FLD+1];
 	char command[CMD_FLD+1];
@@ -85,5 +77,14 @@ typedef struct {
 	FILE * _ircout;
 	FILE * _ircraw;
 } globals_t;
+
+
+typedef struct {
+	char * filename;
+	void * dlhandle;
+	void (*parse)(const irccfg_t * m_irccfg, const msg_t * data);
+	char commands[CFG_FLD+1];
+	char name[CFG_FLD+1];
+} module_t;
 
 #endif /* DATATYPE_H_ */
