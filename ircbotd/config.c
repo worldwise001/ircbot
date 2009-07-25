@@ -71,7 +71,7 @@ llist_t * load_irccfg(char * filename)
 		{
 			while (iterator != NULL)
 			{
-				irccfg_t * i_irccfg = (irccfg_t *)(iterator->item);
+				i_irccfg = (irccfg_t *)(iterator->item);
 				if (i_irccfg->id == atoi(strid))
 					break;
 				iterator = iterator->next;
