@@ -6,7 +6,6 @@ int handle_child(irccfg_t * m_irccfg)
 {
 	int sockfd;
 	int sleeptime = 0;
-	m_irccfg->pid = getpid();
 	open_log();
 	while (globals._run)
 	{
@@ -64,24 +63,22 @@ int set_up_children(int * cpfds)
 	llist_t * iterator = globals.irc_list;
 	while (iterator != NULL)
 	{
-		irccfg_t m_irccfg;
 		irccfg_t * i_irccfg = (irccfg_t *)(iterator->item);
-		memcpy(&m_irccfg, i_irccfg, sizeof(irccfg_t));
+		memcpy(&(globals.m_irccfg), i_irccfg, sizeof(irccfg_t));
 		if (pipe(pfds) == -1)
 			irc_printf(IRCERR, "Error creating IPC: %s\n", strerror(errno));
 		else if ((pid = fork()) == 0)
 		{
-			printf("Forked child\n");
 			close_log();
 			set_signals(_CHILD);
 			close(pfds[W]);
 			close(cpfds[R]);
-			m_irccfg.wfd = cpfds[W];
-			m_irccfg.rfd = pfds[R];
+			globals.m_irccfg.wfd = cpfds[W];
+			globals.m_irccfg.rfd = pfds[R];
+			globals.m_irccfg.pid = getpid();
 			clear_list(globals.irc_list);
 			globals.irc_list = NULL;
-			memcpy(&globals.m_irccfg, &m_irccfg, sizeof(irccfg_t));
-			return handle_child(&m_irccfg);
+			return handle_child(&(globals.m_irccfg));
 		}
 		else if (pid == -1)
 			irc_printf(IRCERR, "Error forking: %s\n", strerror(errno));
