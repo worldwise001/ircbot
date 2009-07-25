@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 #include "sighand.h"
 
-int handle_child();
+int handle_child(irccfg_t * m_irccfg);
 
 int set_up_lib_thread(int * pfds);
 int set_up_children(int * pfds);

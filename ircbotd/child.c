@@ -2,22 +2,22 @@
 
 extern globals_t globals;
 
-int handle_child()
+int handle_child(irccfg_t * m_irccfg)
 {
 	int sockfd;
 	int sleeptime = 0;
-	globals.confPtr->pid = getpid();
+	m_irccfg->pid = getpid();
 	open_log();
 	while (globals._run)
 	{
 		sleeptime += 10;
-		if (globals.confPtr->enabled)
+		if (m_irccfg->enabled)
 		{
-			irc_printf(IRCOUT, "PID %d attempting to connect to %s:%d...\n", getpid(), globals.confPtr->hostname, globals.confPtr->port);
-			if ((sockfd = sock_connect(globals.confPtr->hostname, globals.confPtr->port)) == -1)
+			irc_printf(IRCOUT, "PID %d attempting to connect to %s:%d...\n", getpid(), m_irccfg->hostname, m_irccfg->port);
+			if ((sockfd = sock_connect(m_irccfg->hostname, m_irccfg->port)) == -1)
 			{
 				if (errno)
-					irc_printf(IRCERR, "Error connecting to %s/%d: %s\n", globals.confPtr->hostname, globals.confPtr->port, strerror(errno));
+					irc_printf(IRCERR, "Error connecting to %s/%d: %s\n", m_irccfg->hostname, m_irccfg->port, strerror(errno));
 				irc_printf(IRCERR, "Did you spell the name right?\n");
 				sleep(sleeptime);
 			}
@@ -26,8 +26,8 @@ int handle_child()
 				open_raw();
 				irc_printf(IRCOUT, "Connected; Logging in...\n");
 				errno = 0;
-				globals.confPtr->sockfd = sockfd;
-				if (sock_handshake(globals.confPtr) == -1)
+				m_irccfg->sockfd = sockfd;
+				if (sock_handshake(m_irccfg) == -1)
 				{
 					if (errno == EPIPE)
 					{
@@ -43,7 +43,7 @@ int handle_child()
 				}
 				else
 				{
-					handle_conn(globals.confPtr);
+					handle_conn(m_irccfg);
 					close_raw();
 					break;
 				}
@@ -51,9 +51,8 @@ int handle_child()
 		}
 		else sleep(10);
 	}
-	close(globals.confPtr->wfd);
-	close(globals.confPtr->rfd);
-	free_ninfo(globals.confPtr, 1);
+	close(m_irccfg->wfd);
+	close(m_irccfg->rfd);
 	close_log();
 	return EXIT_SUCCESS;
 }
@@ -61,40 +60,37 @@ int handle_child()
 int set_up_children(int * cpfds)
 {
 	int pfds[2];
-	int sizetmp = globals.size;
 	pid_t pid;
-	while (sizetmp--)
+	llist_t * iterator = globals.irc_list;
+	while (iterator != NULL)
 	{
-		globals.confPtr = info_cpy(&(globals.config[sizetmp]));
-		if (globals.confPtr != NULL)
+		irccfg_t m_irccfg, * i_irccfg = (* irccfg_t)(iterator->item);
+		memcpy(&m_irccfg, i_irccfg, sizeof(irccfg_t));
+		if (pipe(pfds) == -1)
+			irc_printf(IRCERR, "Error creating IPC: %s\n", strerror(errno));
+		else if ((pid = fork()) == 0)
 		{
-			if (pipe(pfds) == -1)
-				irc_printf(IRCERR, "Error creating IPC: %s\n", strerror(errno));
-			else if ((pid = fork()) == 0)
-			{
-				close_log();
-				set_signals(_CHILD);
-				close(pfds[W]);
-				close(cpfds[R]);
-				globals.confPtr->wfd = cpfds[W];
-				globals.confPtr->rfd = pfds[R];
-				free_ninfo(globals.config, globals.size);
-				return handle_child();
-			}
-			else if (pid == -1)
-				irc_printf(IRCERR, "Error forking: %s\n", strerror(errno));
-			else
-			{
-				globals.config[sizetmp].rfd = cpfds[R];
-				globals.config[sizetmp].wfd = pfds[W];
-				close(pfds[R]);
-				globals.config[sizetmp].pid = pid;
-			}
-			free_ninfo(globals.confPtr, 1);
-			globals.confPtr = NULL;
+			close_log();
+			set_signals(_CHILD);
+			close(pfds[W]);
+			close(cpfds[R]);
+			m_irccfg.wfd = cpfds[W];
+			m_irccfg.rfd = pfds[R];
+			clear_list(globals.irc_list);
+			globals.irc_list = NULL;
+			return handle_child(&m_irccfg);
 		}
+		else if (pid == -1)
+			irc_printf(IRCERR, "Error forking: %s\n", strerror(errno));
 		else
-			irc_printf(IRCERR, "Error creating copy: %s\n", strerror(errno));
+		{
+			globals.config[sizetmp].rfd = cpfds[R];
+			globals.config[sizetmp].wfd = pfds[W];
+			close(pfds[R]);
+			globals.config[sizetmp].pid = pid;
+		}
+		free_ninfo(globals.confPtr, 1);
+		globals.confPtr = NULL;
 	}
 	return -1;
 }
