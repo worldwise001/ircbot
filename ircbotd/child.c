@@ -13,11 +13,11 @@ int handle_child(irccfg_t * m_irccfg)
 		sleeptime += 10;
 		if (m_irccfg->enabled)
 		{
-			irc_printf(IRCOUT, "PID %d attempting to connect to %s:%d...\n", getpid(), m_irccfg->hostname, m_irccfg->port);
-			if ((sockfd = sock_connect(m_irccfg->hostname, m_irccfg->port)) == -1)
+			irc_printf(IRCOUT, "PID %d attempting to connect to %s:%d...\n", getpid(), m_irccfg->host, m_irccfg->port);
+			if ((sockfd = sock_connect(m_irccfg->host, m_irccfg->port)) == -1)
 			{
 				if (errno)
-					irc_printf(IRCERR, "Error connecting to %s/%d: %s\n", m_irccfg->hostname, m_irccfg->port, strerror(errno));
+					irc_printf(IRCERR, "Error connecting to %s/%d: %s\n", m_irccfg->host, m_irccfg->port, strerror(errno));
 				irc_printf(IRCERR, "Did you spell the name right?\n");
 				sleep(sleeptime);
 			}
@@ -26,7 +26,7 @@ int handle_child(irccfg_t * m_irccfg)
 				open_raw();
 				irc_printf(IRCOUT, "Connected; Logging in...\n");
 				errno = 0;
-				m_irccfg->sockfd = sockfd;
+				m_irccfg->sfd = sockfd;
 				if (sock_handshake(m_irccfg) == -1)
 				{
 					if (errno == EPIPE)
@@ -64,7 +64,8 @@ int set_up_children(int * cpfds)
 	llist_t * iterator = globals.irc_list;
 	while (iterator != NULL)
 	{
-		irccfg_t m_irccfg, * i_irccfg = (* irccfg_t)(iterator->item);
+		irccfg_t m_irccfg;
+		irccfg_t * i_irccfg = (irccfg_t *)(iterator->item);
 		memcpy(&m_irccfg, i_irccfg, sizeof(irccfg_t));
 		if (pipe(pfds) == -1)
 			irc_printf(IRCERR, "Error creating IPC: %s\n", strerror(errno));
@@ -85,13 +86,12 @@ int set_up_children(int * cpfds)
 			irc_printf(IRCERR, "Error forking: %s\n", strerror(errno));
 		else
 		{
-			globals.config[sizetmp].rfd = cpfds[R];
-			globals.config[sizetmp].wfd = pfds[W];
+			i_irccfg->rfd = cpfds[R];
+			i_irccfg->wfd = pfds[W];
 			close(pfds[R]);
-			globals.config[sizetmp].pid = pid;
+			i_irccfg->pid = pid;
 		}
-		free_ninfo(globals.confPtr, 1);
-		globals.confPtr = NULL;
+		iterator = iterator->next;
 	}
 	return -1;
 }

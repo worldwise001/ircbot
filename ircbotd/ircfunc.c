@@ -72,7 +72,7 @@ void respond(irccfg_t * m_irccfg, char * format, ... )
 	*/
     va_end( listPointer );
 	usleep(UDELAY);
-	kill(info->pid, SIGUSR2);
+	kill(m_irccfg->pid, SIGUSR2);
 	usleep(UDELAY);
 }
 
