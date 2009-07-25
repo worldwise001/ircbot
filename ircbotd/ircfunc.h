@@ -1,8 +1,6 @@
 #ifndef IRCFUNC_H_
 #define IRCFUNC_H_
 
-#include "datatype.h"
-
 bot_t bot_command(char * message);
 void respond(info_t * info, char * format, ... );
 void _timetostr(char * buffer, time_t time);

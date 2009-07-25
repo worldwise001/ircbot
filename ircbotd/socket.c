@@ -94,9 +94,9 @@ int sock_handshake(irccfg_t * m_irccfg)
 		}
 		else
 		{
-			if (strlen(m_irccfg->password) > 0)
+			if (strlen(m_irccfg->pass) > 0)
 				identify(m_irccfg);
-			if (strlen(m_irccfg->channels) > 0)
+			if (strlen(m_irccfg->chan) > 0)
 				autojoin(m_irccfg);
 			process_input(m_irccfg, line);
 			break;
@@ -138,7 +138,8 @@ void handle_conn(irccfg_t * m_irccfg)
 int autojoin(irccfg_t * m_irccfg)
 {
 	int res = 0;
-	char * chancpy = dup_string(m_irccfg->chan);
+	char chancpy[CFG_FLD*8+1];
+		strcpy(chancpy, m_irccfg->chan);
 	if (chancpy != NULL)
 	{
 		char * chanptr = chancpy + strlen(chancpy) + 1;
@@ -162,7 +163,7 @@ int identify(irccfg_t * m_irccfg)
 {
 	int res = 0;
 	res += write_data(m_irccfg->sfd, "NICKSERV IDENTIFY ");
-	res += write_data(m_irccfg->sfd, m_irccfg->password);
+	res += write_data(m_irccfg->sfd, m_irccfg->pass);
 	res += write_data(m_irccfg->sfd, "\n");
 	return res;
 }

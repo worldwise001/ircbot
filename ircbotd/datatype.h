@@ -20,6 +20,7 @@
 
 #include "const.h"
 #include "llist.h"
+#include "ircfunc.h"
 
 typedef struct {
 	char * conf_file;
@@ -41,6 +42,7 @@ typedef struct {
 
 typedef struct {
 	llist_t * irc_list;
+	irccfg_t m_irccfg;
 	char ** admin; //TODO: Change this
 	pid_t parent_pid;
 	pid_t lib_pid;

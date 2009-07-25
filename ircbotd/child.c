@@ -78,6 +78,7 @@ int set_up_children(int * cpfds)
 			m_irccfg.rfd = pfds[R];
 			clear_list(globals.irc_list);
 			globals.irc_list = NULL;
+			memcpy(&globals.m_irccfg, &m_irccfg, sizeof(irccfg_t));
 			return handle_child(&m_irccfg);
 		}
 		else if (pid == -1)
