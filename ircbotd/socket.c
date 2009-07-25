@@ -153,7 +153,6 @@ int autojoin(irccfg_t * m_irccfg)
 			if (chanptr > chancpy) chanptr--;
 			if (*chanptr == ' ') *chanptr = '\0';
 		}
-		free(chancpy);
 	}
 	else res = -1;
 	return res;

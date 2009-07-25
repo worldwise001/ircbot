@@ -103,9 +103,6 @@ int main(int argc, char** argv)
 			irccfg_t * m_irccfg = (irccfg_t *)(iterator->item);
 			close(m_irccfg->rfd);
 			close(m_irccfg->wfd);
-			llist_t * result = delete_item(globals.irc_list, i);
-			if (result != NULL)
-				globals.irc_list = result;
 		}
 	}
 	if (globals.irc_list != NULL)

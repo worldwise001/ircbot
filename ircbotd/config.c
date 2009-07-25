@@ -21,7 +21,7 @@ llist_t * load_irccfg(char * filename)
 		return NULL;
 	}
 
-	char * buff, *istr, *iend, strid[6];
+	char * buff, *istr, *iend, *vstr, *vend, strid[6];
 	int line = 0;
 
 	while ((buff = get_next_line(irccfg_fd)) != NULL && ++line)
@@ -29,20 +29,22 @@ llist_t * load_irccfg(char * filename)
 		iterator = first;
 		istr = NULL;
 		iend = NULL;
+		vstr = NULL;
+		vend = NULL;
 		memset(strid, 0, 6);
 		if (buff[0] == '#' || strlen(buff) == 0)
 		{
 			free(buff);
 			continue;
 		}
-		if ((istr = index(buff, '"')) == NULL)
+		if ((vstr = index(buff, '"')) == NULL)
 		{
 			irc_printf(IRCERR, "Invalid format \" on line %d\n", line);
 			free(buff);
 			continue;
 		}
-		istr++;
-		if ((iend = rindex(buff, '"')) == (istr-1))
+		vstr++;
+		if ((vend = rindex(buff, '"')) == (vstr-1))
 		{
 			irc_printf(IRCERR, "Invalid format \" on line %d\n", line);
 			free(buff);
@@ -94,54 +96,57 @@ llist_t * load_irccfg(char * filename)
 					free(buff);
 					continue;
 				}
+				else
+					first = result;
 				i_irccfg->id = atoi(strid);
 			}
 			else
 				i_irccfg = (irccfg_t *)(iterator->item);
 		}
-		int v_len = iend-istr;
+		
+		int v_len = vend-vstr;
 		if (is_value(buff, "NICK"))
 		{
-			if (strid)
-				strncpy(i_irccfg->nick, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+			if (strlen(strid) > 0)
+				strncpy(i_irccfg->nick, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				strncpy(d_irccfg.nick, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+				strncpy(d_irccfg.nick, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
 			continue;
 		}
 		if (is_value(buff, "USER"))
 		{
-			if (strid)
-				strncpy(i_irccfg->user, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+			if (strlen(strid) > 0)
+				strncpy(i_irccfg->user, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				strncpy(d_irccfg.user, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+				strncpy(d_irccfg.user, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
 			continue;
 		}
 		if (is_value(buff, "REAL"))
 		{
-			if (strid)
-				strncpy(i_irccfg->real, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+			if (strlen(strid) > 0)
+				strncpy(i_irccfg->real, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				strncpy(d_irccfg.real, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+				strncpy(d_irccfg.real, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
 			continue;
 		}
 		if (is_value(buff, "PASS"))
 		{
-			if (strid)
-				strncpy(i_irccfg->pass, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+			if (strlen(strid) > 0)
+				strncpy(i_irccfg->pass, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				strncpy(d_irccfg.pass, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+				strncpy(d_irccfg.pass, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
 			continue;
 		}
 		if (is_value(buff, "HOST"))
 		{
-			if (strid)
-				strncpy(i_irccfg->host, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+			if (strlen(strid) > 0)
+				strncpy(i_irccfg->host, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				strncpy(d_irccfg.host, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+				strncpy(d_irccfg.host, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
 			continue;
 		}
@@ -149,8 +154,8 @@ llist_t * load_irccfg(char * filename)
 		{
 			char sport[6];
 			memset(sport, 0, 6);
-			strncpy(sport, istr, (v_len > 5)?5:v_len);
-			if (strid)
+			strncpy(sport, vstr, (v_len > 5)?5:v_len);
+			if (strlen(strid) > 0)
 				i_irccfg->port = atoi(sport);
 			else
 				d_irccfg.port = atoi(sport);
@@ -159,19 +164,19 @@ llist_t * load_irccfg(char * filename)
 		}
 		if (is_value(buff, "CHAN"))
 		{
-			if (strid)
-				strncpy(i_irccfg->chan, istr, (v_len > CFG_FLD*8)?CFG_FLD*8:v_len);
+			if (strlen(strid) > 0)
+				strncpy(i_irccfg->chan, vstr, (v_len > CFG_FLD*8)?CFG_FLD*8:v_len);
 			else
-				strncpy(d_irccfg.chan, istr, (v_len > CFG_FLD*8)?CFG_FLD*8:v_len);
+				strncpy(d_irccfg.chan, vstr, (v_len > CFG_FLD*8)?CFG_FLD*8:v_len);
 			free(buff);
 			continue;
 		}
 		if (is_value(buff, "AUTH"))
 		{
-			if (strid)
-				strncpy(i_irccfg->auth, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+			if (strlen(strid) > 0)
+				strncpy(i_irccfg->auth, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				strncpy(d_irccfg.auth, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+				strncpy(d_irccfg.auth, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
 			continue;
 		}
@@ -179,11 +184,11 @@ llist_t * load_irccfg(char * filename)
 		{
 			char sbool[6];
 			memset(sbool, 0, 6);
-			strncpy(sbool, istr, (v_len > 5)?5:v_len);
-			if (strid)
-				i_irccfg->enabled = !strncmp("true", sbool, 4);
+			strncpy(sbool, vstr, (v_len > 5)?5:v_len);
+			if (strlen(strid) > 0)
+				i_irccfg->enabled = (strncmp("true", sbool, 4) == 0);
 			else
-				d_irccfg.enabled = !strncmp("true", sbool, 4);
+				d_irccfg.enabled = (strncmp("true", sbool, 4) == 0);
 			free(buff);
 			continue;
 		}
@@ -213,12 +218,21 @@ llist_t * load_irccfg(char * filename)
 			i_irccfg->enabled = d_irccfg.enabled;
 		iterator = iterator->next;
 	}
+	
+	print_irccfg(first);
+	
 	return first;
 }
 
 void print_irccfg(llist_t * irclist)
 {
-	
+	llist_t * iterator = irclist;
+	while (iterator != NULL)
+	{
+		irccfg_t * m_irccfg = (irccfg_t *)(iterator->item);
+		printf("%d \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" %s:%d\n", m_irccfg->enabled, m_irccfg->nick, m_irccfg->user, m_irccfg->real, m_irccfg->pass, m_irccfg->chan, m_irccfg->auth, m_irccfg->host, m_irccfg->port);
+		iterator = iterator->next;
+	}	
 }
 
 int load_args(int argc, char** argv, args_t * args)

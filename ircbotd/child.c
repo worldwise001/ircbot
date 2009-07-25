@@ -71,6 +71,7 @@ int set_up_children(int * cpfds)
 			irc_printf(IRCERR, "Error creating IPC: %s\n", strerror(errno));
 		else if ((pid = fork()) == 0)
 		{
+			printf("Forked child\n");
 			close_log();
 			set_signals(_CHILD);
 			close(pfds[W]);
@@ -125,5 +126,7 @@ int set_up_lib_thread(int * cpfds)
 		raise(SIGTERM);
 		return -1;
 	}
+	else
+		globals.lib_pid = pid;
 	return -2;
 }
