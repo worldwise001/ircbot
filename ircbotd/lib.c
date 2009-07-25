@@ -209,67 +209,56 @@ void process_input(info_t * config, char * line)
 	free_msg(&data);
 }
 
-int lib_loop(info_t * config, int size)
+int lib_loop()
 {
 	time(&timestart);
 	pid_t pid;
 	msg_t data;
+	memset(&data, 0, sizeof(msg_t));
+	char * buffer[5];
 	int i;
-	info_t * cur_conf;
+	llist_t * iterator = NULL;
 	irc_printf(IRCOUT, "Module thread started; loading all modules\n");
 	if (load_module(NULL) == -1)
 		irc_printf(IRCERR, "Error loading modules\n");
 	irc_printf(IRCOUT,"Starting loop\n");
-	int rfd = config[0].rfd;
-	for (i = 0; i < size; i++)
-	{
-		irc_printf(IRCOUT, "%d - %s; sfd=%d rfd=%d wfd=%d\n", config[i].pid, config[i].hostname, config[i].sockfd, config[i].rfd, config[i].wfd);
-	}
+	int rfd = (irccfg_t *)(globals.irc_list->item)->rfd;
 	while (globals._run)
 	{
 		pid = 0;
 		memset(&data, 0, sizeof(msg_t));
 		cur_conf = NULL;
-		char * pid_s = get_next_line(rfd);
-		data.sender = get_next_line(rfd);
-		data.command = get_next_line(rfd);
-		data.target = get_next_line(rfd);
-		data.message = get_next_line(rfd);
-		if (pid_s == NULL)
+		buffer[0] = get_next_line(rfd);
+		buffer[1] = get_next_line(rfd);
+		buffer[2] = get_next_line(rfd);
+		buffer[3] = get_next_line(rfd);
+		buffer[4] = get_next_line(rfd);
+		
+		if (buffer[0] == NULL || buffer[1] == NULL || buffer[2] == NULL || buffer[3] == NULL || buffer[4] == NULL)
 		{
-			free_msg(&data);
-			free(pid_s);
-			break;
-		}
-		pid = atoi(pid_s);
-		free(pid_s);
-		for (i = 0; i < size; i++)
-			if (config[i].pid == pid)
-			{
-				cur_conf = &(config[i]);
-				break;
-			}
-		if (cur_conf == NULL)
-		{
-			free_msg(&data);
+			free(buffer[0]);
+			free(buffer[1]);
+			free(buffer[2]);
+			free(buffer[3]);
+			free(buffer[4]);
 			continue;
 		}
-
-		if (strlen(data.sender) == 0)
-		{
-			free(data.sender);
-			data.sender = NULL;
-		}
-		if (strlen(data.target) == 0)
-		{
-			free(data.target);
-			data.target = NULL;
-		}
-		if (strlen(data.message) == 0)
-		{
-			free(data.message);
-			data.message = NULL;
-		}
+		
+		pid = atoi(buffer[0]);
+		free(buffer[0]);
+		strncpy(data.sender, buffer[1], SND_FLD);
+		free(buffer[1]);
+		strncpy(data.target, buffer[2], TGT_FLD);
+		free(buffer[2]);
+		strncpy(data.command, buffer[3], CMD_FLD);
+		free(buffer[3]);
+		strncpy(data.message, buffer[4], MSG_FLD);
+		free(buffer[4]);
+		i = get_by_pid(globals.irc_list, pid);
+		if (i == -1)
+			continue;
+			
+		//TODO finish cleanup below
 
 		char * ptarget = NULL;
 		if (index(data.sender, '!') != NULL)

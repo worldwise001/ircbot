@@ -9,11 +9,11 @@ int unload_module(char * name);
 char ** list_module_dir();
 char ** list_modules(int type);
 
-int lib_loop(info_t * config, int size);
+int lib_loop();
 
 void parse_input(char * line, msg_t * data);
-void process_input(info_t * config, char * line);
-void respond_direct(info_t * info, char * format, ... );
+void process_input(irccfg_t * m_irccfg, char * line);
+void respond_direct(irccfg_t * m_irccfg, char * format, ... );
 void free_msg(msg_t * data);
 void print_msg(msg_t * data);
 
