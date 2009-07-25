@@ -32,7 +32,7 @@ void parse_input(char * line, msg_t * data)
 	if (is_value(data->command, "JOIN") || is_value(data->command, "NICK"))
 	{
 		spos_b++;
-		int tlen = (strlen(spos_b) < TGT_LEN)?strlen(spos_b):TGT_LEN;
+		int tlen = (strlen(spos_b) < TGT_FLD)?strlen(spos_b):TGT_FLD;
 		strncpy(data->target, spos_b, tlen);
 		return;
 	}
@@ -42,11 +42,11 @@ void parse_input(char * line, msg_t * data)
 		int length = strlen(spos_b);
 		if (end != NULL)
 		{
-			int tlen = (strlen(end+1) < MSG_LEN)?strlen(end+1):MSG_LEN;
+			int tlen = (strlen(end+1) < MSG_FLD)?strlen(end+1):MSG_FLD;
 			strncpy(data->message, end+1, tlen);
 			length = end - spos_b - 1;
 		}
-		int tlen = (length < TGT_LEN)?length:TGT_LEN;
+		int tlen = (length < TGT_FLD)?length:TGT_FLD;
 		strncpy(data->target, spos_b, tlen);
 		return;
 	}
@@ -54,7 +54,7 @@ void parse_input(char * line, msg_t * data)
 	{
 		char * spos_c = index(spos_b, ' ')+1;
 		int c_length = (spos_c != NULL)?(spos_c - spos_b - 1):0;
-		int tlen = (c_length < TGT_LEN)?c_length:TGT_LEN;
+		int tlen = (c_length < TGT_FLD)?c_length:TGT_FLD;
 		strncpy(data->target, spos_b, tlen);
 	}
 
@@ -75,7 +75,7 @@ void parse_input(char * line, msg_t * data)
 	{
 		char * mpos = index(line + offset, ' ') + 1;
 		if (mpos[0] == ':') mpos++;
-		int tlen = (strlen(mpos) < MSG_LEN)?strlen(mpos):MSG_LEN;
+		int tlen = (strlen(mpos) < MSG_FLD)?strlen(mpos):MSG_FLD;
 		strncpy(data->message, mpos, tlen);
 	}
 }
@@ -102,22 +102,17 @@ void print_msg(msg_t * data)
 	irc_printf(IRCOUT, "%s: <%d> <%s> <%s> <%s> <%s>\n", atime, getpid(), sender, command, target, message);
 }
 
-void send_msg(info_t * info, msg_t * data)
+void send_msg(irccfg_t * m_irccfg, msg_t * data)
 {
-	char * sender = (data->sender)?data->sender:"";
-	char * target = (data->target)?data->target:"";
-	char * command = (data->command)?data->command:"";
-	char * message = (data->message)?data->message:"";
-
-	int tempfd = dup(info->wfd);
+	int tempfd = dup(m_irccfg->wfd);
 	FILE * tempstream = fdopen(tempfd, "a");
-	fprintf(tempstream, "%d\n%s\n%s\n%s\n%s\n", getpid(), sender, command, target, message);
+	fprintf(tempstream, "%d\n%s\n%s\n%s\n%s\n", getpid(), data->sender, data->command, data->target, data->message);
 	fflush(tempstream);
 	fclose(tempstream);
 	if (errno) errno = 0;
 }
 
-void process_input(info_t * config, char * line)
+void process_input(irccfg_t * m_irccfg, char * line)
 {
 	if (globals._raw && line)
 	{
@@ -130,18 +125,16 @@ void process_input(info_t * config, char * line)
 	memset(&data, 0, sizeof(msg_t));
 	parse_input(line, &data);
 	free(line);
-	if (strcasecmp(data.command, "ERROR") == 0)
+	if (is_value(data.command, "ERROR"))
 	{
-		close(config->sockfd);
-		free_ninfo(config, 1);
-		free_msg(&data);
+		close(m_irccfg->sfd);
 		exit(EXIT_SUCCESS);
 	}
-	char * ptarget = NULL;
+	char ptarget[TGT_FLD+1];
 	if (data.sender != NULL && index(data.sender, '!') != NULL)
 	{
 		int length = index(data.sender, '!') - data.sender;
-		ptarget = malloc(length + 1);
+		if (length > TGT_FLD) length = TGT_FLD;
 		ptarget[length] = '\0';
 		strncpy(ptarget, data.sender, length);
 	}
@@ -151,47 +144,41 @@ void process_input(info_t * config, char * line)
 	else
 		target = ptarget;
 	
-	if (strcmp(data.command, "001") == 0)
+	if (is_value(data.command, "001"))
 	{
 		char * servname = data.message + 15;
 		int length = strlen(servname);
 		if (index(servname, ' ') != NULL)
 			length = index(servname, ' ') - servname;
-		config->servname = malloc(length+1);
-		strncpy(config->servname, servname, length);
-		config->servname[length] = '\0';
+		if (length > CFG_FLD) length = CFG_FLD;
+		strncpy(m_irccfg->serv, servname, length);
+		m_irccfg->serv[length] = '\0';
 	}
-	else if (strcasecmp(data.command, "NICK") == 0)
+	else if (is_value(data.command, "NICK"))
+		strncpy(m_irccfg->nick, data.target, CFG_FLD);
+	else if (is_value(data.command, "PRIVMSG"))
 	{
-		char * oldnick = config->nickname;
-		config->nickname = dup_string(data.target);
-		free(oldnick);
-	}
-	else if (strcasecmp(data.command, "PRIVMSG") == 0)
-	{
-		if (strcasecmp(data.message, "\001VERSION\001") == 0)
-			respond_direct(config, "NOTICE %s :\001VERSION Circe %s written in C\001\n", ptarget, VERSION);
-		else if (strncasecmp(data.message, "\001PING", 5) == 0)
-			respond_direct(config, "NOTICE %s :%s\n", ptarget, data.message);
-		else if (strncasecmp(data.message, SENTINEL, strlen(SENTINEL)) == 0)
+		if (is_value(data.message, "\001VERSION\001"))
+			respond_direct(m_irccfg, "NOTICE %s :\001VERSION Circe %s written in C\001\n", ptarget, VERSION);
+		else if (is_value(data.message, "\001PING"))
+			respond_direct(m_irccfg, "NOTICE %s :%s\n", ptarget, data.message);
+		else if (is_value(data.message, SENTINEL))
 		{
 			char * msg = data.message + strlen(SENTINEL);
-			if (strcasecmp(msg, "help") == 0 || strncasecmp(msg, "help ", 5) == 0)
+			if (is_value(msg, "help"))
 			{
-				respond_direct(config, "PRIVMSG %s :Circe %s at your service!\n", target, VERSION);
-				respond_direct(config, "PRIVMSG %s :Type %scommands for a list of available commands\n", target, SENTINEL);
+				respond_direct(m_irccfg, "PRIVMSG %s :Circe %s at your service!\n", target, VERSION);
+				respond_direct(m_irccfg, "PRIVMSG %s :Type %scommands for a list of available commands\n", target, SENTINEL);
 			}
-			else if (strncasecmp(msg, "beep", 4) == 0)
+			else if (is_value(msg, "beep"))
 				if (msg[4] == '\0' || msg[4] == ' ')
-					respond_direct(config, "PRIVMSG %s :\007\n", target);
+					respond_direct(m_irccfg, "PRIVMSG %s :\007\n", target);
 		}
 	}
 
 	print_msg(&data);
 
-	send_msg(config, &data);
-	free(ptarget);
-	free_msg(&data);
+	send_msg(m_irccfg, &data);
 }
 
 int lib_loop()
@@ -304,13 +291,7 @@ int lib_loop()
 					}
 					else if (is_value(msg_ptr, "status report"))
 					{
-						respond(m_irccfg, "PRIVMSG %s :I am connected to %d networks:\n", target, globals.size);
-						int i;
-						for (i = 0; i < globals.size; i++)
-						{
-								info_t * i_ptr = &globals.config[i];
-								respond(m_irccfg, "PRIVMSG %s :%s (%s:%d, pid=%d, id=%d)\n", target, i_ptr->serv, i_ptr->host, i_ptr->port, i_ptr->pid, i_ptr->id);
-						}
+						respond(m_irccfg, "PRIVMSG %s :I am connected to %d networks:\n", target, list_size(globals.irc_list));
 						time_t temp;
 						time(&temp);
 						char timebuff[CFG_FLD+1];

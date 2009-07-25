@@ -22,7 +22,9 @@
 #endif
 
 //version of CirceBot
+#ifndef VERSION
 #define VERSION "svn-unstable"
+#endif
 
 //initial receiving buffer size
 #define INIT_SIZE 128
