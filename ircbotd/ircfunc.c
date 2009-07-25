@@ -1,4 +1,4 @@
-#include "datatype.h"
+#include "ircfunc.h"
 
 globals_t globals;
 
@@ -101,7 +101,7 @@ bot_t bot_command(char * message)
 	return temp;
 }
 
-void xstrtime(char * buffer, size_t size, time_t time)
+void _timetostr(char * buffer, time_t time)
 {
 	int seconds = time % 60;
 	int minutes = time / 60;
@@ -111,6 +111,6 @@ void xstrtime(char * buffer, size_t size, time_t time)
 	hours = hours % 24;
 	int years = days / 365;
 	days = days % 365;
-	snprintf(buffer, size, "%d years, %d days, %d hours, %d minutes, %d seconds", years, days, hours, minutes, seconds);
+	snprintf(buffer, CFG_FLD, "%d years, %d days, %d hours, %d minutes, %d seconds", years, days, hours, minutes, seconds);
 }  
 
