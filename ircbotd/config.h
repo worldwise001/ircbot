@@ -2,6 +2,7 @@
 #define CONFIG_H_
 
 #include "io.h"
+#include "ircfunc.h"
 
 void print_irccfg(llist_t * irclist);
 llist_t * load_irccfg(char * filename);
