@@ -7,7 +7,7 @@ int main(int argc, char** argv)
 {
 	set_signals(_INIT);
 
-	int status, sizetmp;
+	int status;
 	pid_t pid, sid;
 	args_t args;
 	memset(&args, 0, sizeof(args_t));
@@ -61,15 +61,14 @@ int main(int argc, char** argv)
 	globals._run = TRUE;
 	irc_printf(IRCOUT, "Circe %s\nLoading configuration\n", VERSION);
 
-	globals.config = load_config(args.conf_file, &(globals.size));
+	globals.irc_list = load_config(args.conf_file);
 
-	if (!(globals.size))
+	if (list_size(globals.irc_list) == 0)
 	{
 		irc_printf(IRCERR, "No configuration loaded\n");
 		return EXIT_FAILURE;
 	}
 	set_signals(_PARENT);
-	sizetmp = globals.size;
 
 	int to_chld[2];
 	if (pipe(to_chld) == -1)
@@ -83,8 +82,8 @@ int main(int argc, char** argv)
 	close(to_chld[W]);
 	if ((returnval = set_up_lib_thread(to_chld)) >= 0)
 		return returnval;
-	sizetmp = globals.size+1;
-	while (sizetmp--)
+	int threadnum = list_size(globals.irc_list) + 1;
+	while (threadnum--)
 	{
 		pid = wait(&status);
 		if (WIFEXITED(status))
@@ -97,14 +96,18 @@ int main(int argc, char** argv)
 			raise(SIGTERM);
 			continue;
 		}
-		if (sizetmp < globals.size)
+		int i = get_by_pid(globals.irc_list, pid);
+		if (i != -1)
 		{
-			close(globals.config[sizetmp].rfd);
-			close(globals.config[sizetmp].wfd);
+			close((irccfg_t *)(globals.irc_list->item)->rfd);
+			close((irccfg_t *)(globals.irc_list->item)->wfd);
+			llist_t * result = delete_item(globals.irc_list, i);
+			if (result != NULL)
+				globals.irc_list = result;
 		}
 	}
-	if (globals.config != NULL && globals.size > 0)
-		free_ninfo(globals.config, globals.size);
+	if (globals.irc_list != NULL)
+		clear_list(globals.irc_list);
 	close_log();
 	if (errno)
 	{

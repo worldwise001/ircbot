@@ -138,9 +138,7 @@ void process_input(info_t * config, char * line)
 	{
 		time_t rawtime;
 		time(&rawtime);
-		char * atime = ctime(&rawtime)+11;
-		atime[8] = '\0';
-		fprintf(globals._ircraw, "%s: %s\n", atime, line);
+		fprintf(globals._ircraw, "%ld000 %s\n", rawtime, line);
 		fflush(globals._ircraw);
 	}
 	msg_t data;
@@ -351,6 +349,11 @@ int lib_loop(info_t * config, int size)
 	                                        xstrtime(timebuff, 80, temp-timestart);
 	                                        respond(cur_conf, "PRIVMSG %s :%s since startup\n", target, timebuff);
 					}
+					else
+					{
+						
+						respond(cur_conf, "PRIVMSG %s :");
+					}
 				}
 			}
 			bot_t result = bot_command(data.message);
@@ -512,7 +515,10 @@ int lib_loop(info_t * config, int size)
 				{
 					if (result.args != NULL)
 					{
-						int id = atoi(result.args);
+						char * acopy = dup_string(result.args);
+						if (strlen(acopy) > 9) acopy[9] = '\0';
+						int id = atoi(acopy);
+						free(acopy);
 						int i;
 						for (i = 0; i < globals.size; i++)
 							if (id == globals.config[i].id)

@@ -2,29 +2,34 @@
 
 extern globals_t globals;
 
-info_t * load_config(char * filename, int * size)
+unsigned int is_irccfg_value(char * field, char * type)
+{
+	return strncasecmp(field, type, strlen(type)) == 0;
+}
+
+llist_t * load_irccfg(char * filename)
 {
 	if (filename == NULL) filename = "ircbotd.conf";
 
-	info_t def_info, *infoset = NULL;
-	memset(&def_info, 0, sizeof(def_info));
-	int conf_fd = open(filename, O_RDONLY);
-	if (conf_fd == -1)
+	irccfg_t d_irccfg;
+	llist_t * first = NULL, * iterator = NULL;
+	memset(&d_irccfg, 0, sizeof(irccfg_t));
+	int irccfg_fd = open(filename, O_RDONLY);
+	if (irccfg_fd == -1)
 	{
-		*size = 0;
 		irc_printf(IRCERR, "Error opening config file %s: %s\n", filename, strerror(errno));
 		return NULL;
 	}
 
-	char * buff, *buffcpy, *istr, *iend, *strid;
+	char * buff, *istr, *iend, strid[6];
 	int line = 0, i;
 
-	while ((buff = get_next_line(conf_fd)) != NULL && ++line)
+	while ((buff = get_next_line(irccfg_fd)) != NULL && ++line)
 	{
+		iterator = first;
 		istr = NULL;
 		iend = NULL;
-		strid = NULL;
-		buffcpy = NULL;
+		memset(strid, 0, 6);
 		if (buff[0] == '#' || strlen(buff) == 0)
 		{
 			free(buff);
@@ -43,19 +48,8 @@ info_t * load_config(char * filename, int * size)
 			free(buff);
 			continue;
 		}
-		if ((buffcpy = malloc(iend-istr+1)) == NULL)
-		{
-			irc_printf(IRCERR, "Unable to malloc: %s\n", strerror(errno));
-			free(buff);
-			continue;
-		}
-		buffcpy = strncpy(buffcpy, istr, iend-istr);
-		buffcpy[iend-istr] = '\0';
 		if ((istr = index(buff, '[')) == NULL)
-		{
-			strid = NULL;
 			iend = NULL;
-		}
 		else
 		{
 			istr++;
@@ -65,14 +59,6 @@ info_t * load_config(char * filename, int * size)
 		{
 			irc_printf(IRCERR, "Invalid format [] on line %d\n", line);
 			free(buff);
-			free(buffcpy);
-			continue;
-		}
-		if (istr != NULL && (strid = malloc(iend-istr+1)) == NULL)
-		{
-			irc_printf(IRCERR, "Unable to malloc: %s\n", strerror(errno));
-			free(buff);
-			free(buffcpy);
 			continue;
 		}
 		else if (istr != NULL)
@@ -81,206 +67,158 @@ info_t * load_config(char * filename, int * size)
 			strid[iend-istr] = '\0';
 		}
 
-		info_t * infoset_tmp = NULL;
-		if (strid != NULL)
+		irccfg_t * i_irccfg = NULL;
+		if (strid[0] != '\0')
 		{
-			for (i = 0; i < *size; i++)
-				if (infoset[i].id == atoi(strid)) break;
-			if (i == *size)
+			while (iterator != NULL)
 			{
-				if ((infoset_tmp = realloc(infoset, (i+1) * sizeof(info_t))) == NULL)
+				if ((irccfg_t *)(iterator->item)->id == atoi(strid))
+					break;
+				iterator = iterator->next;
+			}
+			if (iterator == NULL)
+			{
+				i_irccfg = malloc(sizeof(irccfg_t));
+				if (i_irccfg == NULL)
 				{
-					irc_printf(IRCERR, "Unable to realloc: %s\n", strerror(errno));
+					irc_printf(IRCERR, "Unable to create configuration block: %s\n", strerror(errno));
 					free(buff);
-					free(buffcpy);
-					free(strid);
 					continue;
 				}
-				infoset = infoset_tmp;
-				infoset_tmp = &(infoset[i]);
-				//printf("%d %d\n", (int)infoset_tmp, (int)strid);
-				memset(infoset_tmp, 0, sizeof(info_t));
-				infoset_tmp->id = atoi(strid);
-				(*size)++;
+				memset(i_irccfg, 0, sizeof(irccfg_t));
+				llist_t * result = append(first, i_irccfg);
+				if (result == NULL)
+				{
+					irc_printf(IRCERR, "Unable to add configuration block: %s\n", strerror(errno));
+					free(i_irccfg);
+					free(buff);
+					continue;
+				}
+				i_irccfg->id = atoi(strid);
 			}
 			else
-				infoset_tmp = &(infoset[i]);
+				i_irccfg = (irccfg_t *)(iterator->item);
 		}
-		if (ISNICK)
+		int v_len = iend-istr;
+		if (is_irccfg_value(buff, "NICK"))
 		{
 			if (strid)
-				infoset_tmp->nickname = buffcpy;
+				strncpy(i_irccfg->nick, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				def_info.nickname = buffcpy;
+				strncpy(d_irccfg.nick, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
-			free(strid);
 			continue;
 		}
-		if (ISUSER)
+		if (is_irccfg_value(buff, "USER"))
 		{
 			if (strid)
-				infoset_tmp->username = buffcpy;
+				strncpy(i_irccfg->user, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				def_info.username = buffcpy;
+				strncpy(d_irccfg.user, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
-			free(strid);
 			continue;
 		}
-		if (ISREAL)
+		if (is_irccfg_value(buff, "REAL"))
 		{
 			if (strid)
-				infoset_tmp->realname = buffcpy;
+				strncpy(i_irccfg->real, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				def_info.realname = buffcpy;
+				strncpy(d_irccfg.real, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
-			free(strid);
 			continue;
 		}
-		if (ISPASS)
+		if (is_irccfg_value(buff, "PASS"))
 		{
 			if (strid)
-				infoset_tmp->password = buffcpy;
+				strncpy(i_irccfg->pass, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				def_info.password = buffcpy;
+				strncpy(d_irccfg.pass, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
-			free(strid);
 			continue;
 		}
-		if (ISHOST)
+		if (is_irccfg_value(buff, "HOST"))
 		{
 			if (strid)
-				infoset_tmp->hostname = buffcpy;
+				strncpy(i_irccfg->host, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				def_info.hostname = buffcpy;
+				strncpy(d_irccfg.host, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
-			free(strid);
 			continue;
 		}
-		if (ISPORT)
+		if (is_irccfg_value(buff, "PORT"))
 		{
+			char sport[6];
+			memset(sport, 0, 6);
+			strncpy(sport, istr, (v_len > 5)?5:v_len);
 			if (strid)
-				infoset_tmp->port = atoi(buffcpy);
+				i_irccfg->port = atoi(sport);
 			else
-				def_info.port = atoi(buffcpy);
+				d_irccfg.port = atoi(sport);
 			free(buff);
-			free(buffcpy);
-			free(strid);
 			continue;
 		}
-		if (ISCHAN)
+		if (is_irccfg_value(buff, "CHAN"))
 		{
 			if (strid)
-				infoset_tmp->channels = buffcpy;
+				strncpy(i_irccfg->chan, istr, (v_len > CFG_FLD*8)?CFG_FLD*8:v_len);
 			else
-				def_info.channels = buffcpy;
+				strncpy(d_irccfg.chan, istr, (v_len > CFG_FLD*8)?CFG_FLD*8:v_len);
 			free(buff);
-			free(strid);
 			continue;
 		}
-		if (ISADMIN)
+		if (is_irccfg_value(buff, "AUTH"))
 		{
 			if (strid)
-				infoset_tmp->admin = buffcpy;
+				strncpy(i_irccfg->auth, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
-				def_info.admin = buffcpy;
+				strncpy(d_irccfg.auth, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			free(buff);
-			free(strid);
 			continue;
 		}
-		if (ISSOCKET)
+		if (is_irccfg_value(buff, "SOCKET"))
 		{
+			char sbool[6];
+			memset(sbool 0, 6);
+			strncpy(sbool, istr, (v_len > 5)?5:v_len);
 			if (strid)
-				infoset_tmp->enabled = !strncmp("true", buffcpy, 4);
+				i_irccfg->enabled = !strncmp("true", sbool, 4);
 			else
-				def_info.enabled = !strncmp("true", buffcpy, 4);
+				d_irccfg.enabled = !strncmp("true", sbool, 4);
 			free(buff);
-			free(buffcpy);
-			free(strid);
 			continue;
 		}
 	}
 
-
-	for (i = 0; i < *size; i++)
+	iterator = first;
+	while (iterator != NULL)
 	{
-		if (infoset[i].nickname == NULL)
-			infoset[i].nickname = dup_string(def_info.nickname);
-		if (infoset[i].username == NULL)
-			infoset[i].username = dup_string(def_info.username);
-		if (infoset[i].realname == NULL)
-			infoset[i].realname = dup_string(def_info.realname);
-		if (infoset[i].password == NULL)
-			infoset[i].password = dup_string(def_info.password);
-		if (infoset[i].hostname == NULL)
-			infoset[i].hostname = dup_string(def_info.hostname);
-		if (infoset[i].channels == NULL)
-			infoset[i].channels = dup_string(def_info.channels);
-		if (infoset[i].admin == NULL)
-			infoset[i].admin = dup_string(def_info.admin);
-		if (infoset[i].port == 0)
-			infoset[i].port = def_info.port;
-		if (infoset[i].enabled == 0)
-			infoset[i].enabled = def_info.enabled;
+		i_irccfg = (irccfg_t *)(iterator->item);
+		if (strlen(i_irccfg->nick) == 0)
+			strncpy(i_irccfg->nick, d_irccfg.nick, CFG_FLD);
+		if (strlen(i_irccfg->user) == 0)
+			strncpy(i_irccfg->user, d_irccfg.user, CFG_FLD);
+		if (strlen(i_irccfg->real) == 0)
+			strncpy(i_irccfg->real, d_irccfg.real, CFG_FLD);
+		if (strlen(i_irccfg->pass) == 0)
+			strncpy(i_irccfg->pass, d_irccfg.pass, CFG_FLD);
+		if (strlen(i_irccfg->chan) == 0)
+			strncpy(i_irccfg->chan, d_irccfg.chan, CFG_FLD*8);
+		if (strlen(i_irccfg->auth) == 0)
+			strncpy(i_irccfg->auth, d_irccfg.auth, CFG_FLD);
+		if (strlen(i_irccfg->host) == 0)
+			strncpy(i_irccfg->host, d_irccfg.host, CFG_FLD);
+		if (i_irccfg->port == 0)
+			i_irccfg->port = d_irccfg.port;
+		if (si_irccfg->enabled == 0)
+			i_irccfg->enabled = d_irccfg.enabled;
+		iterator = iterator->next;
 	}
-	free_info(&def_info);
-	return infoset;
+	return first;
 }
 
-void free_info(info_t * infoset)
+void print_irccfg(llist_t * irclist)
 {
-	if (infoset != NULL)
-	{
-		free(infoset->nickname);
-		free(infoset->username);
-		free(infoset->realname);
-		free(infoset->password);
-		free(infoset->hostname);
-		free(infoset->channels);
-		free(infoset->servname);
-		free(infoset->admin);
-	}
-}
-
-void free_ninfo(info_t * infoset, int size)
-{
-	if (infoset != NULL)
-	{
-		while (size--)
-			free_info(&(infoset[size]));
-		free(infoset);
-		infoset = NULL;
-	}
-}
-
-void print_info(info_t * infoset, int size)
-{
-	while (size--)
-	{
-		printf("%s %s %s %s %s %s\n", infoset->nickname, infoset->username, infoset->realname, infoset->password, infoset->channels, infoset->hostname);
-		infoset = &(infoset[1]);
-	}
-}
-
-info_t * info_cpy(info_t * src)
-{
-	info_t * dest = malloc(sizeof(info_t));
-	if (dest == NULL) return NULL;
-	memset(dest, 0, sizeof(info_t));
-
-	dest->nickname = dup_string(src->nickname);
-	dest->username = dup_string(src->username);
-	dest->realname = dup_string(src->realname);
-	dest->password = dup_string(src->password);
-	dest->hostname = dup_string(src->hostname);
-	dest->channels = dup_string(src->channels);
-	dest->admin = dup_string(src->admin);
-
-	dest->port = src->port;
-	dest->enabled = src->enabled;
-	dest->pid = src->pid;
-	dest->id = src->id;
-	dest->sockfd = src->sockfd;
-	return dest;
+	
 }
 
 int load_args(int argc, char** argv, args_t * args)
@@ -428,3 +366,16 @@ void close_raw()
 	}
 }
 
+int get_by_pid(llist_t * first, pid_t pid)
+{
+	if (first == NULL) return -1;
+	llist_t * iterator = first;
+	int i = 0;
+	while (iterator != NULL)
+	{
+		if ((irccfg_t *)(iterator->item)->pid == pid) return i;
+		iterator = iterator->next;
+		i++;
+	}
+	return -1;
+}

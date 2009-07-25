@@ -9,6 +9,13 @@ Current TODO:
 - Commenting; lots of it
 - autoconf it for automake
 
+July 24, 2009
+- Uploaded source to subversion repository
+	http://code.assembla.com/devcodex/subversion/nodes
+- Begin revamp for 0.7.1
+- Added dedicated linked list functions
+- Changed various
+
 July 6, 2009
 - Added support for nick changes
 - Added status command, "status report"

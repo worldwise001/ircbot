@@ -16,51 +16,9 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <time.h>
-#include "module.h"
+#include <sys/types.h>
 
-#ifdef PING_ALARM
-#ifndef PING_DELAY
-#define PING_DELAY 30
-#endif
-#endif
-
-#ifndef MODULEDIR
-#define MODULEDIR "./module"
-#endif
-
-#ifndef LOGDIR
-#define LOGDIR "./logs"
-#endif
-
-#ifndef SOCK_TIMEOUT
-#define SOCK_TIMEOUT -1
-#endif
-
-#ifndef UDELAY
-#define UDELAY 200
-#endif
-
-#define VERSION "0.7 beta"
-
-#define INIT_SIZE 128
-#define INC_SIZE 32
-#ifndef BUFF_SIZE
-#define BUFF_SIZE 1024
-#endif
-
-#define _INIT 0
-#define _PARENT 1
-#define _CHILD 2
-#define _LIB 3
-
-#define R 0
-#define W 1
-
-#define TRUE 1
-#define FALSE 0
-
-#define IRCOUT 0
-#define IRCERR 1
+#include "const.h"
 
 typedef struct {
 	char * conf_file;
@@ -76,18 +34,15 @@ typedef struct {
 	char * filename;
 	void * dlhandle;
 	void (*parse)(const info_t * config, const msg_t * data);
-	char * commands;
-	char * name;
-	void * next;
+	char commands[CFG_FLD+1];
+	char name[CFG_FLD+1];
 } module_t;
 
 typedef struct {
-	info_t *confPtr;
-	info_t *config;
-	int size;
+	llist_t * irc_list;
+	char ** admin; //TODO: Change this
 	pid_t parent_pid;
 	pid_t lib_pid;
-	char ** admin;
 	int logfd;
 	int _daemon;
 	int _log;
@@ -98,8 +53,34 @@ typedef struct {
 	FILE * _ircraw;
 } globals_t;
 
-void print_usage(char * app_name);
-void print_version(char * app_name);
-void irc_printf(int type, char * string, ... );
+typedef struct {
+	char sender[SND_FLD+1];
+	char target[TGT_FLD+1];
+	char command[CMD_FLD+1];
+	char message[MSG_FLD+1];
+} msg_t;
+
+typedef struct {
+	unsigned int enabled:1;
+	unsigned int id;
+	pid_t pid;
+	char nick[CFG_FLD+1];
+	char user[CFG_FLD+1];
+	char real[CFG_FLD+1];
+	char pass[CFG_FLD+1];
+	char chan[CFG_FLD*8+1];
+	char auth[CFG_FLD+1];
+	char serv[CFG_FLD+1];
+	char host[CFG_FLD+1];
+	unsigned short int port;
+	int sfd;
+	int rfd;
+	int wfd;
+} irccfg_t;
+
+typedef struct {
+	char command[MSG_FLD+1];
+	char args[MSG_FLD+1];
+} bot_t;
 
 #endif /* DATATYPE_H_ */
