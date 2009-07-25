@@ -28,7 +28,7 @@ llist_t * append_item(llist_t * first, void * item)
 	return result;
 }
 
-int list_size(llist * first)
+int list_size(llist_t * first)
 {
 	if (first == NULL) return 0;
 	int i = 1;
@@ -57,14 +57,14 @@ llist_t * insert_item(llist_t * first, void * item, int location)
 {
 	llist_t * llptr = get_item(first, location-1);
 	if (llptr == NULL) return NULL;
-	if (location == 0)
-	{
-		item->next = first;
-		return item;
-	}
 	llist_t * iterator = malloc(sizeof(llist_t));
 	if (iterator == NULL) return NULL;
 	memset(iterator, 0, sizeof(llist_t));
+	if (location == 0)
+	{
+		iterator->next = first;
+		return iterator;
+	}
 	iterator->next = llptr->next;
 	llptr->next = iterator;
 	return first;
