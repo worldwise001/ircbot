@@ -5,7 +5,7 @@
 
 void print_irccfg(llist_t * irclist);
 llist_t * load_irccfg(char * filename);
-unsigned int is_irccfg_value(char * field, char * type);
+unsigned int is_value(char * field, char * type);
 
 int get_by_pid(llist_t * first, pid_t pid);
 

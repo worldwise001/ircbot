@@ -2,7 +2,7 @@
 
 extern globals_t globals;
 
-unsigned int is_irccfg_value(char * field, char * type)
+unsigned int is_value(char * field, char * type)
 {
 	return strncasecmp(field, type, strlen(type)) == 0;
 }
@@ -100,7 +100,7 @@ llist_t * load_irccfg(char * filename)
 				i_irccfg = (irccfg_t *)(iterator->item);
 		}
 		int v_len = iend-istr;
-		if (is_irccfg_value(buff, "NICK"))
+		if (is_value(buff, "NICK"))
 		{
 			if (strid)
 				strncpy(i_irccfg->nick, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
@@ -109,7 +109,7 @@ llist_t * load_irccfg(char * filename)
 			free(buff);
 			continue;
 		}
-		if (is_irccfg_value(buff, "USER"))
+		if (is_value(buff, "USER"))
 		{
 			if (strid)
 				strncpy(i_irccfg->user, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
@@ -118,7 +118,7 @@ llist_t * load_irccfg(char * filename)
 			free(buff);
 			continue;
 		}
-		if (is_irccfg_value(buff, "REAL"))
+		if (is_value(buff, "REAL"))
 		{
 			if (strid)
 				strncpy(i_irccfg->real, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
@@ -127,7 +127,7 @@ llist_t * load_irccfg(char * filename)
 			free(buff);
 			continue;
 		}
-		if (is_irccfg_value(buff, "PASS"))
+		if (is_value(buff, "PASS"))
 		{
 			if (strid)
 				strncpy(i_irccfg->pass, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
@@ -136,7 +136,7 @@ llist_t * load_irccfg(char * filename)
 			free(buff);
 			continue;
 		}
-		if (is_irccfg_value(buff, "HOST"))
+		if (is_value(buff, "HOST"))
 		{
 			if (strid)
 				strncpy(i_irccfg->host, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
@@ -145,7 +145,7 @@ llist_t * load_irccfg(char * filename)
 			free(buff);
 			continue;
 		}
-		if (is_irccfg_value(buff, "PORT"))
+		if (is_value(buff, "PORT"))
 		{
 			char sport[6];
 			memset(sport, 0, 6);
@@ -157,7 +157,7 @@ llist_t * load_irccfg(char * filename)
 			free(buff);
 			continue;
 		}
-		if (is_irccfg_value(buff, "CHAN"))
+		if (is_value(buff, "CHAN"))
 		{
 			if (strid)
 				strncpy(i_irccfg->chan, istr, (v_len > CFG_FLD*8)?CFG_FLD*8:v_len);
@@ -166,7 +166,7 @@ llist_t * load_irccfg(char * filename)
 			free(buff);
 			continue;
 		}
-		if (is_irccfg_value(buff, "AUTH"))
+		if (is_value(buff, "AUTH"))
 		{
 			if (strid)
 				strncpy(i_irccfg->auth, istr, (v_len > CFG_FLD)?CFG_FLD:v_len);
@@ -175,7 +175,7 @@ llist_t * load_irccfg(char * filename)
 			free(buff);
 			continue;
 		}
-		if (is_irccfg_value(buff, "SOCKET"))
+		if (is_value(buff, "SOCKET"))
 		{
 			char sbool[6];
 			memset(sbool 0, 6);

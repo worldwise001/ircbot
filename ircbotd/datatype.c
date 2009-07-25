@@ -76,28 +76,6 @@ void respond(info_t * info, char * format, ... )
 	usleep(UDELAY);
 }
 
-char * dup_string(char * string)
-{
-	char * str = NULL;
-	if (string == NULL) string = "";
-	if ((str = malloc(strlen(string) + 1)) == NULL)
-		return NULL;
-	str = strncpy(str, string, strlen(string));
-	str[strlen(string)] = '\0';
-	return str;
-}
-
-char * dup_nstring(char * string, int length)
-{
-	char * str = NULL;
-	if (string == NULL) string = "";
-	if ((str = malloc(length + 1)) == NULL)
-		return NULL;
-	strncpy(str, string, length);
-	str[length] = '\0';
-	return str;
-}
-
 bot_t bot_command(char * message)
 {
 	bot_t temp;
@@ -110,13 +88,15 @@ bot_t bot_command(char * message)
 		char * end = index(ptr, ' ');
 		if (end == NULL)
 		{
-			temp.command = dup_string(ptr);
+			strncpy(temp.command, ptr, MSG_FLD);
 			return temp;
-		}		
-		temp.command = dup_nstring(ptr, end - ptr);
+		}
+		int length = end - ptr;
+		if (length > MSG_FLD) length = MSG_FLD;
+		strncpy(temp.command, ptr, length);
 		if (end[0] == ' ') end++;
 		if (end[0] == '\0') return temp;
-		temp.args = dup_string(end);
+		strncpy(temp.args, end, MSG_FLD);
 	}
 	return temp;
 }

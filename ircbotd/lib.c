@@ -214,10 +214,10 @@ int lib_loop()
 	time(&timestart);
 	pid_t pid;
 	msg_t data;
+	irccfg_t * m_irccfg = NULL;
 	memset(&data, 0, sizeof(msg_t));
 	char * buffer[5];
 	int i;
-	llist_t * iterator = NULL;
 	irc_printf(IRCOUT, "Module thread started; loading all modules\n");
 	if (load_module(NULL) == -1)
 		irc_printf(IRCERR, "Error loading modules\n");
@@ -257,14 +257,12 @@ int lib_loop()
 		i = get_by_pid(globals.irc_list, pid);
 		if (i == -1)
 			continue;
-			
-		//TODO finish cleanup below
+		m_irccfg = (irccfg_t *)(get_item(globals.irc_list, i)->item);
 
-		char * ptarget = NULL;
+		char ptarget[TGT_FLD+1];
 		if (index(data.sender, '!') != NULL)
 		{
 			int length = index(data.sender, '!') - data.sender;
-			ptarget = malloc(length + 1);
 			ptarget[length] = '\0';
 			strncpy(ptarget, data.sender, length);
 		}
@@ -279,29 +277,26 @@ int lib_loop()
 			int length = strlen(servname);
 			if (index(servname, ' ') != NULL)
 				length = index(servname, ' ') - servname;
-			cur_conf->servname = malloc(length+1);
-			strncpy(cur_conf->servname, servname, length);
-			cur_conf->servname[length] = '\0';	
+			if (length > CFG_FLD) length = CFG_FLD;
+			
+			strncpy(m_irccfg->serv, servname, length);
+			m_irccfg->serv[length] = '\0';
 		}
-		else if (strcasecmp(data.command, "NICK") == 0)
+		else if (is_value(data.command, "NICK"))
+			strncpy(m_irccfg->nick, data.target, TGT_FLD);
+		else if (is_value(data.command, "PRIVMSG"))
 		{
-			char * oldnick = cur_conf->nickname;
-			cur_conf->nickname = dup_string(data.target);
-			free(oldnick);
-		}
-		else if (strcasecmp(data.command, "PRIVMSG") == 0)
-		{
-			if (strncasecmp(data.message, cur_conf->nickname, strlen(cur_conf->nickname)) == 0)
+			if (is_value(data.message, m_irccfg->nick))
 			{
-				char * msg_ptr = &data.message[strlen(cur_conf->nickname)];
+				char * msg_ptr = &data.message[strlen(m_irccfg->nick)];
 				if (msg_ptr[0] == ':' || msg_ptr[0] == ',' || msg_ptr[0] == ' ')
 				{
 					msg_ptr++;
 					while (!isalpha(msg_ptr[0])) msg_ptr++;
-					if (strncasecmp(msg_ptr, "state your designation", 22) == 0 || strncasecmp(msg_ptr, "what is your designation", 24) == 0)
+					if (is_value(msg_ptr, "state your designation") || is_value(msg_ptr, "what is your designation"))
 					{
 						char * nary = NULL;
-						switch (cur_conf->id)
+						switch (m_irccfg->id)
 						{
 							case 1: nary = "Primary"; break;
 							case 2: nary = "Secondary"; break;
@@ -319,85 +314,82 @@ int lib_loop()
 						memset(&auname, 0, sizeof(auname));
 						uname(&auname);
 						char * version = dup_string(auname.release);
-						respond(cur_conf, "PRIVMSG %s :I am %s of %s, %s Adjunct of Unimatrix %s\n", target, cur_conf->nickname, cur_conf->servname, nary, version);
+						respond(m_irccfg, "PRIVMSG %s :I am %s of %s, %s Adjunct of Unimatrix %s\n", target, m_irccfg->nick, m_irccfg->serv, nary, version);
 						free(version);
 					}
-					else if (strncasecmp(msg_ptr, "status report", 13) == 0)
+					else if (is_value(msg_ptr, "status report"))
 					{
-	                                        respond(cur_conf, "PRIVMSG %s :I am connected to %d networks:\n", target, globals.size);
-	                                        int i;
-	                                        for (i = 0; i < globals.size; i++)
-	                                        {
-	                                                info_t * i_ptr = &globals.config[i];
-	                                                respond(cur_conf, "PRIVMSG %s :%s (%s:%d, pid=%d, id=%d)\n", target, i_ptr->servname, i_ptr->hostname, i_ptr->port, i_ptr->pid, i_ptr->id);
-	                                        }
-	                                        time_t temp;
-	                                        time(&temp);
-	                                        char timebuff[80];
-	                                        memset(timebuff, 0, 80);
-	                                        xstrtime(timebuff, 80, temp-timestart);
-	                                        respond(cur_conf, "PRIVMSG %s :%s since startup\n", target, timebuff);
+						respond(m_irccfg, "PRIVMSG %s :I am connected to %d networks:\n", target, globals.size);
+						int i;
+						for (i = 0; i < globals.size; i++)
+						{
+								info_t * i_ptr = &globals.config[i];
+								respond(m_irccfg, "PRIVMSG %s :%s (%s:%d, pid=%d, id=%d)\n", target, i_ptr->serv, i_ptr->host, i_ptr->port, i_ptr->pid, i_ptr->id);
+						}
+						time_t temp;
+						time(&temp);
+						char timebuff[CFG_FLD+1];
+						memset(timebuff, 0, CFG_FLD+1);
+						_timetostr(timebuff, temp-timestart);
+						respond(m_irccfg, "PRIVMSG %s :%s since startup\n", target, timebuff);
 					}
 					else
-					{
-						
-						respond(cur_conf, "PRIVMSG %s :");
-					}
+						respond(m_irccfg, "PRIVMSG %s :What do you need?", target);
 				}
 			}
 			bot_t result = bot_command(data.message);
 			if (result.command != NULL)
 			{
-				if (strcasecmp("module", result.command) == 0)
+				if (is_value(result.command, "module"))
 				{
-					if (result.args == NULL)
-						respond(cur_conf, "PRIVMSG %s :You need to type an additional command\n", target);
+					if (strlen(result.args) == 0)
+						respond(m_irccfg, "PRIVMSG %s :Syntax: %smodule <load|unload|dir|list> [module filename]\n", target, SENTINEL);
 					else
 					{
-						if (strncasecmp(result.args, "load", 4) == 0)
+						if (is_value(result.args, "load"))
 						{
 							if (!is_admin(data.sender))
-								respond(cur_conf, "PRIVMSG %s :You are not authorized to do that\n", target);
+								respond(m_irccfg, "PRIVMSG %s :You are not authorized to do that\n", target);
 							else if (result.args[4] == '\0' || (result.args[4] == ' ' && result.args[5] == '\0'))
-								respond(cur_conf, "PRIVMSG %s :You need to supply the module name\n", target);
+								respond(m_irccfg, "PRIVMSG %s :You need to supply the module name\n", target);
 							else
 							{
 								char * libname = result.args + 5;
 								if (load_module(libname) == -1)
-									respond(cur_conf, "PRIVMSG %s :Error loading module: %s\n", target, lasterror);
+									respond(m_irccfg, "PRIVMSG %s :Error loading module: %s\n", target, lasterror);
 								else
-									respond(cur_conf, "PRIVMSG %s :Module loaded: %s\n", target, libname);
+									respond(m_irccfg, "PRIVMSG %s :Module loaded: %s\n", target, libname);
 							}
 						}
-						else if (strncasecmp(result.args, "unload", 6) == 0)
+						else if (is_value(result.args, "unload"))
 						{
 							if (!is_admin(data.sender))
-								respond(cur_conf, "PRIVMSG %s :You are not authorized to do that\n", target);
+								respond(m_irccfg, "PRIVMSG %s :You are not authorized to do that\n", target);
 							else if (result.args[6] == '\0' || (result.args[6] == ' ' && result.args[7] == '\0'))
-								respond(cur_conf, "PRIVMSG %s :You need to supply the module name\n", target);
+								respond(m_irccfg, "PRIVMSG %s :You need to supply the module name\n", target);
 							else
 							{
 								char * libname = result.args + 7;
 								if (unload_module(libname) == -1)
-									respond(cur_conf, "PRIVMSG %s :Error unloading module: %s\n", target, lasterror);
+									respond(m_irccfg, "PRIVMSG %s :Error unloading module: %s\n", target, lasterror);
 								else
-									respond(cur_conf, "PRIVMSG %s :Module unloaded: %s\n", target, libname);
+									respond(m_irccfg, "PRIVMSG %s :Module unloaded: %s\n", target, libname);
 							}
 						}
-						else if (strncasecmp(result.args, "list", 4) == 0)
+						else if (is_value(result.args, "list"))
 						{
 							if (result.args[4] == '\0' || (result.args[4] == ' ' && result.args[5] == '\0'))
 							{
 								char ** mod_name_list = list_modules(1);
 								if (mod_name_list == NULL)
-									respond(cur_conf, "PRIVMSG %s :No modules loaded\n", target);
+									respond(m_irccfg, "PRIVMSG %s :No modules loaded\n", target);
 								else
 								{
-									respond(cur_conf, "PRIVMSG %s :The following modules are loaded:\n", target);
+									respond(m_irccfg, "PRIVMSG %s :The following modules are loaded:\n", target);
 									int i = -1;
 									while (mod_name_list[++i] != NULL)
 									{
-										respond(cur_conf, "PRIVMSG %s :%s\n", target, mod_name_list[i]);
+										respond(m_irccfg, "PRIVMSG %s :%s\n", target, mod_name_list[i]);
 										free(mod_name_list[i]);
 										mod_name_list[i] = NULL;
 									}
@@ -405,22 +397,22 @@ int lib_loop()
 								}
 							}
 							else
-								respond(cur_conf, "PRIVMSG %s :Too many arguments: ", target, result.args+5);
+								respond(m_irccfg, "PRIVMSG %s :Too many arguments: ", target, result.args+5);
 						}
-						else if (strncasecmp(result.args, "dir", 3) == 0)
+						else if (is_value(result.args, "dir"))
 						{
 							if (result.args[3] == '\0' || (result.args[3] == ' ' && result.args[4] == '\0'))
 							{
 								char ** dir_list = list_module_dir();
 								if (dir_list == NULL)
-									respond(cur_conf, "PRIVMSG %s :No modules in directory\n", target);
+									respond(m_irccfg, "PRIVMSG %s :No modules in directory\n", target);
 								else
 								{
-									respond(cur_conf, "PRIVMSG %s :The following modules exist:\n", target);
+									respond(m_irccfg, "PRIVMSG %s :The following modules exist:\n", target);
 									int i = -1;
 									while (dir_list[++i] != NULL)
 									{
-										respond(cur_conf, "PRIVMSG %s :%s\n", target, dir_list[i]);
+										respond(m_irccfg, "PRIVMSG %s :%s\n", target, dir_list[i]);
 											free(dir_list[i]);
 										dir_list[i] = NULL;
 									}
@@ -428,43 +420,43 @@ int lib_loop()
 								}
 							}
 							else
-								respond(cur_conf, "PRIVMSG %s :Too many arguments: %s\n", target, result.args+4);
+								respond(m_irccfg, "PRIVMSG %s :Too many arguments: %s\n", target, result.args+4);
 						}
 						else
-							respond(cur_conf, "PRIVMSG %s :Unrecognized command \"%s\"\n", target, result.args);
+							respond(m_irccfg, "PRIVMSG %s :Unrecognized command \"%s\"\n", target, result.args);
 					}
 				}
-				else if (strcasecmp("login", result.command) == 0)
+				else if (is_value(result.command, "login"))
 				{
 					if (result.args == NULL)
-						respond(cur_conf, "PRIVMSG %s :You need to type an additional argument\n", target);
+						respond(m_irccfg, "PRIVMSG %s :You need to type an additional argument\n", target);
 					else
 					{
-						if (strcmp(result.args, cur_conf->admin) == 0)
+						if (strcmp(result.args, m_irccfg->auth) == 0)
 							if(add_admin(data.sender))
-								respond(cur_conf, "PRIVMSG %s :User \"%s\" authenticated\n", target, data.sender);
+								respond(m_irccfg, "PRIVMSG %s :User \"%s\" authenticated\n", target, data.sender);
 							else
-								respond(cur_conf, "PRIVMSG %s :Unable to add user \"%s\"\n", target, data.sender);
+								respond(m_irccfg, "PRIVMSG %s :Unable to add user \"%s\"\n", target, data.sender);
 						else
-							respond(cur_conf, "PRIVMSG %s :Wrong password\n", target);
+							respond(m_irccfg, "PRIVMSG %s :Invalid password\n", target);
 					}
 				}
-				else if (strcasecmp("raw", result.command) == 0)
+				else if (is_value(result.command, "raw"))
 				{
 					if (!is_admin(data.sender))
-						respond(cur_conf, "PRIVMSG %s :You are not authorized to do that\n", target);
+						respond(m_irccfg, "PRIVMSG %s :You are not authorized to do that\n", target);
 					else if (result.args == NULL)
-						respond(cur_conf, "PRIVMSG %s :You need to type additional arguments\n", target);
+						respond(m_irccfg, "PRIVMSG %s :Syntax: %sraw [IRC commands]\n", target, SENTINEL);
 					else
-						respond(cur_conf, "%s\n", result.args);
+						respond(m_irccfg, "%s\n", result.args);
 				}
-				else if (strcasecmp("commands", result.command) == 0)
+				else if (is_value(result.command, "commands"))
 				{
 					if (result.args != NULL)
-						respond(cur_conf, "PRIVMSG %s :Too many arguments: %s\n", target, result.args);
+						respond(m_irccfg, "PRIVMSG %s :Too many arguments: %s\n", target, result.args);
 					else
 					{
-						respond(cur_conf, "PRIVMSG %s :The following commands are available:\n", target);
+						respond(m_irccfg, "PRIVMSG %s :The following commands are available:\n", target);
 						char ** cmd_list = command_list();
 						int i = 0;
 						while (cmd_list[i] != NULL)
@@ -485,22 +477,22 @@ int lib_loop()
 								
 								free(cmd_list[i]);
 							}
-							respond(cur_conf, "PRIVMSG %s :%s\n", target, aline);
+							respond(m_irccfg, "PRIVMSG %s :%s\n", target, aline);
 							free(aline);
 						}
 						free(cmd_list);
 					}
 				}
-				else if (strcasecmp("uptime", result.command) == 0)
+				else if (is_value(result.command, "uptime"))
 				{
 					time_t temp;
 					time(&temp);
 					char timebuff[80];
 					memset(timebuff, 0, 80);
-					xstrtime(timebuff, 80, temp-timestart);
-					respond(cur_conf, "PRIVMSG %s :%s since startup\n", target, timebuff);
+					_timetostr(timebuff, 80, temp-timestart);
+					respond(m_irccfg, "PRIVMSG %s :%s since startup\n", target, timebuff);
 				}
-				else if (strcasecmp("status", result.command) == 0)
+				else if (is_value(result.command, "status"))
 				{
 					if (result.args != NULL)
 					{
@@ -513,77 +505,54 @@ int lib_loop()
 							if (id == globals.config[i].id)
 								break;
 						if (i == globals.size)
-							respond(cur_conf, "PRIVMSG %s :Invalid id %d\n", target, id);
+							respond(m_irccfg, "PRIVMSG %s :Invalid id %d\n", target, id);
 						else
-						{
-							respond(cur_conf, "PRIVMSG %s :ID %d is pid %d connected to %s (%s:%d)\n", target, id, globals.config[i].pid, globals.config[i].servname, globals.config[i].hostname, globals.config[i].port);
-						}
+							respond(m_irccfg, "PRIVMSG %s :ID %d is pid %d connected to %s (%s:%d)\n", target, id, globals.config[i].pid, globals.config[i].serv, globals.config[i].host, globals.config[i].port);
 					}
 					else
 					{
-						respond(cur_conf, "PRIVMSG %s :I am connected to %d networks:\n", target, globals.size);
-						int i = 0;
-						while (i < globals.size)
-						{
-                                        		char * aline = dup_string(globals.config[i++].servname);
-                                        		int length = strlen(aline);
-                                        		for (; i % 5 != 0 && i < globals.size; i++)
-                                        		{
-								char * servname = globals.config[i].servname;
-                                                		char * bline = realloc(aline, length + 3 + strlen(servname));
-                                                		if (bline == NULL) break;
-                                                		aline = bline;
-                                                		strncpy(aline+length, ", ", 2);
-                                                		strncpy(aline+length+2, servname, strlen(servname));
-                                                		aline[length+2+strlen(servname)] = '\0';
-                                                		length = strlen(aline);
-                                        		}
-                                        		respond(cur_conf, "PRIVMSG %s :%s\n", target, aline);
-                                        		free(aline);
-						}
-						respond(cur_conf, "PRIVMSG %s :For detailed status, type %sstatus <id>\n", target, SENTINEL);
+						respond(m_irccfg, "PRIVMSG %s :I am connected to %d networks:\n", target, globals.size);
+						respond(m_irccfg, "PRIVMSG %s :For detailed status, type %sstatus <id>\n", target, SENTINEL);
 					}
 				}
 			}
-			free(result.command);
-			free(result.args);
 		}
-		else if (strcasecmp(data.command, "QUIT") == 0 || strcasecmp(data.command, "PART") == 0)
+		else if (is_value(data.command, "QUIT") || is_value(data.command, "PART"))
 		{
 			char * end = index(data.sender, '!');
 			if (end != NULL)
 			{
 				int length = end - data.sender;
-				char * nick = malloc(length + 1);
-				memset(nick, 0, length + 1);
+				if (length > CFG_FLD) length = CFG_FLD;
+				char nick[CFG_FLD+1];
+				memset(nick, 0, CFG_FLD+1);
 				strncpy(nick, data.sender, length);
 				remove_admin(nick);
-				free(nick);
 			}
 		}
-		free(ptarget);
 		module_t * m_iterator = modlist;
 		void (*parse)(const info_t *, const msg_t *);
 		while (m_iterator != NULL)
 		{
 			parse = m_iterator->parse;
-			(*parse)(cur_conf, &data);
+			(*parse)(m_irccfg, &data);
 			m_iterator = (module_t *)(m_iterator->next);
 			parse = NULL;
 			usleep(UDELAY); //allows data to go through
 		}
-
-		free_msg(&data);
+		m_irccfg = NULL;
 	}
 	free(lasterror);
 	lasterror = NULL;
-	int sizetmp = size;
-	while (sizetmp--)
+	llist_t * iterator = globals.irc_list;
+	while (iterator != NULL)
 	{
-		close(config[sizetmp].rfd);
-		close(config[sizetmp].wfd);
+		m_irccfg = (irccfg_t *)(iterator->item);
+		close(m_irccfg->rfd);
+		close(m_irccfg->wfd);
 	}
-	free_ninfo(config, size);
+	clear_list(globals.irc_list);
+	globals.irc_list = NULL;
 	unload_module(NULL);
 	remove_admin(NULL);
 	exit(EXIT_SUCCESS);
@@ -838,11 +807,11 @@ char ** list_modules(int type)
 	return dir_list;
 }
 
-void respond_direct(info_t * info, char * format, ... )
+void respond_direct(irccfg_t * m_irccfg, char * format, ... )
 {
     va_list listPointer;
     va_start( listPointer, format );
-	int tempfd = dup(info->sockfd);
+	int tempfd = dup(m_irccfg->sfd);
 	FILE * tempstream = fdopen(tempfd, "w+");
 	vfprintf(tempstream, format, listPointer);
 	fflush(tempstream);
