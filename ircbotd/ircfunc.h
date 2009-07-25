@@ -2,7 +2,6 @@
 #define IRCFUNC_H_
 
 #include "datatype.h"
-#include <stdarg.h>
 
 bot_t bot_command(char * message);
 void respond(irccfg_t * m_irccfg, char * format, ... );

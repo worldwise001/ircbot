@@ -1,24 +1,8 @@
 #ifndef DATATYPE_H_
 #define DATATYPE_H_
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <signal.h>
-#include <dlfcn.h>
-#include <dirent.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <time.h>
-#include <sys/types.h>
-
 #include "const.h"
+#include "include.h"
 #include "llist.h"
 
 typedef struct {
@@ -43,8 +27,6 @@ typedef struct {
 	char command[MSG_FLD+1];
 	char args[MSG_FLD+1];
 } bot_t;
-
-#include "ircfunc.h"
 
 typedef struct {
 	char * conf_file;
@@ -87,7 +69,5 @@ typedef struct {
 	char commands[CFG_FLD+1];
 	char name[CFG_FLD+1];
 } module_t;
-
-
 
 #endif /* DATATYPE_H_ */
