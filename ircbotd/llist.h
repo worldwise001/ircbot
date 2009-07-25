@@ -1,6 +1,8 @@
 #ifndef LLIST_H_
 #define LLIST_H_
 
+#include <stdlib.h>
+
 typedef struct {
 	void * item;
 	void * next;
@@ -14,7 +16,7 @@ void clear_list(llist_t * first);
 
 llist_t * get_item(llist_t * first, int location);
 
-size_t list_size(llist_t * first);
+int list_size(llist_t * first);
 
 #endif //LLIST_H_
 

@@ -58,11 +58,6 @@ typedef struct {
 } irccfg_t;
 
 typedef struct {
-	char command[MSG_FLD+1];
-	char args[MSG_FLD+1];
-} bot_t;
-
-typedef struct {
 	llist_t * irc_list;
 	irccfg_t m_irccfg;
 	char ** admin; //TODO: Change this

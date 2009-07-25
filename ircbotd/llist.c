@@ -28,7 +28,7 @@ llist_t * append_item(llist_t * first, void * item)
 	return result;
 }
 
-size_t list_size(llist * first)
+int list_size(llist * first)
 {
 	if (first == NULL) return 0;
 	int i = 1;

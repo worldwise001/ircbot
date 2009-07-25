@@ -13,7 +13,6 @@ void sighandle_parent(int sig)
 	globals._run = 0;
 	if (list_size(globals.irc_list) > 0)
 	{
-		int i;
 		int asig = SIGUSR1;
 		if (sig == SIGSEGV)
 			asig = SIGSEGV;
@@ -57,7 +56,7 @@ void sighandle_child(int sig)
 		if (globals.m_irccfg.enabled)
 		{
 			usleep(UDELAY);
-			write_data(globals.m_irccfg.s, quitmsg);
+			write_data(globals.m_irccfg.sfd, quitmsg);
 		}
 		else
 			close(globals.m_irccfg.sfd);

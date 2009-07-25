@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 	globals._run = TRUE;
 	irc_printf(IRCOUT, "Circe %s\nLoading configuration\n", VERSION);
 
-	globals.irc_list = load_config(args.conf_file);
+	globals.irc_list = load_irccfg(args.conf_file);
 
 	if (list_size(globals.irc_list) == 0)
 	{
@@ -99,8 +99,10 @@ int main(int argc, char** argv)
 		int i = get_by_pid(globals.irc_list, pid);
 		if (i != -1)
 		{
-			close((irccfg_t *)(globals.irc_list->item)->rfd);
-			close((irccfg_t *)(globals.irc_list->item)->wfd);
+			llist_t * iterator = get_item(globals.irc_list, i);
+			irccfg_t * m_irccfg = (irccfg_t *)(iterator->item);
+			close(m_irccfg->rfd);
+			close(m_irccfg->wfd);
 			llist_t * result = delete_item(globals.irc_list, i);
 			if (result != NULL)
 				globals.irc_list = result;
