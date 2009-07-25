@@ -178,7 +178,7 @@ llist_t * load_irccfg(char * filename)
 		if (is_value(buff, "SOCKET"))
 		{
 			char sbool[6];
-			memset(sbool 0, 6);
+			memset(sbool, 0, 6);
 			strncpy(sbool, istr, (v_len > 5)?5:v_len);
 			if (strid)
 				i_irccfg->enabled = !strncmp("true", sbool, 4);
