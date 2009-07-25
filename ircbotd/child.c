@@ -110,7 +110,10 @@ int set_up_lib_thread(int * cpfds)
 		
 		llist_t * iterator = globals.irc_list;
 		while (iterator != NULL)
-			close((irccfg_t *)(globals.irc_list->item)->wfd);
+		{
+			irccfg_t * i_irccfg = (irccfg_t *)(globals.irc_list->item);
+			close(i_irccfg->wfd);
+		}
 		close(cpfds[R]);
 		clear_list(globals.irc_list);
 		close_log();

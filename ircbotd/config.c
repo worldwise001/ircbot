@@ -11,7 +11,7 @@ llist_t * load_irccfg(char * filename)
 {
 	if (filename == NULL) filename = "ircbotd.conf";
 
-	irccfg_t d_irccfg;
+	irccfg_t d_irccfg, * i_irccfg = NULL;
 	llist_t * first = NULL, * iterator = NULL;
 	memset(&d_irccfg, 0, sizeof(irccfg_t));
 	int irccfg_fd = open(filename, O_RDONLY);
@@ -22,7 +22,7 @@ llist_t * load_irccfg(char * filename)
 	}
 
 	char * buff, *istr, *iend, strid[6];
-	int line = 0, i;
+	int line = 0;
 
 	while ((buff = get_next_line(irccfg_fd)) != NULL && ++line)
 	{
@@ -63,16 +63,16 @@ llist_t * load_irccfg(char * filename)
 		}
 		else if (istr != NULL)
 		{
-			strid = strncpy(strid, istr, iend-istr);
+			strncpy(strid, istr, iend-istr);
 			strid[iend-istr] = '\0';
 		}
-
-		irccfg_t * i_irccfg = NULL;
+		
 		if (strid[0] != '\0')
 		{
 			while (iterator != NULL)
 			{
-				if ((irccfg_t *)(iterator->item)->id == atoi(strid))
+				irccfg_t * i_irccfg = (irccfg_t *)(iterator->item);
+				if (i_irccfg->id == atoi(strid))
 					break;
 				iterator = iterator->next;
 			}
@@ -86,7 +86,7 @@ llist_t * load_irccfg(char * filename)
 					continue;
 				}
 				memset(i_irccfg, 0, sizeof(irccfg_t));
-				llist_t * result = append(first, i_irccfg);
+				llist_t * result = append_item(first, i_irccfg);
 				if (result == NULL)
 				{
 					irc_printf(IRCERR, "Unable to add configuration block: %s\n", strerror(errno));
@@ -209,7 +209,7 @@ llist_t * load_irccfg(char * filename)
 			strncpy(i_irccfg->host, d_irccfg.host, CFG_FLD);
 		if (i_irccfg->port == 0)
 			i_irccfg->port = d_irccfg.port;
-		if (si_irccfg->enabled == 0)
+		if (i_irccfg->enabled == 0)
 			i_irccfg->enabled = d_irccfg.enabled;
 		iterator = iterator->next;
 	}
@@ -308,9 +308,9 @@ void open_log()
 		}
 		else if (getpid() != globals.lib_pid)
 		{
-			filename = malloc(11+strlen(LOGDIR)+strlen(globals.confPtr->hostname));
-			memset(filename, 0, 11+strlen(LOGDIR)+strlen(globals.confPtr->hostname));
-			sprintf(filename, "%s/%i-%s.log", LOGDIR, globals.confPtr->id, globals.confPtr->hostname);
+			filename = malloc(11+strlen(LOGDIR)+strlen(globals.m_irccfg.host));
+			memset(filename, 0, 11+strlen(LOGDIR)+strlen(globals.m_irccfg.host));
+			sprintf(filename, "%s/%i-%s.log", LOGDIR, globals.m_irccfg.id, globals.m_irccfg.host);
 		}
 		else
 		{
@@ -347,9 +347,9 @@ void open_raw()
 {
 	if (globals._raw)
 	{
-		char *filename = malloc(15+strlen(LOGDIR)+strlen(globals.confPtr->hostname));
-		memset(filename, 0, 15+strlen(LOGDIR)+strlen(globals.confPtr->hostname));
-		sprintf(filename, "%s/raw-%i-%s.log", LOGDIR, globals.confPtr->id, globals.confPtr->hostname);
+		char *filename = malloc(15+strlen(LOGDIR)+strlen(globals.m_irccfg.host));
+		memset(filename, 0, 15+strlen(LOGDIR)+strlen(globals.m_irccfg.host));
+		sprintf(filename, "%s/raw-%i-%s.log", LOGDIR, globals.m_irccfg.id, globals.m_irccfg.host);
 		globals._ircraw = fopen(filename, "a");
 		free(filename);
 		filename = NULL;
@@ -373,7 +373,8 @@ int get_by_pid(llist_t * first, pid_t pid)
 	int i = 0;
 	while (iterator != NULL)
 	{
-		if ((irccfg_t *)(iterator->item)->pid == pid) return i;
+		irccfg_t * i_irccfg = (irccfg_t *)(iterator->item);
+		if (i_irccfg->pid == pid) return i;
 		iterator = iterator->next;
 		i++;
 	}
