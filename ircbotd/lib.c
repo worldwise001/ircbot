@@ -606,36 +606,25 @@ int load_module(char * name)
 			return -1;
 		}
 		
-		char buff[BUFF_SIZE+1];
-		memset(buff, 0, BUFF_SIZE+1);
 		void (*commands)(char * string);
 		commands = dlsym(lib_handle, "commands");
 		if ((error = dlerror()) != NULL)
 		{
 			irc_printf(IRCERR, "Error binding \"commands\" in %s, skipping: %s\n", name, error);
 			dlerror();
-			module->commands = NULL;
 		}
 		else
-		{
-			(*commands)(buff);
-			module->commands = dup_nstring(buff, BUFF_SIZE);
-		}
+			(*commands)(module->commands);
 		
-		memset(buff, 0, BUFF_SIZE+1);
 		void (*name)(char * string);
 		name = dlsym(lib_handle, "name");
 		if ((error = dlerror()) != NULL)
 		{
 			irc_printf(IRCERR, "Error binding \"name\" in %s, skipping: %s\n", name, error);
 			dlerror();
-			module->name = NULL;
 		}
 		else
-		{
-			(*name)(buff);
-			module->name = dup_nstring(buff, BUFF_SIZE);
-		}
+			(*name)(module->name);
 
 		module->dlhandle = lib_handle;
 		if (modlist == NULL)

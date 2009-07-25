@@ -68,6 +68,7 @@ typedef struct {
 	void (*parse)(const irccfg_t * m_irccfg, const msg_t * data);
 	char commands[CFG_FLD+1];
 	char name[CFG_FLD+1];
+	void * next;
 } module_t;
 
 #endif /* DATATYPE_H_ */

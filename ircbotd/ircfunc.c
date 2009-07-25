@@ -13,7 +13,7 @@ void print_version(char * app_name)
 	printf("Written in C by worldwise001\n");
 }
 
-void irc_printf(int type, char * string, ... )
+void irc_printf(unsigned int type, char * string, ... )
 {
     va_list listPointer;
     va_start( listPointer, string );
@@ -39,7 +39,7 @@ void irc_printf(int type, char * string, ... )
     va_end( listPointer );
 }
 
-void respond(info_t * info, char * format, ... )
+void respond(irccfg_t * m_irccfg, char * format, ... )
 {
     va_list listPointer;
     va_start( listPointer, format );
@@ -54,7 +54,7 @@ void respond(info_t * info, char * format, ... )
 	ssize_t sent = 0;
 	while (sent < strlen(buff))
 	{
-		ssize_t tmp = write(info->wfd, &buff[sent], strlen(buff) - sent);
+		ssize_t tmp = write(m_irccfg->wfd, &buff[sent], strlen(buff) - sent);
 		if (tmp == -1) return;
 		sent += tmp;
 	}
