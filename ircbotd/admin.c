@@ -48,7 +48,7 @@ unsigned int is_admin(char * sender)
 	if (index(sender, '!') == NULL) return FALSE;
 	llist_t * iterator = globals.auth_list;
 	char nick[SND_FLD+1];
-	memset(nick, 0, SND_FLD+1];
+	memset(nick, 0, SND_FLD+1);
 	strncpy(nick, sender, index(sender, '!') - sender);
 	while (iterator != NULL)
 	{
