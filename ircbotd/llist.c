@@ -86,10 +86,12 @@ llist_t * delete_item(llist_t * first, int location)
 	{
 		iterator = first->next;
 		free(first->item);
+		free(first);
 		return iterator;
 	}
 	llist_t * prev = get_item(first, location-1);
 	prev->next = iterator->next;
+	free(iterator->item);
 	free(iterator);
 	return first;
 }

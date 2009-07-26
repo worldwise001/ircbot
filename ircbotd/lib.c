@@ -461,7 +461,10 @@ int lib_loop()
 				char nick[CFG_FLD+1];
 				memset(nick, 0, CFG_FLD+1);
 				strncpy(nick, data.sender, length);
-				remove_admin(nick);
+				if (remove_admin(nick))
+					printf("%s has part/quit\n", nick);
+				else
+					printf("There we a problem removing %s\n", nick);
 			}
 		}
 		module_t * m_iterator = modlist;
