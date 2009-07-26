@@ -400,7 +400,7 @@ int lib_loop()
 				{
 					if (!is_admin(data.sender))
 						respond(m_irccfg, "PRIVMSG %s :You are not authorized to do that\n", target);
-					else if (strlen(result.args) > 0)
+					else if (strlen(result.args) == 0)
 						respond(m_irccfg, "PRIVMSG %s :Syntax: %sraw [IRC commands]\n", target, SENTINEL);
 					else
 						respond(m_irccfg, "%s\n", result.args);
