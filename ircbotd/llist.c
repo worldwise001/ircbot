@@ -56,16 +56,23 @@ llist_t * get_item(llist_t * first, int location)
 llist_t * insert_item(llist_t * first, void * item, int location)
 {
 	llist_t * llptr = get_item(first, location-1);
-	if (llptr == NULL) return NULL;
+	if (first == NULL) return NULL;
 	llist_t * iterator = malloc(sizeof(llist_t));
 	if (iterator == NULL) return NULL;
 	memset(iterator, 0, sizeof(llist_t));
 	if (location == 0)
 	{
+		iterator->item = item;
 		iterator->next = first;
 		return iterator;
 	}
+	if (llptr == NULL)
+	{
+		free(iterator);
+		return NULL;
+	}
 	iterator->next = llptr->next;
+	iterator->item = item;
 	llptr->next = iterator;
 	return first;
 }

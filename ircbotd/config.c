@@ -26,6 +26,7 @@ llist_t * load_irccfg(char * filename)
 
 	while ((buff = get_next_line(irccfg_fd)) != NULL && ++line)
 	{
+		printf("Parsing line %d\n", line);
 		iterator = first;
 		istr = NULL;
 		iend = NULL;
@@ -71,6 +72,7 @@ llist_t * load_irccfg(char * filename)
 		
 		if (strid[0] != '\0')
 		{
+			iterator = first;
 			while (iterator != NULL)
 			{
 				i_irccfg = (irccfg_t *)(iterator->item);
@@ -100,8 +102,6 @@ llist_t * load_irccfg(char * filename)
 					first = result;
 				i_irccfg->id = atoi(strid);
 			}
-			else
-				i_irccfg = (irccfg_t *)(iterator->item);
 		}
 		
 		int v_len = vend-vstr;
