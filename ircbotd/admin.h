@@ -3,8 +3,8 @@
 
 #include "lib.h"
 
-int add_admin(char * sender);
-int remove_admin(char * nick);
-int is_admin(char * sender);
+unsigned int add_admin(char * sender);
+unsigned int remove_admin(char * nick);
+unsigned int is_admin(char * sender);
 
 #endif /* ADMIN_H_ */

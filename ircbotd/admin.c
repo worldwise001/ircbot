@@ -2,7 +2,7 @@
 
 extern globals_t globals;
 
-int add_admin(char * sender)
+unsigned int add_admin(char * sender)
 {
 	if (sender == NULL) return FALSE;
 	llist_t * iterator = globals.auth_list;
@@ -23,7 +23,7 @@ int add_admin(char * sender)
 	return TRUE;
 }
 
-int remove_admin(char * nick)
+unsigned int remove_admin(char * nick)
 {
 	if (globals.auth_list == NULL) return FALSE;
 	if (nick == NULL) return FALSE;
@@ -43,13 +43,18 @@ int remove_admin(char * nick)
 	return TRUE;
 }
 
-int is_admin(char * sender)
+unsigned int is_admin(char * sender)
 {
+	if (index(sender, '!') == NULL) return FALSE;
 	llist_t * iterator = globals.auth_list;
+	char nick[SND_FLD+1];
+	memset(nick, 0, SND_FLD+1];
+	strncpy(nick, sender, index(sender, '!') - sender);
 	while (iterator != NULL)
 	{
 		char * tmp_sender = (char *)(iterator->item);
-		
+		if (is_value(tmp_sender, nick) && tmp_sender[strlen(nick)] == '!') return TRUE;
+		iterator = iterator->next;
 	}
 	return FALSE;
 }
