@@ -80,26 +80,13 @@ void parse_input(char * line, msg_t * data)
 	}
 }
 
-void free_msg(msg_t * data)
-{
-	free(data->sender);
-	free(data->command);
-	free(data->target);
-	free(data->message);
-}
-
 void print_msg(msg_t * data)
 {
-	char * sender = (data->sender)?data->sender:"no sender";
-	char * target = (data->target)?data->target:"no target";
-	char * command = (data->command)?data->command:"no command";
-	char * message = (data->message)?data->message:"no message";
-	
 	time_t rawtime;
 	time(&rawtime);
 	char * atime = ctime(&rawtime)+11;
 	atime[8] = '\0';
-	irc_printf(IRCOUT, "%s: <%d> <%s> <%s> <%s> <%s>\n", atime, getpid(), sender, command, target, message);
+	irc_printf(IRCOUT, "%s: <%d> <%s> <%s> <%s> <%s>\n", atime, getpid(), data->sender, data->command, data->target, data->message);
 }
 
 void send_msg(irccfg_t * m_irccfg, msg_t * data)
@@ -177,7 +164,6 @@ void process_input(irccfg_t * m_irccfg, char * line)
 	}
 
 	print_msg(&data);
-
 	send_msg(m_irccfg, &data);
 }
 
@@ -200,12 +186,13 @@ int lib_loop()
 	{
 		pid = 0;
 		memset(&data, 0, sizeof(msg_t));
+		memset(buffer, 0, sizeof(buffer));
 		buffer[0] = get_next_line(rfd);
 		buffer[1] = get_next_line(rfd);
 		buffer[2] = get_next_line(rfd);
 		buffer[3] = get_next_line(rfd);
 		buffer[4] = get_next_line(rfd);
-		
+
 		if (buffer[0] == NULL || buffer[1] == NULL || buffer[2] == NULL || buffer[3] == NULL || buffer[4] == NULL)
 		{
 			free(buffer[0]);
@@ -220,16 +207,21 @@ int lib_loop()
 		free(buffer[0]);
 		strncpy(data.sender, buffer[1], SND_FLD);
 		free(buffer[1]);
-		strncpy(data.target, buffer[2], TGT_FLD);
+		strncpy(data.command, buffer[2], CMD_FLD);
 		free(buffer[2]);
-		strncpy(data.command, buffer[3], CMD_FLD);
+		strncpy(data.target, buffer[3], TGT_FLD);
 		free(buffer[3]);
 		strncpy(data.message, buffer[4], MSG_FLD);
 		free(buffer[4]);
+		print_msg(&data);
 		i = get_by_pid(globals.irc_list, pid);
 		if (i == -1)
+		{
+			//printf("invalid pid\n");
 			continue;
-		m_irccfg = (irccfg_t *)(get_item(globals.irc_list, i)->item);
+		}
+		llist_t * tmp = get_item(globals.irc_list, i);
+		m_irccfg = (irccfg_t *)(tmp->item);
 
 		char ptarget[TGT_FLD+1];
 		if (index(data.sender, '!') != NULL)
@@ -239,18 +231,18 @@ int lib_loop()
 			strncpy(ptarget, data.sender, length);
 		}
 		char * target = NULL;
-		if (data.target != NULL && data.target[0] == '#')
+		if (strlen(data.target) > 0 && data.target[0] == '#')
 			target = data.target;
 		else
 			target = ptarget;
-		if (strcmp(data.command, "001") == 0)
+		if (is_value(data.command, "001"))
 		{
+			printf("***********Found server name\n");
 			char * servname = data.message + 15;
 			int length = strlen(servname);
 			if (index(servname, ' ') != NULL)
 				length = index(servname, ' ') - servname;
 			if (length > CFG_FLD) length = CFG_FLD;
-			
 			strncpy(m_irccfg->serv, servname, length);
 			m_irccfg->serv[length] = '\0';
 		}
@@ -306,7 +298,7 @@ int lib_loop()
 				}
 			}
 			bot_t result = bot_command(data.message);
-			if (result.command != NULL)
+			if (strlen(result.command) > 0)
 			{
 				if (is_value(result.command, "module"))
 				{

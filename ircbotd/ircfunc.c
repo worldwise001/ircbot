@@ -48,6 +48,7 @@ void respond(irccfg_t * m_irccfg, char * format, ... )
 	char buff[BUFF_SIZE+1];
 	memset(buff, 0, BUFF_SIZE+1);
 	int written = vsnprintf(buff, BUFF_SIZE+1, format, listPointer);
+	printf("%s\n", buff);
 	if (written < BUFF_SIZE && buff[written-1] != '\n') buff[written] = '\n';
 	else if (written == BUFF_SIZE) buff[written-1] = '\n';
 	
