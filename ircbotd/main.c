@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 		}
 		if (pid > 0)
 		{
-			printf("Circe %s started\n", VERSION);
+			printf("%s %s started in background\n", NAME, VERSION);
 			return EXIT_SUCCESS;
 		}
 		umask(0);
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 	if (args.raw)
 		globals._raw = TRUE;
 	globals._run = TRUE;
-	irc_printf(IRCOUT, "Circe %s\nLoading configuration\n", VERSION);
+	irc_printf(IRCOUT, "%s %s\nLoading configuration\n", NAME, VERSION);
 
 	globals.irc_list = load_irccfg(args.conf_file);
 

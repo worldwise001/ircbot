@@ -48,7 +48,7 @@ typedef struct {
 typedef struct {
 	llist_t * irc_list;
 	irccfg_t m_irccfg;
-	char ** admin; //TODO: Change this
+	llist_t * auth_list;
 	pid_t parent_pid;
 	pid_t lib_pid;
 	int logfd;
@@ -70,5 +70,9 @@ typedef struct {
 	char name[CFG_FLD+1];
 	void * next;
 } module_t;
+
+typedef struct {
+	char nick[CFG_FLD+1];
+} nick_t;
 
 #endif /* DATATYPE_H_ */

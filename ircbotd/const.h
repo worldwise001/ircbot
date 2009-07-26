@@ -21,7 +21,9 @@
 #define UDELAY 200
 #endif
 
-//version of CirceBot
+#define NAME "SuperLuminal"
+
+//version of IRCBot
 #ifndef VERSION
 #define VERSION "svn-unstable"
 #endif

@@ -6,6 +6,5 @@
 int add_admin(char * sender);
 int remove_admin(char * nick);
 int is_admin(char * sender);
-int size_admin();
 
 #endif /* ADMIN_H_ */

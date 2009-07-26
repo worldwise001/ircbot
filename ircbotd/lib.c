@@ -146,7 +146,7 @@ void process_input(irccfg_t * m_irccfg, char * line)
 	else if (is_value(data.command, "PRIVMSG"))
 	{
 		if (is_value(data.message, "\001VERSION\001"))
-			respond_direct(m_irccfg, "NOTICE %s :\001VERSION Circe %s written in C\001\n", ptarget, VERSION);
+			respond_direct(m_irccfg, "NOTICE %s :\001VERSION %s %s written in C\001\n", ptarget, NAME, VERSION);
 		else if (is_value(data.message, "\001PING"))
 			respond_direct(m_irccfg, "NOTICE %s :%s\n", ptarget, data.message);
 		else if (is_value(data.message, SENTINEL))
@@ -154,7 +154,7 @@ void process_input(irccfg_t * m_irccfg, char * line)
 			char * msg = data.message + strlen(SENTINEL);
 			if (is_value(msg, "help"))
 			{
-				respond_direct(m_irccfg, "PRIVMSG %s :Circe %s at your service!\n", target, VERSION);
+				respond_direct(m_irccfg, "PRIVMSG %s :%s %s at your service!\n", target, NAME, VERSION);
 				respond_direct(m_irccfg, "PRIVMSG %s :Type %scommands for a list of available commands\n", target, SENTINEL);
 			}
 			else if (is_value(msg, "beep"))
@@ -291,6 +291,8 @@ int lib_loop()
 					else
 						respond(m_irccfg, "PRIVMSG %s :I don't know what you want; type %scommands for a list of commands", target, SENTINEL);
 				}
+				else
+					respond(m_irccfg, "PRIVMSG %s :I don't know what you want; type %scommands for a list of commands", target, SENTINEL);
 			}
 			bot_t result = bot_command(data.message);
 			if (strlen(result.command) > 0)
