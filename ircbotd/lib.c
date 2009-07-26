@@ -213,13 +213,9 @@ int lib_loop()
 		free(buffer[3]);
 		strncpy(data.message, buffer[4], MSG_FLD);
 		free(buffer[4]);
-		print_msg(&data);
 		i = get_by_pid(globals.irc_list, pid);
 		if (i == -1)
-		{
-			//printf("invalid pid\n");
 			continue;
-		}
 		llist_t * tmp = get_item(globals.irc_list, i);
 		m_irccfg = (irccfg_t *)(tmp->item);
 
@@ -237,7 +233,6 @@ int lib_loop()
 			target = ptarget;
 		if (is_value(data.command, "001"))
 		{
-			printf("***********Found server name\n");
 			char * servname = data.message + 15;
 			int length = strlen(servname);
 			if (index(servname, ' ') != NULL)
@@ -294,7 +289,7 @@ int lib_loop()
 						respond(m_irccfg, "PRIVMSG %s :%s since startup\n", target, timebuff);
 					}
 					else
-						respond(m_irccfg, "PRIVMSG %s :What do you need?", target);
+						respond(m_irccfg, "PRIVMSG %s :I don't know what you want; type %scommands for a list of commands", target, SENTINEL);
 				}
 			}
 			bot_t result = bot_command(data.message);
@@ -389,7 +384,7 @@ int lib_loop()
 				else if (is_value(result.command, "login"))
 				{
 					if (result.args == NULL)
-						respond(m_irccfg, "PRIVMSG %s :You need to type an additional argument\n", target);
+						respond(m_irccfg, "PRIVMSG %s :Syntax %slogin <password>\n", target, SENTINEL);
 					else
 					{
 						if (strcmp(result.args, m_irccfg->auth) == 0)
@@ -405,14 +400,14 @@ int lib_loop()
 				{
 					if (!is_admin(data.sender))
 						respond(m_irccfg, "PRIVMSG %s :You are not authorized to do that\n", target);
-					else if (result.args == NULL)
+					else if (strlen(result.args) > 0)
 						respond(m_irccfg, "PRIVMSG %s :Syntax: %sraw [IRC commands]\n", target, SENTINEL);
 					else
 						respond(m_irccfg, "%s\n", result.args);
 				}
 				else if (is_value(result.command, "commands"))
 				{
-					if (result.args != NULL)
+					if (strlen(result.args) > 0)
 						respond(m_irccfg, "PRIVMSG %s :Too many arguments: %s\n", target, result.args);
 					else
 					{
@@ -451,32 +446,6 @@ int lib_loop()
 					memset(timebuff, 0, CFG_FLD+1);
 					_timetostr(timebuff, temp-timestart);
 					respond(m_irccfg, "PRIVMSG %s :%s since startup\n", target, timebuff);
-				}
-				else if (is_value(result.command, "status"))
-				{
-					respond(m_irccfg, "PRIVMSG %s :%sstatus is disabled\n", target, SENTINEL);
-					/*
-					if (result.args != NULL)
-					{
-						char * acopy = dup_string(result.args);
-						if (strlen(acopy) > 9) acopy[9] = '\0';
-						int id = atoi(acopy);
-						free(acopy);
-						int i;
-						for (i = 0; i < globals.size; i++)
-							if (id == globals.config[i].id)
-								break;
-						if (i == globals.size)
-							respond(m_irccfg, "PRIVMSG %s :Invalid id %d\n", target, id);
-						else
-							respond(m_irccfg, "PRIVMSG %s :ID %d is pid %d connected to %s (%s:%d)\n", target, id, globals.config[i].pid, globals.config[i].serv, globals.config[i].host, globals.config[i].port);
-					}
-					else
-					{
-						respond(m_irccfg, "PRIVMSG %s :I am connected to %d networks:\n", target, globals.size);
-						respond(m_irccfg, "PRIVMSG %s :For detailed status, type %sstatus <id>\n", target, SENTINEL);
-					}
-					*/
 				}
 			}
 		}
