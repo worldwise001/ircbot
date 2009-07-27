@@ -9,6 +9,7 @@ unsigned int add_admin(char * sender)
 	while (iterator != NULL)
 	{
 		char * tmp_sender = (char *)(iterator->item);
+		printf("%s\n", tmp_sender);
 		if (is_value(sender, tmp_sender)) return FALSE;
 		iterator = iterator->next;
 	}
@@ -28,7 +29,7 @@ unsigned int remove_admin(char * nick)
 	if (globals.auth_list == NULL) return FALSE;
 	if (nick == NULL) return FALSE;
 	llist_t * iterator = globals.auth_list;
-	int i = 0;
+	int i = -1;
 	while (iterator != NULL)
 	{
 		i++;
@@ -37,8 +38,9 @@ unsigned int remove_admin(char * nick)
 		iterator = iterator->next;
 	}
 	if (iterator == NULL) return FALSE;
+	int size = list_size(globals.auth_list);
 	llist_t * result = delete_item(globals.auth_list, i);
-	if (result == NULL) return FALSE;
+	if (result == NULL && size > 1) return FALSE;
 	globals.auth_list = result;
 	return TRUE;
 }

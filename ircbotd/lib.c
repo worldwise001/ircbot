@@ -464,7 +464,7 @@ int lib_loop()
 				if (remove_admin(nick))
 					printf("%s has part/quit\n", nick);
 				else
-					printf("There we a problem removing %s\n", nick);
+					printf("There was a problem removing %s\n", nick);
 			}
 		}
 		module_t * m_iterator = modlist;
@@ -492,7 +492,8 @@ int lib_loop()
 	clear_list(globals.irc_list);
 	globals.irc_list = NULL;
 	unload_module(NULL);
-	remove_admin(NULL);
+	clear_list(globals.auth_list);
+	globals.auth_list = NULL;
 	exit(EXIT_SUCCESS);
 }
 
