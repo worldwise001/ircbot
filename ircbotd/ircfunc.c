@@ -156,3 +156,33 @@ char * dup_nstring(char * string, int length)
 	return str;
 }
 
+field_t get_target(msg_t * data)
+{
+	field_t field;
+	memset(&field, 0, sizeof(field_t));
+	if (strlen(data->target) > 0 && data->target[0] == '#')
+	{
+		int length = strlen(data->target);
+		if (length > CFG_FLD) length = CFG_FLD;
+		strncpy(field.field, data->target, length);
+	}
+	else if (index(data->sender, '!') != NULL)
+		field = get_nick(data->sender);
+	return field;
+}
+
+field_t get_nick(char * sender)
+{
+	char * ptr = index(sender, '!');
+	field_t nick;
+	memset(&nick, 0, sizeof(field_t));
+	if (ptr != NULL)
+	{
+		int length = ptr - sender;
+		if (length > CFG_FLD) length = CFG_FLD;
+		strncpy(nick.field, sender, length);
+	}
+	return nick;
+}
+
+
