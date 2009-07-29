@@ -72,7 +72,7 @@ typedef struct {
 } module_t;
 
 typedef struct {
-	char nick[CFG_FLD+1];
-} nick_t;
+	char field[CFG_FLD+1];
+} field_t;
 
 #endif /* DATATYPE_H_ */

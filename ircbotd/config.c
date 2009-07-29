@@ -26,7 +26,6 @@ llist_t * load_irccfg(char * filename)
 
 	while ((buff = get_next_line(irccfg_fd)) != NULL && ++line)
 	{
-		printf("Parsing line %d\n", line);
 		iterator = first;
 		istr = NULL;
 		iend = NULL;
@@ -230,7 +229,7 @@ void print_irccfg(llist_t * irclist)
 	while (iterator != NULL)
 	{
 		irccfg_t * m_irccfg = (irccfg_t *)(iterator->item);
-		printf("%d \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" %s:%d\n", m_irccfg->enabled, m_irccfg->nick, m_irccfg->user, m_irccfg->real, m_irccfg->pass, m_irccfg->chan, m_irccfg->auth, m_irccfg->host, m_irccfg->port);
+		irc_printf(IRCERR, "%d \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" %s:%d\n", m_irccfg->enabled, m_irccfg->nick, m_irccfg->user, m_irccfg->real, m_irccfg->pass, m_irccfg->chan, m_irccfg->auth, m_irccfg->host, m_irccfg->port);
 		iterator = iterator->next;
 	}	
 }

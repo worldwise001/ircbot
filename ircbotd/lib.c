@@ -142,7 +142,10 @@ void process_input(irccfg_t * m_irccfg, char * line)
 		m_irccfg->serv[length] = '\0';
 	}
 	else if (is_value(data.command, "NICK"))
+	{
+		
 		strncpy(m_irccfg->nick, data.target, CFG_FLD);
+	}
 	else if (is_value(data.command, "PRIVMSG"))
 	{
 		if (is_value(data.message, "\001VERSION\001"))
@@ -461,10 +464,7 @@ int lib_loop()
 				char nick[CFG_FLD+1];
 				memset(nick, 0, CFG_FLD+1);
 				strncpy(nick, data.sender, length);
-				if (remove_admin(nick))
-					printf("%s has part/quit\n", nick);
-				else
-					printf("There was a problem removing %s\n", nick);
+				remove_admin(nick);
 			}
 		}
 		module_t * m_iterator = modlist;
@@ -613,8 +613,6 @@ int unload_module(char * name)
 			modtmp->parse = NULL;
 			dlclose(modtmp->dlhandle);
 			free(modtmp->filename);
-			free(modtmp->name);
-			free(modtmp->commands);
 			free(modtmp);
 		}
 	}
@@ -629,8 +627,6 @@ int unload_module(char * name)
 				modtmp->parse = NULL;
 				dlclose(modtmp->dlhandle);
 				free(modtmp->filename);
-				free(modtmp->name);
-				free(modtmp->commands);
 				free(modtmp);
 				modtmp = NULL;
 				return 0;
@@ -645,8 +641,6 @@ int unload_module(char * name)
 					modtmp->parse = NULL;
 					dlclose(modtmp->dlhandle);
 					free(modtmp->filename);
-					free(modtmp->name);
-					free(modtmp->commands);
 					free(modtmp);
 					modtmp = NULL;
 					return 0;

@@ -40,7 +40,7 @@
 
 //sentinel for commands, "!" for !help, etc.
 #ifndef SENTINEL
-#define SENTINEL "!"
+#define SENTINEL "~"
 #endif
 
 //character field length for irc configuration

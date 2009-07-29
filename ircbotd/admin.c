@@ -9,7 +9,6 @@ unsigned int add_admin(char * sender)
 	while (iterator != NULL)
 	{
 		char * tmp_sender = (char *)(iterator->item);
-		printf("%s\n", tmp_sender);
 		if (is_value(sender, tmp_sender)) return FALSE;
 		iterator = iterator->next;
 	}

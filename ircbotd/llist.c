@@ -84,7 +84,6 @@ llist_t * delete_item(llist_t * first, int location)
 	if (iterator == NULL) return NULL;
 	if (location == 0)
 	{
-		printf("Entered here\n");
 		iterator = first->next;
 		free(first->item);
 		free(first);
