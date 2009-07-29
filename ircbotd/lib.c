@@ -143,8 +143,9 @@ void process_input(irccfg_t * m_irccfg, char * line)
 	}
 	else if (is_value(data.command, "NICK"))
 	{
-		
-		strncpy(m_irccfg->nick, data.target, CFG_FLD);
+		field_t nick = get_nick(data.sender);
+		if (strcasecmp(nick.field, m_irccfg->nick) == 0)
+			strncpy(m_irccfg->nick, data.target, CFG_FLD);
 	}
 	else if (is_value(data.command, "PRIVMSG"))
 	{
@@ -245,7 +246,11 @@ int lib_loop()
 			m_irccfg->serv[length] = '\0';
 		}
 		else if (is_value(data.command, "NICK"))
-			strncpy(m_irccfg->nick, data.target, TGT_FLD);
+		{
+			field_t nick = get_nick(data.sender);
+			if (strcasecmp(nick.field, m_irccfg->nick) == 0)
+				strncpy(m_irccfg->nick, data.target, TGT_FLD);
+		}
 		else if (is_value(data.command, "PRIVMSG"))
 		{
 			if (is_value(data.message, m_irccfg->nick))
