@@ -15,10 +15,6 @@ typedef struct {
 	pid_t pid;
 } seen_t;
 
-typedef struct {
-	char field[CFG_FLD+1];
-} field_t;
-
 void parse(irccfg_t * info, msg_t * data);
 void commands(char * string);
 void name(char * string);
@@ -28,8 +24,6 @@ void find_target_last(irccfg_t * info, char * nick, char * target);
 void find_target_seen(irccfg_t * info, char * nick, char * target);
 seen_t * been_seen(pid_t pid, char * sender);
 
-field_t get_target(msg_t * data);
-field_t get_fnick(char * sender);
 field_t get_kicked_nick(char * message);
 
 #endif
