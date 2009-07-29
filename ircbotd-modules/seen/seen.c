@@ -1,9 +1,8 @@
 #include "seen.h"
 
-seen_t * seen = NULL;
-int size = 0;
+llist_t * seen_list = NULL;
 
-void parse(info_t * info, msg_t * data)
+void parse(irccfg_t * info, msg_t * data)
 {
 	if (data->sender != NULL && index(data->sender, '!') != NULL)
 		add_event(info->pid, data);
@@ -12,47 +11,45 @@ void parse(info_t * info, msg_t * data)
 	{
 		if (strcasecmp(temp.command, "last") == 0)
 		{
-			char * target = get_target(data);
-			char * snick = get_nick(data->sender);
+			field_t target = get_target(data);
 			if (temp.args == NULL)
-				respond(info, "PRIVMSG %s :You need to supply an additional argument\n", target);
+				respond(info, "PRIVMSG %s :Syntax: %slast <nickname>\n", target.field, SENTINEL);
 			else
 			{
-				char * nick;
-				if (index(temp.args, ' ') == NULL)
-					nick = dup_string(temp.args);
-				else
-					nick = dup_nstring(temp.args, index(temp.args, ' ') - temp.args);
-				if (strcasecmp(nick, snick) == 0)
-					respond(info, "PRIVMSG %s :%s, look in a mirror\n", target, snick);
-				else
-					find_target_last(info, data, nick);
-				free(nick);
+				char nick[CFG_FLD+1];
+				memset(nick, 0, CFG_FLD+1);
+				int length = strlen(temp.args);
+				
+				if (index(temp.args, ' ') != NULL)
+					length = index(temp.args, ' ') - temp.args;
+				if (length > CFG_FLD) length = CFG_FLD;
+					strncpy(nick, temp.args, length);
+				
+				find_target_last(info, nick, target.field);
 			}
-			free(target);
-			free(snick);
 		}
 		if (strcasecmp(temp.command, "seen") == 0)
 		{
-			char * target = get_target(data);
-			char * snick = get_nick(data->sender);
+			field_t target = get_target(data);
+			field_t snick = get_nick(data->sender);
 			if (temp.args == NULL)
-				respond(info, "PRIVMSG %s :You need to supply an additional argument\n", target);
+				respond(info, "PRIVMSG %s :Syntax: %sseen <nickname>\n", target.field, SENTINEL);
 			else
 			{
-				char * nick;
-				if (index(temp.args, ' ') == NULL)
-					nick = dup_string(temp.args);
+				char nick[CFG_FLD+1];
+				memset(nick, 0, CFG_FLD+1);
+				int length = strlen(temp.args);
+
+				if (index(temp.args, ' ') != NULL)
+					length = index(temp.args, ' ') - temp.args;
+				if (length > CFG_FLD) length = CFG_FLD;
+					strncpy(nick, temp.args, length);
+
+				if (strcasecmp(nick, snick.field) == 0)
+					respond(info, "PRIVMSG %s :%s, look in a mirror\n", target.field, snick.field);
 				else
-					nick = dup_nstring(temp.args, index(temp.args, ' ') - temp.args);
-				if (strcasecmp(nick, snick) == 0)
-					respond(info, "PRIVMSG %s :%s, look in a mirror\n", target, snick);
-				else
-					find_target_seen(info, data, nick);
-				free(nick);
+					find_target_seen(info, nick, target.field);
 			}
-			free(target);
-			free(snick);
 		}
 	}
 }
@@ -67,138 +64,161 @@ void name(char * string)
 	strcpy(string, "Seen Module v1.0");
 }
 
-char * get_target(msg_t * data)
-{
-	if (data->target != NULL && data->target[0] == '#')
-		return dup_string(data->target);
-	else if (index(data->sender, '!') != NULL)
-	{
-		char * target = NULL;
-		int length = index(data->sender, '!') - data->sender;
-		target = malloc(length + 1);
-		target[length] = '\0';
-		strncpy(target, data->sender, length);
-		return target;
-	}
-	else return NULL;
-}
-
 void add_event(pid_t pid, msg_t * data)
 {
-	if (data->sender == NULL || index(data->sender, '!') == NULL) return;
+	if (strlen(data->sender) == 0 || index(data->sender, '!') == NULL) return;
 	
-	if (size == 0)
+	field_t field = get_nick(data->sender);
+	
+	seen_t * seen_data = been_seen(pid, field.field);
+	seen_t * kick_data = NULL;
+	if (is_value(data->command, "KICK"))
 	{
-		seen_t * seentemp = realloc(seen, sizeof(seen_t) * ++size);
-		if (seentemp == NULL) return;
-		seen = seentemp;
-		time(&seen[size-1].time);
-		seen[size-1].message = dup_msg_t(data);
-		seen[size-1].pid = pid;
+		field_t knick = get_kicked_nick(data->message);
+		kick_data = been_seen(pid, knick.field);
 	}
-	else
+	if (seen_data == NULL)
 	{
-		char * nick = get_nick(data->sender);
-		int i = been_seen(pid, nick);
-		free(nick);
-		if (i == -1)
-		{
-			seen_t * seentemp = realloc(seen, sizeof(seen_t) * ++size);
-			if (seentemp == NULL) return;
-			seen = seentemp;
-			time(&seen[size-1].time);
-			seen[size-1].message = dup_msg_t(data);
-			seen[size-1].pid = pid;
-		}
+		seen_data = malloc(sizeof(seen_t));
+		memset(seen_data, 0, sizeof(seen_t));
+		llist_t * result = append_item(seen_list, seen_data);
+		if (result == NULL)
+			free(seen_data);
 		else
 		{
-			free_msg_t(seen[i].message);
-			time(&seen[i].time);
-			seen[i].message = dup_msg_t(data);
+			time(&(seen_data->time));
+			memcpy(&(seen_data->msg), data, sizeof(msg_t));
+			seen_data->pid = pid;
+			seen_list = result;
 		}
+	}
+	else
+	{
+		time(&(seen_data->time));
+		memcpy(&(seen_data->msg), data, sizeof(msg_t));
+	}
+	if (kick_data == NULL && is_value(data->command, "KICK"))
+	{
+		kick_data = malloc(sizeof(seen_t));
+		memset(kick_data, 0, sizeof(seen_t));
+		llist_t * result = append_item(seen_list, kick_data);
+		if (result == NULL)
+			free(kick_data);
+		else
+		{
+			time(&(kick_data->time));
+			memcpy(&(kick_data->msg), data, sizeof(msg_t));
+			kick_data->pid = pid;
+			seen_list = result;
+		}
+	}
+	else if (kick_data != NULL)
+	{
+		time(&(kick_data->time));
+		memcpy(&(kick_data->msg), data, sizeof(msg_t));
 	}
 }
 
-void find_target_last(info_t * info, msg_t * data, char * nick)
+void find_target_last(irccfg_t * info, char * nick, char * target)
 {
-	int i = been_seen(info->pid, nick);
-	char * target = get_target(data);
-	char * strtime = ctime(&seen[i].time);
-	strtime[strlen(strtime)-1] = '\0';
-	if (i == -1)
+	seen_t * seen_data = been_seen(info->pid, nick);
+	if (seen_data == NULL)
 		respond(info, "PRIVMSG %s :Sorry, I have not seen %s\n", target, nick);
 	else
-		respond(info, "PRIVMSG %s :[%s] <%s> <%s> <%s> <%s>\n", target, strtime, seen[i].message.sender, seen[i].message.command, seen[i].message.target, seen[i].message.message);
-	free(target);
+	{
+		time_t timetmp;
+		time(&timetmp);
+		timetmp = timetmp - seen_data->time;
+		char buff[CFG_FLD+1];
+		memset(buff, 0 , CFG_FLD+1);
+		_timetostr(buff, timetmp);
+		msg_t * msg = &(seen_data->msg);
+		if (is_value(msg->command, "PART"))
+			respond(info, "PRIVMSG %s :%s left channel %s stating \"%s\" %s ago", target, nick, msg->target, msg->message, buff);
+		else if (is_value(msg->command, "PRIVMSG"))
+			respond(info, "PRIVMSG %s :%s last said \"%s\" to %s %s ago", target, nick, msg->message, msg->target, buff);
+		else if (is_value(msg->command, "QUIT"))
+			respond(info, "PRIVMSG %s :%s quit the server stating \"%s\" %s ago", target, nick, msg->message, buff);
+		else if (is_value(msg->command, "KICK"))
+		{
+			field_t field = get_nick(msg->sender);
+			field_t kicked = get_kicked_nick(msg->message);
+			char * reason = index(msg->message, ':');
+			if (reason == NULL) reason = "";
+			else reason++;
+
+			if (strcasecmp(field.field, nick) == 0)
+				respond(info, "PRIVMSG %s :%s kicked %s from %s stating \"%s\" %s ago", target, nick, kicked.field, msg->target, reason, buff);
+			else
+				respond(info, "PRIVMSG %s :%s was kicked by %s from %s (%s) %s ago", target, nick, field.field, msg->target, reason, buff);
+		}
+		else if (is_value(msg->command, "NOTICE"))
+			respond(info, "PRIVMSG %s :%s last noted \"%s\" to %s %s ago", target, nick, msg->message, msg->target, buff);
+		else if (is_value(msg->command, "JOIN"))
+			respond(info, "PRIVMSG %s :%s last joined %s %s ago", target, nick, msg->target, buff);
+		else if (is_value(msg->command, "MODE"))
+			respond(info, "PRIVMSG %s :%s set \"%s\" on %s %s ago", target, nick, msg->message, msg->target, buff);
+		else
+			respond(info, "PRIVMSG %s :%s last issued a %s on %s stating \"%s\" %s ago", target, nick, msg->command, msg->target, msg->message, buff);
+	}
 }
 
-void find_target_seen(info_t * info, msg_t * data, char * nick)
+void find_target_seen(irccfg_t * info, char * nick, char * target)
 {
-	int i = been_seen(info->pid, nick);
-	char * target = get_target(data);
-	if (i == -1)
-		respond(info, "PRIVMSG %s :Sorry, I have not seen %s\n", target, nick);
+	seen_t * seen_data = been_seen(info->pid, nick);
+	if (seen_data == NULL)
+		respond(info, "PRIVMSG %s :Sorry, I have not seen %s", target, nick);
 	else
 	{
 		time_t temp;
 		time(&temp);
-		temp = temp - seen[i].time;
-		if (strcasecmp(seen[i].message.command, "PART") == 0 || strcasecmp(seen[i].message.command, "QUIT") == 0)
-			respond(info, "PRIVMSG %s :%s left approximately %ld seconds ago\n", target, nick, temp);
+		temp = temp - seen_data->time;
+		char buffer[CFG_FLD+1];
+		memset(buffer, 0, CFG_FLD+1);
+		_timetostr(buffer, temp);
+		if (is_value(seen_data->msg.command, "PART") || is_value(seen_data->msg.command, "QUIT"))
+			respond(info, "PRIVMSG %s :%s left approximately %s ago", target, nick, buffer);
+		else if (is_value(seen_data->msg.command, "KICK"))
+			respond(info, "PRIVMSG %s :%s was kicked approximately %s ago", target, nick, buffer);
 		else
 			respond(info, "PRIVMSG %s :%s is right here!\n", target, nick);
 	}
-	free(target);
 }
 
-int been_seen(pid_t pid, char * nick)
+seen_t * been_seen(pid_t pid, char * nick)
 {
-	int i;
-	for (i = 0; i < size; i++)
-		if (seen[i].pid == pid)
-		{
-			char * a_end = index(seen[i].message.sender, '!');
-			if (a_end == NULL) continue;
-			char * anick = dup_nstring(seen[i].message.sender, a_end - seen[i].message.sender);
-			if (strcasecmp(anick, nick) == 0)
-			{
-				free(anick);
-				return i;
-			}
-			free(anick);
-		}
-	return -1;
-}
-
-msg_t dup_msg_t(msg_t * data)
-{
-	msg_t temp;
-	memset(&temp, 0, sizeof(msg_t));
-	temp.sender = dup_string(data->sender);
-	temp.command = dup_string(data->command);
-	temp.target = dup_string(data->target);
-	temp.message = dup_string(data->message);
-	return temp;
-}
-
-void free_msg_t(msg_t msg)
-{
-	free(msg.sender);
-	free(msg.command);
-	free(msg.target);
-	free(msg.message);
-	msg.sender = msg.command = msg.target = msg.message = NULL;
-}
-
-char * get_nick(char * sender)
-{
-	char * ptr = index(sender, '!');
-	if (ptr == NULL) return NULL;
-	else
+	llist_t * iterator = seen_list;
+	while (iterator != NULL)
 	{
-		char * nick = malloc(ptr - sender + 1);
-		strncpy(nick, sender, ptr - sender);
-		nick[ptr-sender] = '\0';
-		return nick;
+		seen_t * seen_data = (seen_t *)(iterator->item);
+		if (seen_data->pid == pid)
+		{
+			field_t anick = get_nick(seen_data->msg.sender);
+			if (strcasecmp(anick.field, nick) == 0)
+				return seen_data;
+			if (is_value(seen_data->msg.command, "KICK"))
+			{
+				field_t kicked = get_kicked_nick(seen_data->msg.message);
+				if (strcasecmp(kicked.field, nick) == 0)
+					return seen_data;
+			}
+		}
+		iterator = iterator->next;
 	}
+	return NULL;
 }
+
+field_t get_kicked_nick(char * message)
+{
+	char * ptr = index(message, ' ');
+	field_t kicked;
+	memset(&kicked, 0, sizeof(field_t));
+	if (ptr != NULL)
+	{
+		int length = ptr - message;
+		if (length > CFG_FLD) length = CFG_FLD;
+		strncpy(kicked.field, message, length);
+	}
+	return kicked;
+}
+
