@@ -24,8 +24,9 @@ void sighandle_parent(int sig)
 			iterator = iterator->next;
 		}
 		kill(globals.lib_pid, SIGUSR1);
+		clear_list(globals.irc_list);
+		globals.irc_list = NULL;
 	}
-	clear_list(globals.irc_list);
 }
 
 void sighandle_child(int sig)

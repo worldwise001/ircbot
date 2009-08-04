@@ -106,7 +106,10 @@ int main(int argc, char** argv)
 		}
 	}
 	if (globals.irc_list != NULL)
+	{
 		clear_list(globals.irc_list);
+		globals.irc_list = NULL;
+	}
 	close_log();
 	if (errno)
 	{
