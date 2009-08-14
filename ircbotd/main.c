@@ -12,6 +12,7 @@ int main(int argc, char** argv)
 	args_t args;
 	memset(&args, 0, sizeof(args_t));
 	memset(&globals, 0, sizeof(globals_t));
+	time(&globals.start);
 	if (load_args(argc-1, &argv[1], &args) == -1)
 	{
 		print_usage(argv[0]);
@@ -50,66 +51,31 @@ int main(int argc, char** argv)
 		close(STDERR_FILENO);
 		globals._daemon = TRUE;
 	}
-	globals.parent_pid = getpid();
 	if (args.log)
 	{
 		globals._log = TRUE;
 		open_log();
 	}
-	if (args.raw)
-		globals._raw = TRUE;
+	if (args.raw) globals._raw = TRUE;
+	
 	globals._run = TRUE;
 	irc_printf(IRCOUT, "%s %s\nLoading configuration\n", NAME, VERSION);
 
-	globals.irc_list = load_irccfg(args.conf_file);
+	llist_t * irc_list = load_irccfg(args.conf_file);
 
-	if (list_size(globals.irc_list) == 0)
+	if (list_size(irc_list) == 0)
 	{
 		irc_printf(IRCERR, "No configuration loaded\n");
 		return EXIT_FAILURE;
 	}
 	set_signals(_PARENT);
-
-	int to_chld[2];
-	if (pipe(to_chld) == -1)
-	{
-		irc_printf(IRCERR, "Error creating IPC: %s\n", strerror(errno));
-		return EXIT_FAILURE;
-	}
-	int returnval = 0;
-	if ((returnval = set_up_children(to_chld)) != -1)
-		return returnval;
-	close(to_chld[W]);
-	if ((returnval = set_up_lib_thread(to_chld)) >= 0)
-		return returnval;
-	int threadnum = list_size(globals.irc_list) + 1;
-	while (threadnum--)
-	{
-		pid = wait(&status);
-		if (WIFEXITED(status))
-			irc_printf(IRCOUT, "PID %d exited with status %d\n", pid, WEXITSTATUS(status));
-		else
-			irc_printf(IRCERR, "PID %d had a serious error\n", pid);
-		if (pid == globals.lib_pid && globals._run)
-		{
-			irc_printf(IRCOUT, "Library thread died for some reason\n");
-			raise(SIGTERM);
-			continue;
-		}
-		int i = get_by_pid(globals.irc_list, pid);
-		if (i != -1)
-		{
-			llist_t * iterator = get_item(globals.irc_list, i);
-			irccfg_t * m_irccfg = (irccfg_t *)(iterator->item);
-			close(m_irccfg->rfd);
-			close(m_irccfg->wfd);
-		}
-	}
-	if (globals.irc_list != NULL)
-	{
-		clear_list(globals.irc_list);
-		globals.irc_list = NULL;
-	}
+	
+	set_up_children();
+	
+	pthread_t lib_tid = set_up_lib_thread();
+	
+	if (irc_list != NULL)
+		clear_list(irc_list);
 	close_log();
 	if (errno)
 	{

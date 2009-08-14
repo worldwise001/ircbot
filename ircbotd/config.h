@@ -12,8 +12,8 @@ int get_by_pid(llist_t * first, pid_t pid);
 
 int load_args(int argc, char** argv, args_t * argt);
 
-void open_log();
-void close_log();
+void open_log(int is_child);
+void close_log(int is_child);
 
 void open_raw();
 void close_raw();

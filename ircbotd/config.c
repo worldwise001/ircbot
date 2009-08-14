@@ -267,8 +267,8 @@ int load_args(int argc, char** argv, args_t * args)
 				case 'v': (args->verbose)++; break;
 				case 'd': args->daemon = 1; break;
 				case 'c': expected_args++; break;
-				case 'V': args->version++; break;
-				case 'h': args->help++; break;
+				case 'V': args->version = 1; break;
+				case 'h': args->help = 1; break;
 				case 'l': args->log = 1; break;
 				case 'r': args->raw = 1; break;
 				case '-':
@@ -277,9 +277,9 @@ int load_args(int argc, char** argv, args_t * args)
 					else if (strcmp(&buff[1], "config") == 0)
 						expected_args++;
 					else if (strcmp(&buff[1], "version") == 0)
-						args->version++;
+						args->version = 1;
 					else if (strcmp(&buff[1], "help") == 0)
-						args->help++;
+						args->help = 1;
 					else if (strcmp(&buff[1], "log") == 0)
 						args->log = 1;
 					else if (strcmp(&buff[1], "raw") == 0)
@@ -308,61 +308,69 @@ int load_args(int argc, char** argv, args_t * args)
 	return 0;
 }
 
-void open_log()
+void open_log(irccfg_t * m_irccfg)
 {
 	if (globals._log)
 	{
 		char * filename = NULL;
-		if (getpid() == globals.parent_pid)
+		if (m_irccfg != NULL)
+		{
+			filename = malloc(11+strlen(LOGDIR)+strlen(m_irccfg->host));
+			memset(filename, 0, 11+strlen(LOGDIR)+strlen(m_irccfg->host));
+			sprintf(filename, "%s/%i-%s.log", LOGDIR, m_irccfg->id, m_irccfg->host);
+			m_irccfg->_ircout = fopen(filename, "a");
+		}
+		else
 		{
 			filename = malloc(11+strlen(LOGDIR));
 			memset(filename, 0, 11+strlen(LOGDIR));
 			sprintf(filename, "%s/circe.log", LOGDIR);
+			globals._ircout = fopen(filename, "a");
 		}
-		else if (getpid() != globals.lib_pid)
-		{
-			filename = malloc(11+strlen(LOGDIR)+strlen(globals.m_irccfg.host));
-			memset(filename, 0, 11+strlen(LOGDIR)+strlen(globals.m_irccfg.host));
-			sprintf(filename, "%s/%i-%s.log", LOGDIR, globals.m_irccfg.id, globals.m_irccfg.host);
-		}
-		else
-		{
-			filename = malloc(9+strlen(LOGDIR));
-			memset(filename, 0, 9+strlen(LOGDIR));
-			sprintf(filename, "%s/lib.log", LOGDIR);
-		}
-		globals._ircout = fopen(filename, "a");
 		free(filename);
 		filename = NULL;
-		if (globals._ircout == NULL) return;
-		filename = malloc(11+strlen(LOGDIR));
-		memset(filename, 0, 11+strlen(LOGDIR));
-		sprintf(filename, "%s/error.log", LOGDIR);
-		globals._ircerr = fopen(filename, "a");
-		free(filename);
-		filename = NULL;
-		if (globals._ircerr == NULL) return;
+		
+		if (m_irccfg == NULL)
+		{
+			filename = malloc(11+strlen(LOGDIR));
+			memset(filename, 0, 11+strlen(LOGDIR));
+			sprintf(filename, "%s/error.log", LOGDIR);
+			globals._ircerr = fopen(filename, "a");
+			free(filename);
+			filename = NULL;
+		}
+		
+		return outf;
 	}
+	return NULL;
 }
 
-void close_log()
+void close_log(irccfg_t * m_irccfg)
 {
 	if (globals._log)
 	{
-		fclose(globals._ircout);
-		fclose(globals._ircerr);
-		globals._ircout = NULL;
-		globals._ircerr = NULL;
+		if (m_irccfg == NULL)
+		{
+			fclose(globals._ircout);
+			fclose(globals._ircerr);
+			globals._ircout = NULL;
+			globals._ircerr = NULL;
+		}
+		else
+		{
+			fclose(m_irccfg->_ircout);
+			m_irccfg->_ircout = NULL;
+		}
 	}
 }
 
-void open_raw()
+void open_raw(irccfg_t * m_irccfg)
 {
 	if (globals._raw)
 	{
-		char *filename = malloc(15+strlen(LOGDIR)+strlen(globals.m_irccfg.host));
-		memset(filename, 0, 15+strlen(LOGDIR)+strlen(globals.m_irccfg.host));
-		sprintf(filename, "%s/raw-%i-%s.log", LOGDIR, globals.m_irccfg.id, globals.m_irccfg.host);
+		char *filename = malloc(15+strlen(LOGDIR)+strlen(m_irccfg->host));
+		memset(filename, 0, 15+strlen(LOGDIR)+strlen(m_irccfg->host));
+		sprintf(filename, "%s/raw-%i-%s.log", LOGDIR, m_irccfg->id, m_irccfg->host);
 		globals._ircraw = fopen(filename, "a");
 		free(filename);
 		filename = NULL;
@@ -370,26 +378,11 @@ void open_raw()
 	}
 }
 
-void close_raw()
+void close_raw(irccfg_t * m_irccfg)
 {
 	if (globals._raw)
 	{
 		fclose(globals._ircraw);
 		globals._ircraw = NULL;
 	}
-}
-
-int get_by_pid(llist_t * first, pid_t pid)
-{
-	if (first == NULL) return -1;
-	llist_t * iterator = first;
-	int i = 0;
-	while (iterator != NULL)
-	{
-		irccfg_t * i_irccfg = (irccfg_t *)(iterator->item);
-		if (i_irccfg->pid == pid) return i;
-		iterator = iterator->next;
-		i++;
-	}
-	return -1;
 }
