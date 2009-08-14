@@ -2,17 +2,18 @@
 
 extern globals_t globals;
 
-int handle_child(irccfg_t * m_irccfg)
+void handle_child(irccfg_t * m_irccfg)
 {
 	int sockfd;
 	int sleeptime = 0;
 	open_log();
 	while (globals._run)
 	{
-		sleeptime += 10;
+		if (sleeptime < MAX_RECON_CYCLE)
+			sleeptime += 10;
 		if (m_irccfg->enabled)
 		{
-			irc_printf(IRCOUT, "PID %d attempting to connect to %s:%d...\n", getpid(), m_irccfg->host, m_irccfg->port);
+			irc_printf(IRCOUT, "Thread %d attempting to connect to %s:%d...\n", pthread_self(), m_irccfg->host, m_irccfg->port);
 			if ((sockfd = sock_connect(m_irccfg->host, m_irccfg->port)) == -1)
 			{
 				if (errno)
@@ -42,7 +43,7 @@ int handle_child(irccfg_t * m_irccfg)
 				}
 				else
 				{
-					handle_conn(m_irccfg);
+					child_loop(m_irccfg);
 					close_raw();
 					break;
 				}
@@ -50,80 +51,59 @@ int handle_child(irccfg_t * m_irccfg)
 		}
 		else sleep(10);
 	}
-	close(m_irccfg->wfd);
-	close(m_irccfg->rfd);
 	close_log();
-	return EXIT_SUCCESS;
 }
 
-int set_up_children(int * cpfds)
+void spawn_child(irccfg_t * m_irccfg)
 {
-	int pfds[2];
-	pid_t pid;
+	pthread_t tid;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	int return_value = pthread_create(&tid, &attr, handle_child, m_irccfg);
+	if (return_value)
+		irc_printf(IRCERR, "There was an error in thread creation\n");
+	m_irccfg->tid = tid;
+}
+
+void set_up_children()
+{
 	llist_t * iterator = globals.irc_list;
 	while (iterator != NULL)
 	{
 		irccfg_t * i_irccfg = (irccfg_t *)(iterator->item);
-		memcpy(&(globals.m_irccfg), i_irccfg, sizeof(irccfg_t));
-		if (pipe(pfds) == -1)
-			irc_printf(IRCERR, "Error creating IPC: %s\n", strerror(errno));
-		else if ((pid = fork()) == 0)
-		{
-			close_log();
-			set_signals(_CHILD);
-			close(pfds[W]);
-			close(cpfds[R]);
-			globals.m_irccfg.wfd = cpfds[W];
-			globals.m_irccfg.rfd = pfds[R];
-			globals.m_irccfg.pid = getpid();
-			clear_list(globals.irc_list);
-			globals.irc_list = NULL;
-			return handle_child(&(globals.m_irccfg));
-		}
-		else if (pid == -1)
-			irc_printf(IRCERR, "Error forking: %s\n", strerror(errno));
-		else
-		{
-			i_irccfg->rfd = cpfds[R];
-			i_irccfg->wfd = pfds[W];
-			close(pfds[R]);
-			i_irccfg->pid = pid;
-		}
+		spawn_child(i_irccfg);
 		iterator = iterator->next;
 	}
-	return -1;
 }
 
-int set_up_lib_thread(int * cpfds)
+void child_loop(irccfg_t * m_irccfg)
 {
-	pid_t pid;
-	if ((pid = fork()) == 0)
+	char * line = NULL;
+	while (TRUE)
 	{
-		irc_printf(IRCOUT, "Success in lib forking\n");
-		globals.lib_pid = getpid();
-		close_log();
-		open_log();
-		set_signals(_LIB);
-		lib_loop(globals.irc_list);
-		
-		llist_t * iterator = globals.irc_list;
-		while (iterator != NULL)
+		line = get_next_line(m_irccfg->sfd);
+		if (line == NULL || strlen(line) == 0)
 		{
-			irccfg_t * i_irccfg = (irccfg_t *)(globals.irc_list->item);
-			close(i_irccfg->wfd);
+			if (line == NULL) break;
+			if (line != NULL)
+			{
+				free(line);
+				line = NULL;
+			}
+			continue;
 		}
-		close(cpfds[R]);
-		clear_list(globals.irc_list);
-		close_log();
-		return EXIT_SUCCESS;
+		
+		if (strstr(line, "PING :") != NULL)
+		{
+			write_data(m_irccfg->sfd, "PONG :");
+			write_data(m_irccfg->sfd, &line[6]);
+			write_data(m_irccfg->sfd, "\n");
+			free(line);
+			line = NULL;
+		}
+		else
+			process_data(m_irccfg, line);
 	}
-	else if (pid == -1)
-	{
-		irc_printf(IRCERR, "Error forking: %s\n", strerror(errno));
-		raise(SIGTERM);
-		return -1;
-	}
-	else
-		globals.lib_pid = pid;
-	return -2;
 }
+

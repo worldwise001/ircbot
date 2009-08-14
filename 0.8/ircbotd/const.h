@@ -40,8 +40,17 @@
 
 //sentinel for commands, "!" for !help, etc.
 #ifndef SENTINEL
-#define SENTINEL "~"
+#define SENTINEL "!"
 #endif
+
+//default module extension
+#define EXT ".so"
+
+//default filename length
+#define FILENAME_LEN 256
+
+//default error length
+#define ERROR_LEN 256
 
 //character field length for irc configuration
 #define CFG_FLD 80
@@ -69,6 +78,34 @@
 //output/error identifiers
 #define IRCOUT 0
 #define IRCERR 1
+
+//some formatting stuff
+#define TXT_BOLD '\x002'
+#define TXT_ULIN '\x015'
+#define TXT_ITAL '\x009'
+#define TXT_COLR '\x003'
+#define TXT_NORM '\x00F'
+
+#define COL_WHITE	"00"
+#define COL_BLACK	"01"
+#define COL_BLUE	"02"
+#define COL_GREEN	"03"
+#define COL_RED		"04"
+#define COL_BROWN	"05"
+#define COL_PURPLE	"06"
+#define COL_ORANGE	"07"
+#define COL_YELLOW	"08"
+#define COL_LTGRN	"09"
+#define COL_TEAL	"10"
+#define COL_CYAN	"11"
+#define COL_LTBLU	"12"
+#define COL_PINK	"13"
+#define COL_GREY	"14"
+#define COL_LTGRY	"15"
+
+#define BELL '\x007'
+
+#define MAX_RECON_CYCLE 120
 
 #endif //CONST_H_
 

@@ -5,9 +5,11 @@ lines of code: 2205
 
 Current TODO:
 - Implement auto-avoid NICK collision
-- Cleaning config file parser code
 - Commenting; lots of it
 - autoconf it for automake
+
+August 12, 2009
+- Huge revamp for 0.8
 
 July 24, 2009
 - Uploaded source to subversion repository

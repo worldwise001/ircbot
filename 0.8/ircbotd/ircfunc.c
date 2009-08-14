@@ -2,6 +2,9 @@
 
 globals_t globals;
 
+pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t io_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 void print_usage(char * app_name)
 {
 	printf("Usage: %s [-c|--config config.conf] [-d|--daemon] [-V|--version] [-h|--help] [-l|--log] [-r|--raw]\n", app_name);
@@ -15,6 +18,8 @@ void print_version(char * app_name)
 
 void irc_printf(unsigned int type, char * string, ... )
 {
+	pthread_mutex_lock( &print_mutex );
+
     va_list listPointer;
     va_start( listPointer, string );
 	
@@ -37,44 +42,25 @@ void irc_printf(unsigned int type, char * string, ... )
 		if (!globals._daemon) vfprintf(stderr, string, listPointer);
 	}
     va_end( listPointer );
+
+	pthread_mutex_unlock( &print_mutex );
 }
 
 void respond(irccfg_t * m_irccfg, char * format, ... )
 {
+	pthread_mutex_lock( &io_mutex );
+	
     va_list listPointer;
     va_start( listPointer, format );
-	
-	
-	char buff[BUFF_SIZE+1];
-	memset(buff, 0, BUFF_SIZE+1);
-	int written = vsnprintf(buff, BUFF_SIZE+1, format, listPointer);
-	printf("%s\n", buff);
-	if (written < BUFF_SIZE && buff[written-1] != '\n') buff[written] = '\n';
-	else if (written == BUFF_SIZE) buff[written-1] = '\n';
-	
-	ssize_t sent = 0;
-	while (sent < strlen(buff))
-	{
-		ssize_t tmp = write(m_irccfg->wfd, &buff[sent], strlen(buff) - sent);
-		if (tmp == -1) return;
-		sent += tmp;
-	}
-	
-	/*
-	int tempfd = dup(info->wfd);
-	FILE * tempstream = fdopen(tempfd, "a");
+	int tempfd = dup(m_irccfg->sfd);
+	FILE * tempstream = fdopen(tempfd, "w+");
 	vfprintf(tempstream, format, listPointer);
 	fflush(tempstream);
 	fclose(tempstream);
-	if (errno) errno = 0;
-	
-	va_start( listPointer, format );
-	vprintf(format, listPointer);	
-	*/
     va_end( listPointer );
 	usleep(UDELAY);
-	kill(m_irccfg->pid, SIGUSR2);
-	usleep(UDELAY);
+	
+	pthread_mutex_unlock( &io_mutex );
 }
 
 bot_t bot_command(char * message)
@@ -131,7 +117,6 @@ void _timetostr(char * buffer, time_t time)
 	len = strlen(buffer)-1;
 	if (buffer[len] == ',') buffer[len] = '\0';
 	if (strlen(buffer) == 0) snprintf(buffer, CFG_FLD, "0s");
-	//snprintf(buffer, CFG_FLD, "%d years, %d days, %d hours, %d minutes, %d seconds", years, days, hours, minutes, seconds);
 }
 
 char * dup_string(char * string)

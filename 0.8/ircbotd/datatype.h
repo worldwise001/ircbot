@@ -8,7 +8,7 @@
 typedef struct {
 	unsigned int enabled:1;
 	unsigned int id;
-	pid_t pid;
+	pthread_t tid;
 	char nick[CFG_FLD+1];
 	char user[CFG_FLD+1];
 	char real[CFG_FLD+1];
@@ -19,8 +19,8 @@ typedef struct {
 	char host[CFG_FLD+1];
 	unsigned short int port;
 	int sfd;
-	int rfd;
-	int wfd;
+	FILE * _ircout;
+	FILE * _ircraw;
 } irccfg_t;
 
 typedef struct {
@@ -31,11 +31,11 @@ typedef struct {
 typedef struct {
 	char * conf_file;
 	int verbose;
-	int daemon;
-	int version;
-	int help;
-	int log;
-	int raw;
+	int daemon:1;
+	int version:1;
+	int help:1;
+	int log:1;
+	int raw:1;
 } args_t;
 
 typedef struct {
@@ -46,29 +46,27 @@ typedef struct {
 } msg_t;
 
 typedef struct {
-	llist_t * irc_list;
-	irccfg_t m_irccfg;
-	llist_t * auth_list;
-	pid_t parent_pid;
-	pid_t lib_pid;
-	int logfd;
-	int _daemon;
-	int _log;
-	int _raw;
-	int _run;
+	irccfg_t * m_irccfg;
+	msg_t msg;
+} queue_t;
+
+typedef struct {
+	int _daemon:1;
+	int _log:1;
+	int _raw:1;
+	int _run:1;
 	FILE * _ircerr;
 	FILE * _ircout;
-	FILE * _ircraw;
+	time_t start;
 } globals_t;
 
 
 typedef struct {
-	char * filename;
 	void * dlhandle;
 	void (*parse)(const irccfg_t * m_irccfg, const msg_t * data);
 	char commands[CFG_FLD+1];
 	char name[CFG_FLD+1];
-	void * next;
+	char filename[CFG_FLD+1];
 } module_t;
 
 typedef struct {

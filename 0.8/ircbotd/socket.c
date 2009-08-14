@@ -105,36 +105,6 @@ int sock_handshake(irccfg_t * m_irccfg)
 	return 0;
 }
 
-void handle_conn(irccfg_t * m_irccfg)
-{
-	char * line = NULL;
-	while (TRUE)
-	{
-		line = get_next_line(m_irccfg->sfd);
-		if (line == NULL || strlen(line) == 0)
-		{
-			if (line == NULL) break;
-			if (line != NULL)
-			{
-			free(line);
-				line = NULL;
-			}
-			continue;
-		}
-		
-		if (strstr(line, "PING :") != NULL)
-		{
-			write_data(m_irccfg->sfd, "PONG :");
-			write_data(m_irccfg->sfd, &line[6]);
-			write_data(m_irccfg->sfd, "\n");
-			free(line);
-			line = NULL;
-		}
-		else
-			process_input(m_irccfg, line);
-	}
-}
-
 int autojoin(irccfg_t * m_irccfg)
 {
 	int res = 0;
