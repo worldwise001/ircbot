@@ -1,0 +1,30 @@
+README
+
+To compile:
+	gcc -Wall -rdynamic -ldl *.c -oircbotd
+
+Any modules must be placed in the "./module" subdirectory.
+Default configuration file is ./ircbotd.conf; a custom one may be set
+through flags:
+
+ircbotd -c conffile
+
+To make custom modules:
+
+- Include at least module.h
+- Implement the following prototype, or else the module will not be loaded:
+		void parse(const info_t * config, const msg_t * data);
+	Take a look at datatype.h to see what is in the custom data types.
+- Please use the following prototype for writing output to the stream:
+		void respond(info_t * info, char * format, ... );
+	this allows for proper signaling to the parent thread to send/flush the stream;
+	format is the string format, similar to the printf family of functions
+- To compile:
+	gcc -Wall -fPIC -shared *.c -o libcustommod.so
+- Placing this in the "./module" directory on ircbotd startup will cause it to be automatically
+	loaded; placed anywhere else, you can still load it while ircbotd is running by sending
+		!module load libcustommod.so
+	for example.
+
+Note: be warned that creating your own modules increases the risk that your bot	may segfault.
+	
