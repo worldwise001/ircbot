@@ -5,19 +5,7 @@
 extern globals_t globals;
 
 llist_t * queue = NULL;
-
 pthread_mutex_t queue_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t condition_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t condition_check  = PTHREAD_COND_INITIALIZER;
-
-void print_msg(msg_t * data)
-{
-	time_t rawtime;
-	time(&rawtime);
-	char * atime = ctime(&rawtime)+11;
-	atime[8] = '\0';
-	irc_printf(IRCOUT, "%s: <%d> <%s> <%s> <%s> <%s>\n", atime, getpid(), data->sender, data->command, data->target, data->message);
-}
 
 pthread_t set_up_lib_thread()
 {
@@ -28,7 +16,7 @@ pthread_t set_up_lib_thread()
 	return tid;
 }
 
-void send_to_queue(const irccfg_t * m_irccfg, msg_t * data)
+void send_to_queue(const irccfg_t * m_irccfg, const msg_t * data)
 {
 	pthread_mutex_lock( &queue_mutex );
 	
@@ -42,24 +30,17 @@ void send_to_queue(const irccfg_t * m_irccfg, msg_t * data)
 	i_list->next = queue;
 	queue = i_list;
 	
-	pthread_mutex_lock( &condition_mutex );
-	pthread_cond_signal( &condition_check );
-	pthread_mutex_unlock( &condition_mutex );
-	
 	pthread_mutex_unlock( &queue_mutex );
 }
 
 
 void lib_loop()
 {
+
 	if (load_module(NULL) == -1) irc_printf(IRCERR, "Error loading modules\n");
 	while (globals._run)
 	{
-		pthread_mutex_lock( &condition_mutex );
-		pthread_cond_wait( &condition_cond, &condition_mutex );
-		
 		pthread_mutex_lock( &queue_mutex );
-		pthread_mutex_unlock( &condition_mutex );
 		
 		module_t * m_iterator = modlist;
 		void (*parse)(const irccfg_t *, const msg_t *);

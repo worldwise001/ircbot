@@ -2,7 +2,7 @@
 
 extern globals_t globals;
 
-unsigned int is_value(char * field, char * type)
+boolean is_value(char * field, char * type)
 {
 	return strncasecmp(field, type, strlen(type)) == 0;
 }
@@ -197,29 +197,19 @@ llist_t * load_irccfg(char * filename)
 	while (iterator != NULL)
 	{
 		i_irccfg = (irccfg_t *)(iterator->item);
-		if (strlen(i_irccfg->nick) == 0)
-			strncpy(i_irccfg->nick, d_irccfg.nick, CFG_FLD);
-		if (strlen(i_irccfg->user) == 0)
-			strncpy(i_irccfg->user, d_irccfg.user, CFG_FLD);
-		if (strlen(i_irccfg->real) == 0)
-			strncpy(i_irccfg->real, d_irccfg.real, CFG_FLD);
-		if (strlen(i_irccfg->pass) == 0)
-			strncpy(i_irccfg->pass, d_irccfg.pass, CFG_FLD);
-		if (strlen(i_irccfg->chan) == 0)
-			strncpy(i_irccfg->chan, d_irccfg.chan, CFG_FLD*8);
-		if (strlen(i_irccfg->auth) == 0)
-			strncpy(i_irccfg->auth, d_irccfg.auth, CFG_FLD);
-		if (strlen(i_irccfg->host) == 0)
-			strncpy(i_irccfg->host, d_irccfg.host, CFG_FLD);
-		if (i_irccfg->port == 0)
-			i_irccfg->port = d_irccfg.port;
-		if (i_irccfg->enabled == 0)
-			i_irccfg->enabled = d_irccfg.enabled;
+		FIELD_SCPY(nick);
+		FIELD_SCPY(user);
+		FIELD_SCPY(real);
+		FIELD_SCPY(pass);
+		FIELD_SCPY(chan);
+		FIELD_SCPY(auth);
+		FIELD_SCPY(host);
+		FIELD_ICPY(port);
+		FIELD_ICPY(enabled);
 		iterator = iterator->next;
 	}
 	
-	print_irccfg(first);
-	
+	if (VERBOSE(2)) print_irccfg(first);
 	return first;
 }
 
@@ -234,7 +224,7 @@ void print_irccfg(llist_t * irclist)
 	}	
 }
 
-int load_args(int argc, char** argv, args_t * args)
+check load_args(int argc, char** argv, args_t * args)
 {
 	int i = -1;
 	int expected_args = 0;
@@ -243,7 +233,7 @@ int load_args(int argc, char** argv, args_t * args)
 		if (argv[i][0] != '-' && expected_args == 0)
 		{
 			irc_printf(IRCERR, "Invalid flag: %s\n", argv[i]);
-			return -1;
+			return ERROR;
 		}
 		else if (expected_args > 0)
 		{
@@ -258,7 +248,7 @@ int load_args(int argc, char** argv, args_t * args)
 			if (*(buff+1) == '\0')
 			{
 				irc_printf(IRCERR, "Invalid flag: %s\n", argv[i]);
-				return -1;
+				return ERROR;
 			}
 			while (*(++buff) != '\0')
 			{
@@ -287,13 +277,13 @@ int load_args(int argc, char** argv, args_t * args)
 					else
 					{
 						irc_printf(IRCERR, "Invalid flag: %s\n", argv[i]);
-						return -1;
+						return ERROR;
 					}
 					buff+=(strlen(argv[i])-2);
 					break;
 				default:
 					irc_printf(IRCERR, "Invalid flag: %c\n", *buff);
-					return -1;
+					return ERROR;
 				}
 			}
 			continue;
@@ -303,86 +293,97 @@ int load_args(int argc, char** argv, args_t * args)
 	if (expected_args > 0)
 	{
 		irc_printf(IRCERR, "Expecting an argument; perhaps you forgot the configuration file?\n");
-		return -1;
+		return ERROR;
 	}
-	return 0;
+	return OKAY;
 }
 
-void open_log(irccfg_t * m_irccfg)
+void open_log()
 {
-	if (globals._log)
+	if (globals.log)
 	{
+		irccfg_t * m_irccfg = pthread_getspecific(globals.key_irccfg);
 		char * filename = NULL;
 		if (m_irccfg != NULL)
 		{
 			filename = malloc(11+strlen(LOGDIR)+strlen(m_irccfg->host));
 			memset(filename, 0, 11+strlen(LOGDIR)+strlen(m_irccfg->host));
 			sprintf(filename, "%s/%i-%s.log", LOGDIR, m_irccfg->id, m_irccfg->host);
-			m_irccfg->_ircout = fopen(filename, "a");
 		}
 		else
 		{
 			filename = malloc(11+strlen(LOGDIR));
 			memset(filename, 0, 11+strlen(LOGDIR));
 			sprintf(filename, "%s/circe.log", LOGDIR);
-			globals._ircout = fopen(filename, "a");
 		}
+		
+		FILE * file = fopen(filename, "a");
+		pthread_setspecific(globals.key_ircout, file);
+		
 		free(filename);
 		filename = NULL;
-		
-		if (m_irccfg == NULL)
-		{
-			filename = malloc(11+strlen(LOGDIR));
-			memset(filename, 0, 11+strlen(LOGDIR));
-			sprintf(filename, "%s/error.log", LOGDIR);
-			globals._ircerr = fopen(filename, "a");
-			free(filename);
-			filename = NULL;
-		}
-		
-		return outf;
-	}
-	return NULL;
-}
-
-void close_log(irccfg_t * m_irccfg)
-{
-	if (globals._log)
-	{
-		if (m_irccfg == NULL)
-		{
-			fclose(globals._ircout);
-			fclose(globals._ircerr);
-			globals._ircout = NULL;
-			globals._ircerr = NULL;
-		}
-		else
-		{
-			fclose(m_irccfg->_ircout);
-			m_irccfg->_ircout = NULL;
-		}
 	}
 }
 
-void open_raw(irccfg_t * m_irccfg)
+void close_log()
 {
-	if (globals._raw)
+	if (globals.log)
 	{
+		FILE * ircout = pthread_getspecific(globals.key_ircout);
+		fclose(ircout);
+		pthread_getspecific(globals.key_ircout, NULL);
+	}
+}
+
+void open_err()
+{
+	if (globals.log)
+	{
+		char * filename = malloc(11+strlen(LOGDIR));
+		memset(filename, 0, 11+strlen(LOGDIR));
+		sprintf(filename, "%s/error.log", LOGDIR);
+		globals._ircerr = fopen(filename, "a");
+		free(filename);
+		filename = NULL;
+	}
+}
+
+void close_err()
+{
+	if (globals.log) fclose(globals._ircerr);
+}
+
+void open_raw()
+{
+	if (globals.raw)
+	{
+		irccfg_t * m_irccfg = pthread_getspecific(globals.key_irccfg);
 		char *filename = malloc(15+strlen(LOGDIR)+strlen(m_irccfg->host));
 		memset(filename, 0, 15+strlen(LOGDIR)+strlen(m_irccfg->host));
 		sprintf(filename, "%s/raw-%i-%s.log", LOGDIR, m_irccfg->id, m_irccfg->host);
-		globals._ircraw = fopen(filename, "a");
+		FILE * ircraw = fopen(filename, "a");
 		free(filename);
 		filename = NULL;
-		if (globals._ircraw == NULL) return;
+		pthread_setspecific(globals.key_ircraw, ircraw);
 	}
 }
 
 void close_raw(irccfg_t * m_irccfg)
 {
-	if (globals._raw)
+	if (globals.raw)
 	{
-		fclose(globals._ircraw);
-		globals._ircraw = NULL;
+		FILE * ircraw = pthread_getspecific(globals.key_ircraw);
+		fclose(ircraw);
+		pthread_getspecific(globals.key_ircraw, NULL);
 	}
+}
+
+void clean_up();
+{
+	close_log();
+	close_err();
+	
+	pthread_key_delete(&globals.key_irccfg);
+	pthread_key_delete(&globals.key_ircout);
+	pthread_key_delete(&globals.key_ircraw);
 }

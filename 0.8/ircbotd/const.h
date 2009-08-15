@@ -3,7 +3,7 @@
 
 //module directory
 #ifndef MODULEDIR
-#define MODULEDIR "./module"
+#define MODULEDIR "./modules"
 #endif
 
 //log directory
@@ -67,14 +67,6 @@
 #define _CHILD 2
 #define _LIB 3
 
-//pipe identifiers
-#define R 0
-#define W 1
-
-//true/false
-#define TRUE 1
-#define FALSE 0
-
 //output/error identifiers
 #define IRCOUT 0
 #define IRCERR 1
@@ -106,6 +98,10 @@
 #define BELL '\x007'
 
 #define MAX_RECON_CYCLE 120
+
+#define VERBOSE(x) globals.verbose == (x)
+#define FIELD_SCPY(x) if (strlen(i_irccfg->x) == 0) strcpy(i_irccfg->x, d_irccfg.x)
+#define FIELD_ICPY(x) if (i_irccfg->x == 0) i_irccfg->x = d_irccfg.x
 
 #endif //CONST_H_
 

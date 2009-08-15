@@ -3,8 +3,9 @@
 
 #include "lib.h"
 
-unsigned int add_admin(char * sender);
-unsigned int remove_admin(char * nick);
-unsigned int is_admin(char * sender);
+check add_admin(char * sender);		//checks, and if not authed, adds sender as admmin to auth_list
+check remove_admin(char * nick);		//removes nick!*@* from auth_list
+boolean is_admin(char * sender);		//checks if sender is in auth_list
+void clear_auth_list();					//empties auth_list
 
 #endif /* ADMIN_H_ */

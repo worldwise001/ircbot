@@ -5,8 +5,11 @@
 #include "include.h"
 #include "llist.h"
 
+typedef enum { FALSE = 0, TRUE } boolean;
+typedef enum { OKAY = 0, ERROR = -1 } check;
+
 typedef struct {
-	unsigned int enabled:1;
+	boolean enabled;
 	unsigned int id;
 	pthread_t tid;
 	char nick[CFG_FLD+1];
@@ -19,8 +22,6 @@ typedef struct {
 	char host[CFG_FLD+1];
 	unsigned short int port;
 	int sfd;
-	FILE * _ircout;
-	FILE * _ircraw;
 } irccfg_t;
 
 typedef struct {
@@ -31,11 +32,11 @@ typedef struct {
 typedef struct {
 	char * conf_file;
 	int verbose;
-	int daemon:1;
-	int version:1;
-	int help:1;
-	int log:1;
-	int raw:1;
+	boolean daemon;
+	boolean version;
+	boolean help;
+	boolean log;
+	boolean raw;
 } args_t;
 
 typedef struct {
@@ -51,13 +52,16 @@ typedef struct {
 } queue_t;
 
 typedef struct {
-	int _daemon:1;
-	int _log:1;
-	int _raw:1;
-	int _run:1;
-	FILE * _ircerr;
-	FILE * _ircout;
+	boolean daemon;
+	boolean log;
+	boolean raw;
+	boolean run;
+	int verbose;
 	time_t start;
+	pthread_key_t key_irccfg;
+	pthread_key_t key_ircout;
+	pthread_key_t key_ircraw;
+	FILE * _ircerr;
 } globals_t;
 
 

@@ -2,7 +2,6 @@
 #define CHILD_H_
 
 #include "socket.h"
-#include <sys/wait.h>
 #include "sighand.h"
 
 int handle_child(irccfg_t * m_irccfg);
