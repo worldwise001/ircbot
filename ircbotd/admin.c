@@ -1,15 +1,15 @@
 #include "admin.h"
 
-extern globals_t globals;
+llist_t * auth_list;
 
-unsigned int add_admin(char * sender)
+check add_admin(char * sender)
 {
-	if (sender == NULL) return FALSE;
-	llist_t * iterator = globals.auth_list;
+	if (sender == NULL) return ERROR;
+	llist_t * iterator = auth_list;
 	while (iterator != NULL)
 	{
 		char * tmp_sender = (char *)(iterator->item);
-		if (is_value(sender, tmp_sender)) return FALSE;
+		if (is_value(sender, tmp_sender)) return ERROR;
 		iterator = iterator->next;
 	}
 	char * sdup = dup_string(sender);
@@ -17,17 +17,17 @@ unsigned int add_admin(char * sender)
 	if (result == NULL)
 	{
 		free(sdup);
-		return FALSE;
+		return ERROR;
 	}
-	globals.auth_list = result;
-	return TRUE;
+	auth_list = result;
+	return OKAY;
 }
 
-unsigned int remove_admin(char * nick)
+check remove_admin(char * nick)
 {
-	if (globals.auth_list == NULL) return FALSE;
-	if (nick == NULL) return FALSE;
-	llist_t * iterator = globals.auth_list;
+	if (auth_list == NULL) return ERROR;
+	if (nick == NULL) return ERROR;
+	llist_t * iterator = auth_list;
 	int i = -1;
 	while (iterator != NULL)
 	{
@@ -36,18 +36,18 @@ unsigned int remove_admin(char * nick)
 		if (is_value(tmp_sender, nick) && tmp_sender[strlen(nick)] == '!') break;
 		iterator = iterator->next;
 	}
-	if (iterator == NULL) return FALSE;
-	int size = list_size(globals.auth_list);
-	llist_t * result = delete_item(globals.auth_list, i);
-	if (result == NULL && size > 1) return FALSE;
-	globals.auth_list = result;
-	return TRUE;
+	if (iterator == NULL) return ERROR;
+	int size = list_size(auth_list);
+	llist_t * result = delete_item(auth_list, i);
+	if (result == NULL && size > 1) return ERROR;
+	auth_list = result;
+	return OKAY;
 }
 
-unsigned int is_admin(char * sender)
+boolean is_admin(char * sender)
 {
 	if (index(sender, '!') == NULL) return FALSE;
-	llist_t * iterator = globals.auth_list;
+	llist_t * iterator = auth_list;
 	char nick[SND_FLD+1];
 	memset(nick, 0, SND_FLD+1);
 	strncpy(nick, sender, index(sender, '!') - sender);
@@ -58,4 +58,10 @@ unsigned int is_admin(char * sender)
 		iterator = iterator->next;
 	}
 	return FALSE;
+}
+
+void clear_auth_list()
+{
+	clear_list(auth_list);
+	auth_list = NULL;
 }

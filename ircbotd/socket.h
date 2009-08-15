@@ -5,11 +5,10 @@
 #include "config.h"
 #include "lib.h"
 
-int sock_connect(char * host, int port);
-int sock_handshake(irccfg_t * m_irccfg);
-void handle_conn(irccfg_t * m_irccfg);
-int autojoin(irccfg_t * m_irccfg);
-int identify(irccfg_t * m_irccfg);
-void socket_terminate(char * message);
+int sock_connect(char * host, int port);				//returns socket file descriptor, -1 on error
+check sock_handshake(const irccfg_t * m_irccfg);		//returns T/F based on whether IRC "handshake" was successful
+void autojoin(const irccfg_t * m_irccfg);				//returns nothing
+void identify(const irccfg_t * m_irccfg);				//returns nothing
+void socket_terminate(char * message);					//returns nothing
 
 #endif /* SOCKET_H_ */

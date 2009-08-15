@@ -4,9 +4,6 @@
 #include "config.h"
 #include "admin.h"
 
-
-
 int lib_loop();
-
 
 #endif /* LIB_H_ */

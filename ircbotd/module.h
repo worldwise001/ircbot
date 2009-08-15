@@ -12,5 +12,4 @@ void output_commands(const irccfg_t * m_irccfg, const char * sender);
 llist_t * list_module_dir();
 llist_t * list_modules(int show_names);
 
-
 #endif //MODULE_H_

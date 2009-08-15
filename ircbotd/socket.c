@@ -44,7 +44,7 @@ int sock_connect(char* host, int port)
 	return sfd;
 }
 
-int sock_handshake(irccfg_t * m_irccfg)
+check sock_handshake(irccfg_t * m_irccfg)
 {
 	char * line  = NULL;
 
@@ -56,7 +56,7 @@ int sock_handshake(irccfg_t * m_irccfg)
 	{
 		irc_printf(IRCERR, "Error writing to stream: %s\n", strerror(errno));
 		close(m_irccfg->sfd);
-		return -1;
+		return ERROR;
 	}
 	write_data(m_irccfg->sfd, "USER ");
 	write_data(m_irccfg->sfd, m_irccfg->user);
@@ -67,7 +67,7 @@ int sock_handshake(irccfg_t * m_irccfg)
 	{
 		irc_printf(IRCERR, "Error writing to stream: %s\n", strerror(errno));
 		close(m_irccfg->sfd);
-		return -1;
+		return ERROR;
 	}
 
 	while (TRUE)
@@ -77,7 +77,7 @@ int sock_handshake(irccfg_t * m_irccfg)
 		{
 			irc_printf(IRCERR, "Error reading from socket\n");
 			close(m_irccfg->sfd);
-			return -1;
+			return ERROR;
 		}
 		else if (strstr(line, " NOTICE AUTH :") != NULL)
 		{
@@ -102,39 +102,31 @@ int sock_handshake(irccfg_t * m_irccfg)
 			break;
 		}
 	}
-	return 0;
+	return OKAY;
 }
 
-int autojoin(irccfg_t * m_irccfg)
+void autojoin(irccfg_t * m_irccfg)
 {
-	int res = 0;
 	char chancpy[CFG_FLD*8+1];
-		strcpy(chancpy, m_irccfg->chan);
-	if (chancpy != NULL)
+	strcpy(chancpy, m_irccfg->chan);
+	char * chanptr = chancpy + strlen(chancpy) + 1;
+	while (chanptr > chancpy)
 	{
-		char * chanptr = chancpy + strlen(chancpy) + 1;
-		while (chanptr > chancpy)
-		{
-			while (*(--chanptr) != ' ' && chanptr > chancpy);
-			if (chanptr > chancpy) chanptr++;
-			write_data(m_irccfg->sfd, "JOIN ");
-			write_data(m_irccfg->sfd, chanptr);
-			write_data(m_irccfg->sfd, "\n");
-			if (chanptr > chancpy) chanptr--;
-			if (*chanptr == ' ') *chanptr = '\0';
-		}
+		while (*(--chanptr) != ' ' && chanptr > chancpy);
+		if (chanptr > chancpy) chanptr++;
+		write_data(m_irccfg->sfd, "JOIN ");
+		write_data(m_irccfg->sfd, chanptr);
+		write_data(m_irccfg->sfd, "\n");
+		if (chanptr > chancpy) chanptr--;
+		if (*chanptr == ' ') *chanptr = '\0';
 	}
-	else res = -1;
-	return res;
 }
 
-int identify(irccfg_t * m_irccfg)
+void identify(irccfg_t * m_irccfg)
 {
-	int res = 0;
-	res += write_data(m_irccfg->sfd, "NICKSERV IDENTIFY ");
-	res += write_data(m_irccfg->sfd, m_irccfg->pass);
-	res += write_data(m_irccfg->sfd, "\n");
-	return res;
+	write_data(m_irccfg->sfd, "NICKSERV IDENTIFY ");
+	write_data(m_irccfg->sfd, m_irccfg->pass);
+	write_data(m_irccfg->sfd, "\n");
 }
 
 

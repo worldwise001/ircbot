@@ -6,6 +6,7 @@ void handle_child(irccfg_t * m_irccfg)
 {
 	int sockfd;
 	int sleeptime = 0;
+	pthread_setspecific(&globals.key, m_irccfg);
 	open_log();
 	while (globals._run)
 	{
@@ -68,6 +69,7 @@ void spawn_child(irccfg_t * m_irccfg)
 
 void set_up_children()
 {
+	pthread_key_create(&globals.key_irccfg, NULL);
 	llist_t * iterator = globals.irc_list;
 	while (iterator != NULL)
 	{

@@ -1,4 +1,3 @@
-#include <sys/wait.h>
 #include "sighand.h"
 
 extern globals_t globals;
@@ -51,10 +50,16 @@ int main(int argc, char** argv)
 		close(STDERR_FILENO);
 		globals._daemon = TRUE;
 	}
+	
+	pthread_key_create(&globals.key_irccfg, NULL);
+	pthread_key_create(&globals.key_ircout, NULL);
+	pthread_key_create(&globals.key_ircraw, NULL);
+	
 	if (args.log)
 	{
 		globals._log = TRUE;
 		open_log();
+		open_err();
 	}
 	if (args.raw) globals._raw = TRUE;
 	
@@ -66,17 +71,17 @@ int main(int argc, char** argv)
 	if (list_size(irc_list) == 0)
 	{
 		irc_printf(IRCERR, "No configuration loaded\n");
+		clean_up();
 		return EXIT_FAILURE;
 	}
-	set_signals(_PARENT);
 	
 	set_up_children();
-	
 	pthread_t lib_tid = set_up_lib_thread();
 	
-	if (irc_list != NULL)
-		clear_list(irc_list);
-	close_log();
+	clean_up();
+	
+	if (irc_list != NULL) clear_list(irc_list);
+	
 	if (errno)
 	{
 		irc_printf(IRCERR, "Some error occured; last error was: %s\n", strerror(errno));
