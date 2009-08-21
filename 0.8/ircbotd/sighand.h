@@ -8,7 +8,6 @@ int set_signals(int type);
 
 void sighandle_init(int sig);
 void sighandle_parent(int sig);
-void sighandle_child(int sig);
 void sighandle_lib(int sig);
 
 #endif

@@ -6,7 +6,6 @@ void handle_child(irccfg_t * m_irccfg)
 {
 	int sockfd;
 	int sleeptime = 0;
-	pthread_setspecific(&globals.key, m_irccfg);
 	open_log();
 	while (globals._run)
 	{
@@ -45,6 +44,7 @@ void handle_child(irccfg_t * m_irccfg)
 				else
 				{
 					child_loop(m_irccfg);
+					close(sockfd);
 					close_raw();
 					break;
 				}
@@ -67,6 +67,11 @@ void spawn_child(irccfg_t * m_irccfg)
 	m_irccfg->tid = tid;
 }
 
+void kill_child(irccfg_t * m_irccfg)
+{
+	
+}
+
 void set_up_children()
 {
 	pthread_key_create(&globals.key_irccfg, NULL);
@@ -82,7 +87,7 @@ void set_up_children()
 void child_loop(irccfg_t * m_irccfg)
 {
 	char * line = NULL;
-	while (TRUE)
+	while (globals.run)
 	{
 		line = get_next_line(m_irccfg->sfd);
 		if (line == NULL || strlen(line) == 0)
@@ -100,12 +105,13 @@ void child_loop(irccfg_t * m_irccfg)
 		{
 			write_data(m_irccfg->sfd, "PONG :");
 			write_data(m_irccfg->sfd, &line[6]);
-			write_data(m_irccfg->sfd, "\n");
+			write_data(m_irccfg->sfd, "\r\n");
 			free(line);
 			line = NULL;
 		}
 		else
 			process_data(m_irccfg, line);
 	}
+	write_data(m_irccfg->sfd, "QUIT :Terminated by user\r\n");
 }
 

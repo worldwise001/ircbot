@@ -17,5 +17,6 @@
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <pthread.h>
 
 #endif //INCLUDE_H_

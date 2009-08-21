@@ -36,9 +36,7 @@ char * get_next_line(int fd)
 		free(buffer);
 		return NULL;
 	}
-	#ifdef IOPRINT
-	printf("%d<<(%d) %s\n",getpid(), fd, buffer);
-	#endif
+	if (VERBOSE(4))	printf("[%d<]<(%d) %s\n",pthread_self(), fd, buffer);
 	return buffer;
 }
 
@@ -66,9 +64,7 @@ int write_data(int fd, char * data)
 		if (tmp == -1) return -1;
 		written += tmp;
 	}
-	#ifdef IOPRINT
-	printf("%d>>(%d) %s\n",getpid(), fd, data);
-	#endif
+	if (VERBOSE(4))	printf("[%d]>>(%d) %s\n",pthread_self(), fd, data);
 
 	return written;
 }

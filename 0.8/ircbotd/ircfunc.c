@@ -12,8 +12,9 @@ void print_usage(char * app_name)
 
 void print_version(char * app_name)
 {
-	printf("Circe %s\n", VERSION);
+	printf("CirceBot %s\n", VERSION);
 	printf("Written in C by worldwise001\n");
+	printf("http://circebot.sourceforge.net\n");
 }
 
 void irc_printf(unsigned int type, char * string, ... )
@@ -27,8 +28,9 @@ void irc_printf(unsigned int type, char * string, ... )
 	{
 		if (globals._log)
 		{
-			vfprintf(globals._ircout, string, listPointer);
-			fflush(globals._ircout);
+			FILE * ircout = pthread_getspecific(globals.key_ircout);
+			vfprintf(ircout, string, listPointer);
+			fflush(ircout);
 		}
 		if (!globals._daemon) vfprintf(stdout, string, listPointer);
 	}

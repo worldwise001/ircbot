@@ -63,10 +63,9 @@ int main(int argc, char** argv)
 	}
 	if (args.raw) globals._raw = TRUE;
 	
-	globals._run = TRUE;
 	irc_printf(IRCOUT, "%s %s\nLoading configuration\n", NAME, VERSION);
 
-	llist_t * irc_list = load_irccfg(args.conf_file);
+	globals.irc_list = load_irccfg(args.conf_file);
 
 	if (list_size(irc_list) == 0)
 	{
@@ -74,6 +73,8 @@ int main(int argc, char** argv)
 		clean_up();
 		return EXIT_FAILURE;
 	}
+	
+	
 	
 	set_up_children();
 	pthread_t lib_tid = set_up_lib_thread();

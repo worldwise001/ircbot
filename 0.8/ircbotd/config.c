@@ -331,7 +331,7 @@ void close_log()
 	{
 		FILE * ircout = pthread_getspecific(globals.key_ircout);
 		fclose(ircout);
-		pthread_getspecific(globals.key_ircout, NULL);
+		pthread_setspecific(globals.key_ircout, NULL);
 	}
 }
 
@@ -374,7 +374,7 @@ void close_raw(irccfg_t * m_irccfg)
 	{
 		FILE * ircraw = pthread_getspecific(globals.key_ircraw);
 		fclose(ircraw);
-		pthread_getspecific(globals.key_ircraw, NULL);
+		pthread_setspecific(globals.key_ircraw, NULL);
 	}
 }
 
