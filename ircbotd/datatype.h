@@ -58,6 +58,8 @@ typedef struct {
 	boolean run;
 	int verbose;
 	time_t start;
+	llist_t * irc_list;
+	pthreat_t lib_tid;
 	pthread_key_t key_irccfg;
 	pthread_key_t key_ircout;
 	pthread_key_t key_ircraw;

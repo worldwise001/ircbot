@@ -5,63 +5,12 @@ extern globals_t globals;
 void sighandle_init(int sig)
 {
 	clear_list(globals.irc_list);
-	exit(EXIT_SUCCESS);
+	exit(EXIT_FAILURE);
 }
 
 void sighandle_parent(int sig)
 {
-	globals._run = 0;
-	if (list_size(globals.irc_list) > 0)
-	{
-		int asig = SIGUSR1;
-		if (sig == SIGSEGV)
-			asig = SIGSEGV;
-		llist_t * iterator = globals.irc_list;
-		while (iterator != NULL)
-		{
-			irccfg_t * m_irccfg = (irccfg_t *)(iterator->item);
-			if (m_irccfg->pid != 0) kill(m_irccfg->pid, asig);
-			iterator = iterator->next;
-		}
-		kill(globals.lib_pid, SIGUSR1);
-		clear_list(globals.irc_list);
-		globals.irc_list = NULL;
-	}
-}
-
-void sighandle_child(int sig)
-{
-	if (sig == SIGUSR2)
-	{
-		char * line = get_next_line(globals.m_irccfg.rfd);
-		if (line == NULL) return;
-		//printf("%s\n", line);
-		write_data(globals.m_irccfg.sfd, line);
-		write_data(globals.m_irccfg.sfd, "\n");
-		free(line);
-	}
-	#ifdef PING_ALARM
-	else if (sig == SIGALRM)
-	{
-		write_data(globals.m_irccfg.sockfd, "PING :IRCBot\n");
-		alarm(PING_DELAY);
-	}
-	#endif
-	else if (sig != SIGUSR1 && sig != SIGSEGV)
-		kill(globals.parent_pid, sig);
-	else
-	{
-		char * quitmsg = "QUIT :Terminated by signal\n";
-		if (sig == SIGSEGV) quitmsg = "QUIT :Segmentation fault!\n";
-		globals._run = 0;
-		if (globals.m_irccfg.enabled)
-		{
-			usleep(UDELAY);
-			write_data(globals.m_irccfg.sfd, quitmsg);
-		}
-		else
-			close(globals.m_irccfg.sfd);
-	}
+	globals.run = FALSE;
 }
 
 void sighandle_lib(int sig)

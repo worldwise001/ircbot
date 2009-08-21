@@ -4,9 +4,11 @@
 #include "socket.h"
 #include "sighand.h"
 
-int handle_child(irccfg_t * m_irccfg);
+void handle_child(irccfg_t * m_irccfg);
 
-int set_up_lib_thread(int * pfds);
-int set_up_children(int * pfds);
+void spawn_child(irccfg_t * m_irccfg);
+void kill_child(irccfg_t * m_irccfg);
+void set_up_children();
+void child_loop(irccfg_t * m_irccfg);
 
 #endif /* CHILD_H_ */

@@ -72,7 +72,7 @@ void parse_raw_to_irc(char * line, msg_t * data)
 	}
 }
 
-void process_data(irccfg_t * m_irccfg, char * line)
+void process_input(irccfg_t * m_irccfg, char * line)
 {
 	if (globals._raw && line)
 	{
@@ -141,5 +141,5 @@ void print_msg(const msg_t * data)
 	time(&rawtime);
 	char * atime = ctime(&rawtime)+11;
 	atime[8] = '\0';
-	irc_printf(IRCOUT, "%s: <%d> <%s> <%s> <%s> <%s>\n", atime, data->tid, data->sender, data->command, data->target, data->message);
+	irc_printf(IRCOUT, "%s: <%d> <%s> <%s> <%s> <%s>\n", atime, pthread_self(), data->sender, data->command, data->target, data->message);
 }
