@@ -54,11 +54,20 @@ void respond(const irccfg_t * m_irccfg, char * format, ... )
 	
     va_list listPointer;
     va_start( listPointer, format );
+	char buffer[BUFF_SIZE+1];
+	memset(buffer, 0, BUFF_SIZE+1);
+	vsnprintf(buffer, BUFF_SIZE-2, format, listPointer);
+	buffer[strlen(buffer)] = '\r';
+	buffer[strlen(buffer)] = '\n';
+	write_data(m_irccfg->sfd, buffer);
+	/*
 	int tempfd = dup(m_irccfg->sfd);
 	FILE * tempstream = fdopen(tempfd, "w+");
 	vfprintf(tempstream, format, listPointer);
+	fprintf(tempstream, "\r\n");
 	fflush(tempstream);
 	fclose(tempstream);
+	*/
     va_end( listPointer );
 	usleep(UDELAY);
 	

@@ -48,10 +48,10 @@ check sock_handshake(irccfg_t * m_irccfg)
 {
 	char * line  = NULL;
 
-	write_data(m_irccfg->sfd, "\n");
+	write_data(m_irccfg->sfd, "\r\n");
 	write_data(m_irccfg->sfd, "NICK ");
 	write_data(m_irccfg->sfd, m_irccfg->nick);
-	write_data(m_irccfg->sfd, "\n");
+	write_data(m_irccfg->sfd, "\r\n");
 	if (errno)
 	{
 		irc_printf(IRCERR, "Error writing to stream: %s\n", strerror(errno));
@@ -62,7 +62,7 @@ check sock_handshake(irccfg_t * m_irccfg)
 	write_data(m_irccfg->sfd, m_irccfg->user);
 	write_data(m_irccfg->sfd, " * * :");
 	write_data(m_irccfg->sfd, m_irccfg->real);
-	write_data(m_irccfg->sfd, "\n");
+	write_data(m_irccfg->sfd, "\r\n");
 	if (errno)
 	{
 		irc_printf(IRCERR, "Error writing to stream: %s\n", strerror(errno));
@@ -88,7 +88,7 @@ check sock_handshake(irccfg_t * m_irccfg)
 		{
 			write_data(m_irccfg->sfd, "PONG :");
 			write_data(m_irccfg->sfd, &line[6]);
-			write_data(m_irccfg->sfd, "\n");
+			write_data(m_irccfg->sfd, "\r\n");
 			free(line);
 			continue;
 		}
@@ -116,7 +116,7 @@ void autojoin(const irccfg_t * m_irccfg)
 		if (chanptr > chancpy) chanptr++;
 		write_data(m_irccfg->sfd, "JOIN ");
 		write_data(m_irccfg->sfd, chanptr);
-		write_data(m_irccfg->sfd, "\n");
+		write_data(m_irccfg->sfd, "\r\n");
 		if (chanptr > chancpy) chanptr--;
 		if (*chanptr == ' ') *chanptr = '\0';
 	}
@@ -126,7 +126,7 @@ void identify(const irccfg_t * m_irccfg)
 {
 	write_data(m_irccfg->sfd, "NICKSERV IDENTIFY ");
 	write_data(m_irccfg->sfd, m_irccfg->pass);
-	write_data(m_irccfg->sfd, "\n");
+	write_data(m_irccfg->sfd, "\r\n");
 }
 
 
