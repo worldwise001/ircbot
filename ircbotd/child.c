@@ -5,13 +5,14 @@ extern sigset_t sigset;
 
 void *handle_child(void * ptr)
 {
-	irc_printf(IRCOUT, "Child started!\n");
 	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 	irccfg_t * m_irccfg = (irccfg_t *)(ptr);
 	m_irccfg->alive = 1;
+	pthread_setspecific(globals.key_irccfg, m_irccfg);
 	int sockfd;
 	int sleeptime = 0;
 	open_log();
+	irc_printf(IRCOUT, "Child started!\n");
 	while (globals.run)
 	{
 		if (sleeptime < MAX_RECON_CYCLE)

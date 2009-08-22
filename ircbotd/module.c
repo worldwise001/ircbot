@@ -231,7 +231,7 @@ void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 	field_t target = get_target(data);
 	respond(m_irccfg, "PRIVMSG %s :%cBasic commands:%c help, commands, login, status, uptime, moddir, modlist, beep", target.field, TXT_BOLD, TXT_NORM);
 	if (is_admin(data->sender))
-		respond(m_irccfg, "PRIVMSG %s :%cAdmin commands:%s load, unload, raw", target.field, TXT_BOLD, TXT_NORM);
+		respond(m_irccfg, "PRIVMSG %s :%cAdmin commands:%c load, unload, raw", target.field, TXT_BOLD, TXT_NORM);
 	
 	char buffer[MSG_FLD/2 + 1];
 	memset(buffer, 0, MSG_FLD/2 + 1);
@@ -258,6 +258,36 @@ void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 	}
 	if (command_list != NULL)
 		respond(m_irccfg, "PRIVMSG %s :%cModule commands:%c %s", target.field, TXT_BOLD, TXT_NORM, buffer);
+}
+
+void output_llist(const irccfg_t * m_irccfg, const msg_t * data, llist_t * llist)
+{
+	field_t target = get_target(data);
+	char buffer[MSG_FLD/2 + 1];
+	memset(buffer, 0, MSG_FLD/2 + 1);
+	int pos = 0;
+	llist_t * c_iterator = llist;
+	while (c_iterator != NULL)
+	{
+		char * entry = (char *)(c_iterator->item);
+		if (pos + strlen(entry) + 2 < MSG_FLD/2)
+		{
+			sprintf(buffer + pos, "%s, ", entry);
+			pos += strlen(entry) + 2;
+		}
+		else
+		{
+			respond(m_irccfg, "PRIVMSG %s :%s", target.field, buffer);
+			memset(buffer, 0, MSG_FLD/2 + 1);
+			pos = 0;
+			
+			sprintf(buffer + pos, "%s, ", entry);
+			pos += strlen(entry) + 2;
+		}
+		c_iterator = c_iterator->next;
+	}
+	if (command_list != NULL)
+		respond(m_irccfg, "PRIVMSG %s :%s", target.field, buffer);
 }
 
 llist_t * get_module_list()

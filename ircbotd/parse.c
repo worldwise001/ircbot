@@ -115,7 +115,9 @@ void process_input(irccfg_t * m_irccfg, char * line)
 		{
 			char buffer[CFG_FLD+1];
 			memset(buffer, 0, CFG_FLD+1);
-			_timetostr(buffer, globals.start);
+			time_t now;
+			time(&now);
+			_timetostr(buffer, now - globals.start);
 			respond(m_irccfg, "NOTICE %s :%s", ptarget.field, buffer);
 		}
 		else if (is_value(data.message, SENTINEL))
@@ -123,7 +125,7 @@ void process_input(irccfg_t * m_irccfg, char * line)
 			char * msg = data.message + strlen(SENTINEL);
 			if (is_value(msg, "beep"))
 				if (msg[4] == '\0' || msg[4] == ' ')
-					respond(m_irccfg, "PRIVMSG %s :%c%cBEEP!", data.target, BELL, TXT_BOLD);
+					respond(m_irccfg, "PRIVMSG %s :%cBEEP!%c", data.target, TXT_BOLD, BELL);
 		}
 	}
 

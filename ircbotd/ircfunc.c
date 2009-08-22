@@ -74,7 +74,7 @@ void respond(const irccfg_t * m_irccfg, char * format, ... )
 	pthread_mutex_unlock( &io_mutex );
 }
 
-bot_t bot_command(char * message)
+bot_t bot_command(const char * message)
 {
 	bot_t temp;
 	memset(&temp, 0, sizeof(bot_t));
@@ -82,7 +82,7 @@ bot_t bot_command(char * message)
 	if (strlen(message) < strlen(SENTINEL)) return temp;
 	if (strncmp(message, SENTINEL, strlen(SENTINEL)) == 0)
 	{
-		char * ptr = &message[strlen(SENTINEL)];
+		const char * ptr = &message[strlen(SENTINEL)];
 		char * end = index(ptr, ' ');
 		if (end == NULL)
 		{
