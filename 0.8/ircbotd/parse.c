@@ -84,10 +84,8 @@ void process_input(irccfg_t * m_irccfg, char * line)
 	free(line);
 	if (is_value(data.command, "ERROR"))
 	{
-		close(m_irccfg->sfd);
-		close_log();
-		close_raw();
-		pthread_exit(NULL);
+		m_irccfg->alive = 0;
+		return;
 	}
 	
 	field_t ptarget = get_nick(data.sender);

@@ -10,6 +10,7 @@ typedef enum { OKAY = 0, ERROR = -1 } check;
 
 typedef struct {
 	boolean enabled;
+	volatile sig_atomic_t alive;
 	unsigned int id;
 	pthread_t tid;
 	char nick[CFG_FLD+1];

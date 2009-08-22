@@ -8,6 +8,7 @@ void *handle_child(void * ptr)
 	irc_printf(IRCOUT, "Child started!\n");
 	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 	irccfg_t * m_irccfg = (irccfg_t *)(ptr);
+	m_irccfg->alive = 1;
 	int sockfd;
 	int sleeptime = 0;
 	open_log();
@@ -98,7 +99,7 @@ void set_up_children()
 void child_loop(irccfg_t * m_irccfg)
 {
 	char * line = NULL;
-	while (TRUE)
+	while (m_irccfg->alive)
 	{
 		line = get_next_line(m_irccfg->sfd);
 		if (line == NULL || strlen(line) == 0)
