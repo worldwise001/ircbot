@@ -1,13 +1,22 @@
-#include "sighand.h"
+#include "child.h"
+#include "lib.h"
 
 extern globals_t globals;
 
+sigset_t sigset;
+
+#define sigcaught(x) sigismember(&sigset_pending, x)
+
 int main(int argc, char** argv)
 {
-	set_signals(_INIT);
+	sigemptyset(&sigset);
+	sigaddset(&sigset, SIGABRT);
+	sigaddset(&sigset, SIGTERM);
+	sigaddset(&sigset, SIGINT);
+	sigaddset(&sigset, SIGHUP);
+	sigaddset(&sigset, SIGQUIT);
+	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 
-	int status;
-	pid_t pid, sid;
 	args_t args;
 	memset(&args, 0, sizeof(args_t));
 	memset(&globals, 0, sizeof(globals_t));
@@ -29,6 +38,7 @@ int main(int argc, char** argv)
 	}
 	if (args.daemon)
 	{
+		pid_t pid, sid;
 		if ((pid = fork()) < 0)
 		{
 			fprintf(stderr, "Unable to daemonize\n");
@@ -69,19 +79,61 @@ int main(int argc, char** argv)
 
 	if (list_size(globals.irc_list) == 0)
 	{
-		globals.irc_printf(IRCERR, "No configuration loaded\n");
+		irc_printf(IRCERR, "No configuration loaded\n");
 		clean_up();
 		return EXIT_FAILURE;
 	}
+	sigset_t sigset_pending;
+	sigpending(&sigset_pending);
+	if (sigcaught(SIGINT) || sigcaught(SIGABRT) || sigcaught(SIGTERM) || sigcaught(SIGHUP) || sigcaught(SIGQUIT))
+	{
+		clear_list(globals.irc_list);
+		irc_printf(IRCOUT, "Signal caught, terminating!\n");
+		clean_up();
+		return EXIT_SUCCESS;
+	}
 	
+	globals.run = 1;
 	
-	
+	globals.lib_tid = set_up_lib_thread();
 	set_up_children();
-	pthread_t lib_tid = set_up_lib_thread();
+	
+	int signal = 0;
+	sigwait(&sigset, &signal);
+	
+	char * sigtype = NULL;
+	switch (signal)
+	{
+		case SIGINT: sigtype = "SIGINT"; break;
+		case SIGHUP: sigtype = "SIGHUP"; break;
+		case SIGTERM: sigtype = "SIGTERM"; break;
+		case SIGQUIT: sigtype = "SIGQUIT"; break;
+		case SIGABRT: sigtype = "SIGABRT"; break;
+		default: sigtype = "Unknown";
+	}
+	
+	irc_printf(IRCOUT, "%s caught; cleaning up\n", sigtype);
+	llist_t * i_iterator = globals.irc_list;
+	
+	while (i_iterator != NULL)
+	{
+		irccfg_t * i_irccfg = (irccfg_t *)(i_iterator->item);
+		if (i_irccfg->enabled)
+			respond(i_irccfg, "QUIT :Terminated by %s", sigtype);
+		i_iterator = i_iterator->next;
+	}
+	sleep(2);
+	globals.run = 0;
+	pthread_kill(globals.lib_tid, SIGUSR1);
+	sleep(1);
+	
+	if (globals.irc_list != NULL)
+	{
+		clear_list(globals.irc_list);
+		globals.irc_list = NULL;
+	}
 	
 	clean_up();
-	
-	if (globals.irc_list != NULL) clear_list(globals.irc_list);
 	
 	if (errno)
 	{

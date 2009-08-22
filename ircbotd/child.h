@@ -2,12 +2,11 @@
 #define CHILD_H_
 
 #include "socket.h"
-#include "sighand.h"
+#include "parse.h"
 
-void handle_child(void * ptr);
+void *handle_child(void * ptr);
 
 void spawn_child(irccfg_t * m_irccfg);
-void kill_child(irccfg_t * m_irccfg);
 void set_up_children();
 void child_loop(irccfg_t * m_irccfg);
 

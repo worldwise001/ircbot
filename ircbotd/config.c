@@ -2,12 +2,12 @@
 
 extern globals_t globals;
 
-boolean is_value(char * field, char * type)
+boolean is_value(const char * field, const char * type)
 {
 	return strncasecmp(field, type, strlen(type)) == 0;
 }
 
-llist_t * load_irccfg(char * filename)
+llist_t * load_irccfg(const char * filename)
 {
 	if (filename == NULL) filename = "ircbotd.conf";
 
@@ -383,7 +383,16 @@ void clean_up()
 	close_log();
 	close_err();
 	
-	pthread_key_delete(&globals.key_irccfg);
-	pthread_key_delete(&globals.key_ircout);
-	pthread_key_delete(&globals.key_ircraw);
+	pthread_key_delete(globals.key_irccfg);
+	pthread_key_delete(globals.key_ircout);
+	pthread_key_delete(globals.key_ircraw);
+}
+
+void irc_print_raw(const char * line)
+{
+	time_t rawtime;
+	time(&rawtime);
+	FILE * ircraw = pthread_getspecific(globals.key_ircraw);
+	fprintf(ircraw, "%ld000 %s\n", rawtime, line);
+	fflush(ircraw);
 }

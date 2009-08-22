@@ -36,7 +36,7 @@ char * get_next_line(int fd)
 		free(buffer);
 		return NULL;
 	}
-	if (VERBOSE(4))	printf("[%d]<< %s\n",pthread_self(), fd, buffer);
+	if (VERBOSE(4))	printf("[%d]<< %s\n", fd, buffer);
 	return buffer;
 }
 
@@ -55,7 +55,7 @@ int get_next_char(int fd)
 	return fbuff[pos++];
 }
 
-int write_data(int fd, char * data)
+int write_data(int fd, const char * data)
 {
 	ssize_t written = 0;
 	while (written < strlen(data))
@@ -64,7 +64,7 @@ int write_data(int fd, char * data)
 		if (tmp == -1) return -1;
 		written += tmp;
 	}
-	if (VERBOSE(4))	printf("[%d]>> %s\n",pthread_self(), fd, data);
+	if (VERBOSE(4))	printf("[%d]>> %s\n", fd, data);
 
 	return written;
 }

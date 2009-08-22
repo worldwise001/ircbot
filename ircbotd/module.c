@@ -5,7 +5,7 @@ extern globals_t globals;
 llist_t * module_list = NULL;
 llist_t * command_list = NULL;
 
-int load_module(char * name, char * error)
+int load_module(char * mname, char * error)
 {
 	void * lib_handle = NULL;
 	llist_t * module_filelist = list_modules(FALSE);
@@ -24,7 +24,7 @@ int load_module(char * name, char * error)
 	while (mf_iterator != NULL)
 	{
 		char * entry = (char *)(mf_iterator->item);
-		if (strcmp(entry, name) == 0)
+		if (strcmp(entry, mname) == 0)
 		{
 			module_loaded = TRUE;
 			break;
@@ -34,27 +34,27 @@ int load_module(char * name, char * error)
 	if (module_loaded)
 	{
 		strncpy(error, "Module already loaded", ERROR_LEN);
-		irc_printf(IRCERR, "Module %s already loaded\n", name);
+		irc_printf(IRCERR, "Module %s already loaded\n", mname);
 		return -1;
 	}
 	
-	char * filename = malloc(strlen(name) + 2 + strlen(MODULEDIR));
-	memset(filename, 0, strlen(name) + 2 + strlen(MODULEDIR));
-	snprintf(filename, "%s/%s", MODULEDIR, name);
+	char * filename = malloc(strlen(mname) + 2 + strlen(MODULEDIR));
+	memset(filename, 0, strlen(mname) + 2 + strlen(MODULEDIR));
+	sprintf(filename, "%s/%s", MODULEDIR, mname);
 	
 	lib_handle = dlopen(filename, RTLD_NOW);
 	free(filename);
 	if (!lib_handle)
 	{
 		strncpy(error, dlerror(), ERROR_LEN);
-		irc_printf(IRCERR, "Error loading %s: %s\n", name, error);
+		irc_printf(IRCERR, "Error loading %s: %s\n", mname, error);
 		dlerror();
 		return -1;
 	}
 	
 	module_t * module = malloc(sizeof(module_t));
 	memset(module, 0, sizeof(module_t));
-	strncpy(module->filename, name, CFG_FLD);
+	strncpy(module->filename, mname, CFG_FLD);
 	
 	//begin shared object symbol resolution
 	module->parse = dlsym(lib_handle, "parse");
@@ -62,7 +62,7 @@ int load_module(char * name, char * error)
 	if ((lerror = dlerror()) != NULL)
 	{
 		strncpy(error, lerror, ERROR_LEN);
-		irc_printf(IRCERR, "Error binding \"parse\" in %s: %s\n", name, error);
+		irc_printf(IRCERR, "Error binding \"parse\" in %s: %s\n", mname, error);
 		free(module);
 		dlerror();
 		return -1;
@@ -72,7 +72,7 @@ int load_module(char * name, char * error)
 	commands = dlsym(lib_handle, "commands");
 	if ((lerror = dlerror()) != NULL)
 	{
-		irc_printf(IRCERR, "Error binding \"commands\" in %s, skipping: %s\n", name, lerror);
+		irc_printf(IRCERR, "Error binding \"commands\" in %s, skipping: %s\n", mname, lerror);
 		dlerror();
 	}
 	else
@@ -82,7 +82,7 @@ int load_module(char * name, char * error)
 	name = dlsym(lib_handle, "name");
 	if ((lerror = dlerror()) != NULL)
 	{
-		irc_printf(IRCERR, "Error binding \"name\" in %s, skipping: %s\n", name, lerror);
+		irc_printf(IRCERR, "Error binding \"name\" in %s, skipping: %s\n", mname, lerror);
 		dlerror();
 	}
 	else
@@ -102,7 +102,6 @@ int load_module(char * name, char * error)
 int unload_module(char * name, char * error)
 {
 	llist_t * m_iterator = module_list;
-	int module_loaded = FALSE;
 	int i = 0;
 	while (m_iterator != NULL)
 	{
@@ -117,6 +116,30 @@ int unload_module(char * name, char * error)
 		i++;
 	}
 	return -1;
+}
+
+int load_all_modules(char * error)
+{
+	llist_t * dir_iterator = list_module_dir();
+	while (dir_iterator != NULL)
+	{
+		char * filename = (char *)(dir_iterator->item);
+		load_module(filename, error);
+		dir_iterator = dir_iterator->next;
+	}
+	return 0;
+}
+
+int unload_all_modules(char * error)
+{
+	llist_t * dir_iterator = list_modules(0);
+	while (dir_iterator != NULL)
+	{
+		char * filename = (char *)(dir_iterator->item);
+		unload_module(filename, error);
+		dir_iterator = dir_iterator->next;
+	}
+	return 0;
 }
 
 llist_t * list_module_dir()
@@ -136,10 +159,10 @@ llist_t * list_module_dir()
 		char * extension = rindex(dir_entry->d_name, '.');
 		if (extension == NULL) continue;
 		if (strcmp(extension, EXT) != 0) continue;
-		filename = malloc(strlen(dir_entry->d_name)+1);
-		memset(filename, 0, strlen(dir_entry->d_name)+1);
-		strncpy(filename, dir_entry->d_name, strlen(dir_entry->d_name));
-		llist_t * iterator = append_item(first, filename);
+		file_name = malloc(strlen(dir_entry->d_name)+1);
+		memset(file_name, 0, strlen(dir_entry->d_name)+1);
+		strncpy(file_name, dir_entry->d_name, strlen(dir_entry->d_name));
+		llist_t * iterator = append_item(first, file_name);
 		if (iterator != NULL)
 			first = iterator;
 	}
@@ -157,13 +180,13 @@ llist_t * list_modules(int show_names)
 	{
 		char * entry;
 		module_t * module = (module_t *)(m_iterator->item);
-		if (type && module->name != NULL)
+		if (show_names && module->name != NULL)
 		{
 			int name_l = strlen(module->name);
 			int fname_l = strlen(module->filename);
 			entry = malloc(name_l + 4 + fname_l);
 			memset(entry, 0, name_l + 4 + fname_l);
-			strncpy(entry, m_iterator->name, name_l);
+			strncpy(entry, module->name, name_l);
 			strncpy(entry+name_l, " (", 2);
 			strncpy(entry+name_l+2, module->filename, fname_l);
 			entry[name_l+2+fname_l] = ')';
@@ -206,9 +229,9 @@ void generate_command_list()
 void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 {
 	field_t target = get_target(data);
-	respond(m_irccfg, "PRIVMSG %s :%cBasic commands:%c help, commands, login, status, uptime, moddir, modlist, beep", target->field, TXT_BOLD, TXT_NORM);
-	if (is_admin(sender))
-		respond(m_irccfg, "PRIVMSG %s :%cAdmin commands:%s load, unload, raw", target->field, TXT_BOLD, TXT_NORM);
+	respond(m_irccfg, "PRIVMSG %s :%cBasic commands:%c help, commands, login, status, uptime, moddir, modlist, beep", target.field, TXT_BOLD, TXT_NORM);
+	if (is_admin(data->sender))
+		respond(m_irccfg, "PRIVMSG %s :%cAdmin commands:%s load, unload, raw", target.field, TXT_BOLD, TXT_NORM);
 	
 	char buffer[MSG_FLD/2 + 1];
 	memset(buffer, 0, MSG_FLD/2 + 1);
@@ -219,25 +242,25 @@ void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 		char * entry = (char *)(c_iterator->item);
 		if (pos + strlen(entry) + 2 < MSG_FLD/2)
 		{
-			snprintf(buffer + pos, "%s, ", entry);
+			sprintf(buffer + pos, "%s, ", entry);
 			pos += strlen(entry) + 2;
 		}
 		else
 		{
-			respond(m_irccfg, "PRIVMSG %s :%cModule commands:%c %s", target->field, TXT_BOLD, TXT_NORM, buffer);
+			respond(m_irccfg, "PRIVMSG %s :%cModule commands:%c %s", target.field, TXT_BOLD, TXT_NORM, buffer);
 			memset(buffer, 0, MSG_FLD/2 + 1);
 			pos = 0;
 			
-			snprintf(buffer + pos, "%s, ", entry);
+			sprintf(buffer + pos, "%s, ", entry);
 			pos += strlen(entry) + 2;
 		}
 		c_iterator = c_iterator->next;
 	}
 	if (command_list != NULL)
-		respond(m_irccfg, "PRIVMSG %s :%cModule commands:%c %s", target->field, TXT_BOLD, TXT_NORM, buffer);
+		respond(m_irccfg, "PRIVMSG %s :%cModule commands:%c %s", target.field, TXT_BOLD, TXT_NORM, buffer);
 }
 
 llist_t * get_module_list()
 {
-	return modlist;
+	return module_list;
 }

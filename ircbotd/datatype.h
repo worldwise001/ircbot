@@ -47,7 +47,7 @@ typedef struct {
 } msg_t;
 
 typedef struct {
-	irccfg_t * m_irccfg;
+	const irccfg_t * m_irccfg;
 	msg_t msg;
 } queue_t;
 
@@ -55,10 +55,11 @@ typedef struct {
 	boolean daemon;
 	boolean log;
 	boolean raw;
-	boolean run;
+	volatile sig_atomic_t run;
 	int verbose;
 	time_t start;
 	llist_t * irc_list;
+	pthread_t main_tid;
 	pthread_t lib_tid;
 	pthread_key_t key_irccfg;
 	pthread_key_t key_ircout;
