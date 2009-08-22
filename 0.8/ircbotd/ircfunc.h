@@ -4,7 +4,7 @@
 #include "datatype.h"
 #include "io.h"
 
-bot_t bot_command(char * message);
+bot_t bot_command(const char * message);
 void respond(const irccfg_t * m_irccfg, char * format, ... );
 void _timetostr(char * buffer, time_t time);
 field_t get_nick(const char * sender);
