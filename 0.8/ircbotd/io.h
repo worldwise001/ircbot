@@ -5,5 +5,5 @@
 
 char * get_next_line(int fd);
 int get_next_char(int fd);
-int write_data(int fd, char * data);
+int write_data(int fd, const char * data);
 #endif /* IO_H_ */

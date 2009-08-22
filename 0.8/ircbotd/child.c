@@ -1,9 +1,12 @@
 #include "child.h"
 
 extern globals_t globals;
+extern sigset_t sigset;
 
-void handle_child(void * ptr)
+void *handle_child(void * ptr)
 {
+	irc_printf(IRCOUT, "Child started!\n");
+	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 	irccfg_t * m_irccfg = (irccfg_t *)(ptr);
 	int sockfd;
 	int sleeptime = 0;
@@ -14,7 +17,7 @@ void handle_child(void * ptr)
 			sleeptime += 10;
 		if (m_irccfg->enabled)
 		{
-			irc_printf(IRCOUT, "Thread %d attempting to connect to %s:%d...\n", pthread_self(), m_irccfg->host, m_irccfg->port);
+			irc_printf(IRCOUT, "ID %d attempting to connect to %s:%d...\n", m_irccfg->id, m_irccfg->host, m_irccfg->port);
 			if ((sockfd = sock_connect(m_irccfg->host, m_irccfg->port)) == -1)
 			{
 				if (errno)
@@ -51,9 +54,18 @@ void handle_child(void * ptr)
 				}
 			}
 		}
-		else sleep(10);
+		else
+		{
+			int tmpsleep = sleeptime;
+			while (tmpsleep--)
+			{
+				sleep(1);
+				if (globals.run == 0) break;
+			}
+		}
 	}
 	close_log();
+	return NULL;
 }
 
 void spawn_child(irccfg_t * m_irccfg)
@@ -65,12 +77,9 @@ void spawn_child(irccfg_t * m_irccfg)
 	int return_value = pthread_create(&tid, &attr, &handle_child, m_irccfg);
 	if (return_value)
 		irc_printf(IRCERR, "There was an error in thread creation\n");
+	else
+		irc_printf(IRCOUT, "Child thread created\n");
 	m_irccfg->tid = tid;
-}
-
-void kill_child(irccfg_t * m_irccfg)
-{
-	
 }
 
 void set_up_children()
@@ -80,6 +89,7 @@ void set_up_children()
 	while (iterator != NULL)
 	{
 		irccfg_t * i_irccfg = (irccfg_t *)(iterator->item);
+		irc_printf(IRCOUT, "Spawning child with id %d\n", i_irccfg->id);
 		spawn_child(i_irccfg);
 		iterator = iterator->next;
 	}
@@ -88,7 +98,7 @@ void set_up_children()
 void child_loop(irccfg_t * m_irccfg)
 {
 	char * line = NULL;
-	while (globals.run)
+	while (TRUE)
 	{
 		line = get_next_line(m_irccfg->sfd);
 		if (line == NULL || strlen(line) == 0)
@@ -113,6 +123,5 @@ void child_loop(irccfg_t * m_irccfg)
 		else
 			process_input(m_irccfg, line);
 	}
-	write_data(m_irccfg->sfd, "QUIT :Terminated by user\r\n");
 }
 

@@ -105,7 +105,7 @@ check sock_handshake(irccfg_t * m_irccfg)
 	return OKAY;
 }
 
-void autojoin(irccfg_t * m_irccfg)
+void autojoin(const irccfg_t * m_irccfg)
 {
 	char chancpy[CFG_FLD*8+1];
 	strcpy(chancpy, m_irccfg->chan);
@@ -122,7 +122,7 @@ void autojoin(irccfg_t * m_irccfg)
 	}
 }
 
-void identify(irccfg_t * m_irccfg)
+void identify(const irccfg_t * m_irccfg)
 {
 	write_data(m_irccfg->sfd, "NICKSERV IDENTIFY ");
 	write_data(m_irccfg->sfd, m_irccfg->pass);

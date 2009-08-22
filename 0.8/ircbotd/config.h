@@ -4,9 +4,9 @@
 #include "io.h"
 #include "ircfunc.h"
 
-boolean is_value(char * field, char * type);			//convenient shortcut
+boolean is_value(const char * field, const char * type);			//convenient shortcut
 
-llist_t * load_irccfg(char * filename);					//load configuration from filename into linked list
+llist_t * load_irccfg(const char * filename);					//load configuration from filename into linked list
 void print_irccfg(llist_t * irclist);					//print configuration (V == 2)
 
 check load_args(int argc, char** argv, args_t * argt);	//load arguments into argt

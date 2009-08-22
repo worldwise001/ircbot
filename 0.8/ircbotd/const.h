@@ -103,5 +103,7 @@
 #define FIELD_SCPY(x) if (strlen(i_irccfg->x) == 0) strcpy(i_irccfg->x, d_irccfg.x)
 #define FIELD_ICPY(x) if (i_irccfg->x == 0) i_irccfg->x = d_irccfg.x
 
+#define sigcaught(x) sigismember(&sigset_pending, x)
+
 #endif //CONST_H_
 

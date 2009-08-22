@@ -2,7 +2,7 @@
 
 llist_t * auth_list;
 
-check add_admin(char * sender)
+check add_admin(const char * sender)
 {
 	if (sender == NULL) return ERROR;
 	llist_t * iterator = auth_list;
@@ -23,7 +23,7 @@ check add_admin(char * sender)
 	return OKAY;
 }
 
-check remove_admin(char * nick)
+check remove_admin(const char * nick)
 {
 	if (auth_list == NULL) return ERROR;
 	if (nick == NULL) return ERROR;
@@ -44,7 +44,7 @@ check remove_admin(char * nick)
 	return OKAY;
 }
 
-boolean is_admin(char * sender)
+boolean is_admin(const char * sender)
 {
 	if (index(sender, '!') == NULL) return FALSE;
 	llist_t * iterator = auth_list;

@@ -48,7 +48,7 @@ void irc_printf(unsigned int type, char * string, ... )
 	pthread_mutex_unlock( &print_mutex );
 }
 
-void respond(irccfg_t * m_irccfg, char * format, ... )
+void respond(const irccfg_t * m_irccfg, char * format, ... )
 {
 	pthread_mutex_lock( &io_mutex );
 	
@@ -121,7 +121,7 @@ void _timetostr(char * buffer, time_t time)
 	if (strlen(buffer) == 0) snprintf(buffer, CFG_FLD, "0s");
 }
 
-char * dup_string(char * string)
+char * dup_string(const char * string)
 {
 	char * str = NULL;
 	if (string == NULL) string = "";
@@ -132,7 +132,7 @@ char * dup_string(char * string)
 	return str;
 }
 
-char * dup_nstring(char * string, int length)
+char * dup_nstring(const char * string, int length)
 {
 	char * str = NULL;
 	if (string == NULL) string = "";
@@ -143,7 +143,7 @@ char * dup_nstring(char * string, int length)
 	return str;
 }
 
-field_t get_target(msg_t * data)
+field_t get_target(const msg_t * data)
 {
 	field_t field;
 	memset(&field, 0, sizeof(field_t));
@@ -158,7 +158,7 @@ field_t get_target(msg_t * data)
 	return field;
 }
 
-field_t get_nick(char * sender)
+field_t get_nick(const char * sender)
 {
 	char * ptr = index(sender, '!');
 	field_t nick;

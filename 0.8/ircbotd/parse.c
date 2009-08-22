@@ -76,24 +76,21 @@ void parse_raw_to_irc(char * line, msg_t * data)
 
 void process_input(irccfg_t * m_irccfg, char * line)
 {
-	if (globals._raw && line)
-	{
-		time_t rawtime;
-		time(&rawtime);
-		fprintf(globals._ircraw, "%ld000 %s\n", rawtime, line);
-		fflush(globals._ircraw);
-	}
+	if (globals.raw && line)
+		irc_print_raw(line);
 	msg_t data;
 	memset(&data, 0, sizeof(msg_t));
-	parse_input(line, &data);
+	parse_raw_to_irc(line, &data);
 	free(line);
 	if (is_value(data.command, "ERROR"))
 	{
 		close(m_irccfg->sfd);
-		exit(EXIT_SUCCESS);
+		close_log();
+		close_raw();
+		pthread_exit(NULL);
 	}
 	
-	field_t ptarget = get_target(data.sender);
+	field_t ptarget = get_nick(data.sender);
 	
 	if (is_value(data.command, "001"))
 	{
@@ -107,41 +104,40 @@ void process_input(irccfg_t * m_irccfg, char * line)
 	}
 	else if (is_value(data.command, "NICK"))
 	{
-		field_t nick = get_nick(data.sender);
-		if (strcasecmp(nick.field, m_irccfg->nick) == 0)
+		if (strcasecmp(ptarget.field, m_irccfg->nick) == 0)
 			strncpy(m_irccfg->nick, data.target, CFG_FLD);
 	}
 	else if (is_value(data.command, "PRIVMSG"))
 	{
 		if (is_value(data.message, "\001VERSION\001"))
-			respond(m_irccfg, "NOTICE %s :\001VERSION %s %s written in C\001", ptarget->field, NAME, VERSION);
+			respond(m_irccfg, "NOTICE %s :\001VERSION %s %s written in C\001", ptarget.field, NAME, VERSION);
 		else if (is_value(data.message, "\001PING"))
-			respond(m_irccfg, "NOTICE %s :%s", ptarget->field, data.message);
+			respond(m_irccfg, "NOTICE %s :%s", ptarget.field, data.message);
 		else if (is_value(data.message, "\001UPTIME\001"))
 		{
 			char buffer[CFG_FLD+1];
 			memset(buffer, 0, CFG_FLD+1);
 			_timetostr(buffer, globals.start);
-			respond(m_irccfg, "NOTICE %s :%s", ptarget->field, buffer);
+			respond(m_irccfg, "NOTICE %s :%s", ptarget.field, buffer);
 		}
 		else if (is_value(data.message, SENTINEL))
 		{
 			char * msg = data.message + strlen(SENTINEL);
 			if (is_value(msg, "beep"))
 				if (msg[4] == '\0' || msg[4] == ' ')
-					respond(m_irccfg, "PRIVMSG %s :%c%cBEEP!", target, BEEP, TXT_BOLD);
+					respond(m_irccfg, "PRIVMSG %s :%c%cBEEP!", data.target, BELL, TXT_BOLD);
 		}
 	}
 
-	print_msg(&data);
+	print_msg(m_irccfg->id, &data);
 	send_to_queue(m_irccfg, &data);
 }
 
-void print_msg(const msg_t * data)
+void print_msg(int id, const msg_t * data)
 {
 	time_t rawtime;
 	time(&rawtime);
 	char * atime = ctime(&rawtime)+11;
 	atime[8] = '\0';
-	irc_printf(IRCOUT, "%s: <%d> <%s> <%s> <%s> <%s>\n", atime, pthread_self(), data->sender, data->command, data->target, data->message);
+	irc_printf(IRCOUT, "%s: <%d> <%s> <%s> <%s> <%s>\n", atime, id, data->sender, data->command, data->target, data->message);
 }
