@@ -68,7 +68,6 @@ void * lib_loop(void * ptr)
 				m_iterator = get_module_list();
 				void (*parse)(const irccfg_t *, const msg_t *);
 				queue_t *q_item = (queue_t *)(q_iterator->item);
-				print_msg(0, &q_item->msg);
 				while (m_iterator != NULL)
 				{
 					module_t * module = (module_t *)(m_iterator->item);
