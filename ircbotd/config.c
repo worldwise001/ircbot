@@ -378,7 +378,7 @@ void close_raw(irccfg_t * m_irccfg)
 	}
 }
 
-void clean_up();
+void clean_up()
 {
 	close_log();
 	close_err();

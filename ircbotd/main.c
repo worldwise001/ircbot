@@ -48,7 +48,7 @@ int main(int argc, char** argv)
 		close(STDIN_FILENO);
 		close(STDOUT_FILENO);
 		close(STDERR_FILENO);
-		globals._daemon = TRUE;
+		globals.daemon = TRUE;
 	}
 	
 	pthread_key_create(&globals.key_irccfg, NULL);
@@ -57,19 +57,19 @@ int main(int argc, char** argv)
 	
 	if (args.log)
 	{
-		globals._log = TRUE;
+		globals.log = TRUE;
 		open_log();
 		open_err();
 	}
-	if (args.raw) globals._raw = TRUE;
+	if (args.raw) globals.raw = TRUE;
 	
 	irc_printf(IRCOUT, "%s %s\nLoading configuration\n", NAME, VERSION);
 
 	globals.irc_list = load_irccfg(args.conf_file);
 
-	if (list_size(irc_list) == 0)
+	if (list_size(globals.irc_list) == 0)
 	{
-		irc_printf(IRCERR, "No configuration loaded\n");
+		globals.irc_printf(IRCERR, "No configuration loaded\n");
 		clean_up();
 		return EXIT_FAILURE;
 	}
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 	
 	clean_up();
 	
-	if (irc_list != NULL) clear_list(irc_list);
+	if (globals.irc_list != NULL) clear_list(globals.irc_list);
 	
 	if (errno)
 	{

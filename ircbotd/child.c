@@ -2,8 +2,9 @@
 
 extern globals_t globals;
 
-void handle_child(irccfg_t * m_irccfg)
+void handle_child(void * ptr)
 {
+	irccfg_t * m_irccfg = (irccfg_t *)(ptr);
 	int sockfd;
 	int sleeptime = 0;
 	open_log();
@@ -110,7 +111,7 @@ void child_loop(irccfg_t * m_irccfg)
 			line = NULL;
 		}
 		else
-			process_data(m_irccfg, line);
+			process_input(m_irccfg, line);
 	}
 	write_data(m_irccfg->sfd, "QUIT :Terminated by user\r\n");
 }
