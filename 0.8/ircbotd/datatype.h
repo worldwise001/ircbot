@@ -5,7 +5,7 @@
 #include "include.h"
 #include "llist.h"
 
-typedef enum { FALSE = 0, TRUE } boolean;
+typedef enum { FALSE = 0, TRUE = 1 } boolean;
 typedef enum { OKAY = 0, ERROR = -1 } check;
 
 typedef struct {
@@ -59,7 +59,7 @@ typedef struct {
 	int verbose;
 	time_t start;
 	llist_t * irc_list;
-	pthreat_t lib_tid;
+	pthread_t lib_tid;
 	pthread_key_t key_irccfg;
 	pthread_key_t key_ircout;
 	pthread_key_t key_ircraw;

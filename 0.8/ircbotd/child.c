@@ -7,7 +7,7 @@ void handle_child(irccfg_t * m_irccfg)
 	int sockfd;
 	int sleeptime = 0;
 	open_log();
-	while (globals._run)
+	while (globals.run)
 	{
 		if (sleeptime < MAX_RECON_CYCLE)
 			sleeptime += 10;
@@ -61,7 +61,7 @@ void spawn_child(irccfg_t * m_irccfg)
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	int return_value = pthread_create(&tid, &attr, handle_child, m_irccfg);
+	int return_value = pthread_create(&tid, &attr, &handle_child, m_irccfg);
 	if (return_value)
 		irc_printf(IRCERR, "There was an error in thread creation\n");
 	m_irccfg->tid = tid;
