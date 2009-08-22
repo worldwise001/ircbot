@@ -4,7 +4,7 @@
 #include "socket.h"
 #include "sighand.h"
 
-void handle_child(irccfg_t * m_irccfg);
+void handle_child(void * ptr);
 
 void spawn_child(irccfg_t * m_irccfg);
 void kill_child(irccfg_t * m_irccfg);

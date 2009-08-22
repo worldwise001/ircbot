@@ -1,5 +1,7 @@
 #include "module.h"
 
+extern globals_t globals;
+
 llist_t * module_list = NULL;
 llist_t * command_list = NULL;
 
@@ -235,3 +237,7 @@ void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 		respond(m_irccfg, "PRIVMSG %s :%cModule commands:%c %s", target->field, TXT_BOLD, TXT_NORM, buffer);
 }
 
+llist_t * get_module_list()
+{
+	return modlist;
+}

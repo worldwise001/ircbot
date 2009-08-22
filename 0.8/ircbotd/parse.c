@@ -1,5 +1,7 @@
 #include "parse.h"
 
+extern globals_t globals;
+
 void parse_raw_to_irc(char * line, msg_t * data)
 {
 	memset(data, 0, sizeof(msg_t));

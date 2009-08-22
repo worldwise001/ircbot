@@ -5,6 +5,7 @@ extern globals_t globals;
 void sighandle_init(int sig)
 {
 	clear_list(globals.irc_list);
+	globals.irc_list = NULL;
 	exit(EXIT_FAILURE);
 }
 

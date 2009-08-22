@@ -26,22 +26,22 @@ void irc_printf(unsigned int type, char * string, ... )
 	
 	if (type == IRCOUT)
 	{
-		if (globals._log)
+		if (globals.log)
 		{
 			FILE * ircout = pthread_getspecific(globals.key_ircout);
 			vfprintf(ircout, string, listPointer);
 			fflush(ircout);
 		}
-		if (!globals._daemon) vfprintf(stdout, string, listPointer);
+		if (!globals.daemon) vfprintf(stdout, string, listPointer);
 	}
 	else if (type == IRCERR)
 	{
-		if (globals._log)
+		if (globals.log)
 		{
 			vfprintf(globals._ircerr, string, listPointer);
 			fflush(globals._ircerr);
 		}
-		if (!globals._daemon) vfprintf(stderr, string, listPointer);
+		if (!globals.daemon) vfprintf(stderr, string, listPointer);
 	}
     va_end( listPointer );
 

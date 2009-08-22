@@ -36,7 +36,7 @@ char * get_next_line(int fd)
 		free(buffer);
 		return NULL;
 	}
-	if (VERBOSE(4))	printf("[%d<]<(%d) %s\n",pthread_self(), fd, buffer);
+	if (VERBOSE(4))	printf("[%d]<< %s\n",pthread_self(), fd, buffer);
 	return buffer;
 }
 
@@ -64,7 +64,7 @@ int write_data(int fd, char * data)
 		if (tmp == -1) return -1;
 		written += tmp;
 	}
-	if (VERBOSE(4))	printf("[%d]>>(%d) %s\n",pthread_self(), fd, data);
+	if (VERBOSE(4))	printf("[%d]>> %s\n",pthread_self(), fd, data);
 
 	return written;
 }
