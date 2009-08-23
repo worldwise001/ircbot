@@ -112,7 +112,7 @@ void process_queue_item(const queue_t * q_item)
 	if (strlen(result.command) > 0)
 	{
 		if (is_value(result.command, "help"))
-			respond(m_irccfg, "PRIVMSG %s :%s (CirceBot) at your service! For a list of commands, type %c%scommands.", target.field, m_irccfg->nick, TXT_BOLD, SENTINEL);
+			respond(m_irccfg, "PRIVMSG %s :%s (%s) at your service! For a list of commands, type %c%scommands%c.", target.field, m_irccfg->nick, NAME, TXT_BOLD, SENTINEL, TXT_NORM);
 		else if (is_value(result.command, "commands"))
 			output_commands(m_irccfg, data);
 		else if (is_value(result.command, "login"))

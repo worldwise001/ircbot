@@ -1,12 +1,22 @@
 CHANGELOG
 
-ircbotd size: 44905 bytes
-lines of code: 2205
+ircbotd size: 43166 bytes
+lines of code: 2070
 
 Current TODO:
 - Implement auto-avoid NICK collision
 - Commenting; lots of it
 - autoconf it for automake
+- Standardize boolean/check values
+
+August 22, 2009
+- Version 0.8 is fairly stable
+- Added IRC text formatting
+- !beep is implemented
+- All linked lists converted
+
+August 14, 2009
+- Version 0.7.1 is released
 
 August 12, 2009
 - Huge revamp for 0.8
