@@ -21,7 +21,7 @@
 #define UDELAY 200
 #endif
 
-#define NAME "Circe"
+#define NAME "CirceBot"
 
 //version of IRCBot
 #ifndef VERSION

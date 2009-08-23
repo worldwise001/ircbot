@@ -60,14 +60,6 @@ void respond(const irccfg_t * m_irccfg, char * format, ... )
 	buffer[strlen(buffer)] = '\r';
 	buffer[strlen(buffer)] = '\n';
 	write_data(m_irccfg->sfd, buffer);
-	/*
-	int tempfd = dup(m_irccfg->sfd);
-	FILE * tempstream = fdopen(tempfd, "w+");
-	vfprintf(tempstream, format, listPointer);
-	fprintf(tempstream, "\r\n");
-	fflush(tempstream);
-	fclose(tempstream);
-	*/
     va_end( listPointer );
 	usleep(UDELAY);
 	
