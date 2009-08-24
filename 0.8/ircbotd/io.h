@@ -3,7 +3,7 @@
 
 #include "datatype.h"
 
-char * get_next_line(int fd);
+char * get_next_line(int fd, data);
 int get_next_char(int fd);
 int write_data(int fd, const char * data);
 #endif /* IO_H_ */

@@ -64,6 +64,7 @@ int main(int argc, char** argv)
 	pthread_key_create(&globals.key_irccfg, NULL);
 	pthread_key_create(&globals.key_ircout, NULL);
 	pthread_key_create(&globals.key_ircraw, NULL);
+	pthread_key_create(&globals.key_datastat, NULL);
 	
 	if (args.log)
 	{
@@ -109,7 +110,7 @@ int main(int argc, char** argv)
 		case SIGTERM: sigtype = "SIGTERM"; break;
 		case SIGQUIT: sigtype = "SIGQUIT"; break;
 		case SIGABRT: sigtype = "SIGABRT"; break;
-		default: sigtype = "Unknown";
+		default: sigtype = "Unknown signal";
 	}
 	
 	irc_printf(IRCOUT, "%s caught; cleaning up\n", sigtype);
@@ -125,7 +126,7 @@ int main(int argc, char** argv)
 	sleep(2);
 	globals.run = 0;
 	pthread_kill(globals.lib_tid, SIGUSR1);
-	sleep(1);
+	sleep(2);
 	
 	if (globals.irc_list != NULL)
 	{
@@ -133,12 +134,13 @@ int main(int argc, char** argv)
 		globals.irc_list = NULL;
 	}
 	
-	clean_up();
-	
 	if (errno)
 	{
 		irc_printf(IRCERR, "Some error occured; last error was: %s\n", strerror(errno));
+		clean_up();
 		return EXIT_FAILURE;
 	}
+	
+	clean_up();
 	return EXIT_SUCCESS;
 }

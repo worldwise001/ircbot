@@ -386,6 +386,7 @@ void clean_up()
 	pthread_key_delete(globals.key_irccfg);
 	pthread_key_delete(globals.key_ircout);
 	pthread_key_delete(globals.key_ircraw);
+	pthread_key_delete(globals.key_datastat);
 }
 
 void irc_print_raw(const char * line)

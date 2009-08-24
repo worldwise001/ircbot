@@ -51,6 +51,15 @@ int get_next_char(int fd)
 			return EOF;
 		fbuff[frsize] = '\0';
 		pos = 0;
+		
+		void * ptr = pthread_getspecific(globals.key_datastat);
+		if (ptr != NULL)
+		{
+			datastat_t * datastat = (datastat_t *)(ptr);
+			datastat->rbytes += frsize;
+		}
+		
+		globals.datastat.rbytes += frsize;
 	}
 	return fbuff[pos++];
 }
@@ -65,7 +74,16 @@ int write_data(int fd, const char * data)
 		written += tmp;
 	}
 	if (VERBOSE(4))	printf("[%d]>> %s\n", fd, data);
-
+	
+	void * ptr = pthread_getspecific(globals.key_datastat);
+	if (ptr != NULL)
+	{
+		datastat_t * datastat = (datastat_t *)(ptr);
+		datastat->wbytes += written;
+	}
+	
+	globals.datastat.wbytes += written;
+	
 	return written;
 }
 

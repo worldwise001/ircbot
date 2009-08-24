@@ -9,6 +9,7 @@ void *handle_child(void * ptr)
 	irccfg_t * m_irccfg = (irccfg_t *)(ptr);
 	m_irccfg->alive = 1;
 	pthread_setspecific(globals.key_irccfg, m_irccfg);
+	pthread_setspecific(globals.key_datastat, &m_irccfg->datastat);
 	int sockfd;
 	int sleeptime = 0;
 	open_log();

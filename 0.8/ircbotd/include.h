@@ -18,5 +18,6 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <pthread.h>
+#include <limits.h>
 
 #endif //INCLUDE_H_
