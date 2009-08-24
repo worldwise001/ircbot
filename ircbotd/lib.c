@@ -84,7 +84,7 @@ void * lib_loop(void * ptr)
 		}
 	}
 	
-	clear_list(queue);
+	clear_queue();
 	if (unload_all_modules(errormsg)) irc_printf(IRCERR, "Error unloading modules: \n", errormsg);
 	
 	clear_auth_list();
@@ -121,7 +121,48 @@ void process_queue_item(const queue_t * q_item)
 			else
 				respond(m_irccfg, "PRIVMSG %s :There was a problem authenticating; perhaps you already logged in?", target.field);
 		else if (is_value(result.command, "status"))
-			respond(m_irccfg, "PRIVMSG %s :Not implemented yet.", target.field);
+		{
+			FILE * tmpfile = fopen("/proc/loadavg", "r");
+			if (tmpfile == NULL) respond(m_irccfg, "PRIVMSG %s :Error opening /proc/avg for status: %s", target.field, strerror(errno));
+			else
+			{
+				char buff1[CFG_FLD+1];
+				memset(buff1, 0, CFG_FLD+1);
+				char * result = fgets(buff1, CFG_FLD, tmpfile);
+				fclose(tmpfile);
+				if (result == NULL)
+					respond(m_irccfg, "PRIVMSG %s :Error reading /proc/avg for status: %s", target.field, strerror(errno));
+				else
+				{
+					tmpfile = fopen("/proc/self/statm", "r");
+					if (tmpfile == NULL) respond(m_irccfg, "PRIVMSG %s :Error opening /proc/self/statm for status: %s", target.field, strerror(errno));
+					else
+					{
+						char buff2[CFG_FLD+1];
+						memset(buff2, 0, CFG_FLD+1);
+						result = fgets(buff2, CFG_FLD, tmpfile);
+						fclose(tmpfile);
+						if (result == NULL)
+							respond(m_irccfg, "PRIVMSG %s :Error reading /proc/self/statm for status: %s", target.field, strerror(errno));
+						else
+						{
+							buff1[14] = '\0';
+							char * loadavg = buff1;
+							char * vss_s = buff2;
+							char * rss_s = index(buff2, ' ');
+							rss_s[0] = '\0';
+							rss_s++;
+							char * end = index(rss_s, ' ');
+							end[0] = '\0';
+							int pagesize = sysconf(_SC_PAGESIZE);
+							int vss = atoi(vss_s);
+							int rss = atoi(rss_s);
+							respond(m_irccfg, "PRIVMSG %s :%cLoad Avg:%c %s; %cVSS:%c %dkB; %cRSS:%c %dkB; %cThreadNum:%c %d; %cBytes R/W:%c %ld/%ld", target.field, TXT_BOLD, TXT_NORM, loadavg, TXT_BOLD, TXT_NORM, vss*pagesize/1024, TXT_BOLD, TXT_NORM, rss*pagesize/1024, TXT_BOLD, TXT_NORM, list_size(globals.irc_list)+2, TXT_BOLD, TXT_NORM, globals.datastat.rbytes, globals.datastat.wbytes);
+						}
+					}					
+				}
+			}
+		}
 		else if (is_value(result.command, "uptime"))
 		{
 			char buffer[CFG_FLD+1];

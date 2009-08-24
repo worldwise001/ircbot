@@ -1,12 +1,17 @@
 #ifndef DATATYPE_H_
 #define DATATYPE_H_
 
-#include "const.h"
 #include "include.h"
+#include "const.h"
 #include "llist.h"
 
 typedef enum { FALSE = 0, TRUE = 1 } boolean;
 typedef enum { OKAY = 0, ERROR = -1 } check;
+
+typedef struct {
+	unsigned long rbytes;
+	unsigned long wbytes;
+} datastat_t;
 
 typedef struct {
 	boolean enabled;
@@ -23,6 +28,7 @@ typedef struct {
 	char host[CFG_FLD+1];
 	unsigned short int port;
 	int sfd;
+	datastat_t datastat;
 } irccfg_t;
 
 typedef struct {
@@ -65,7 +71,9 @@ typedef struct {
 	pthread_key_t key_irccfg;
 	pthread_key_t key_ircout;
 	pthread_key_t key_ircraw;
+	pthread_key_t key_datastat;
 	FILE * _ircerr;
+	datastat_t datastat;
 } globals_t;
 
 
