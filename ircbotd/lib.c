@@ -157,7 +157,7 @@ void process_queue_item(const queue_t * q_item)
 							int pagesize = sysconf(_SC_PAGESIZE);
 							int vss = atoi(vss_s);
 							int rss = atoi(rss_s);
-							respond(m_irccfg, "PRIVMSG %s :%cLoad Avg:%c %s; %cVSS:%c %dkB; %cRSS:%c %dkB; %cThreadNum:%c %d; %cBytes R/W:%c %ld/%ld", target.field, TXT_BOLD, TXT_NORM, loadavg, TXT_BOLD, TXT_NORM, vss*pagesize/1024, TXT_BOLD, TXT_NORM, rss*pagesize/1024, TXT_BOLD, TXT_NORM, list_size(globals.irc_list)+2, TXT_BOLD, TXT_NORM, globals.datastat.rbytes, globals.datastat.wbytes);
+							respond(m_irccfg, "PRIVMSG %s :%cLoad Avg:%c %s; %cVSZ:%c %dkB; %cRSS:%c %dkB; %cThreadNum:%c %d; %cBytes R/W:%c %ld/%ld", target.field, TXT_BOLD, TXT_NORM, loadavg, TXT_BOLD, TXT_NORM, vss*pagesize/1024, TXT_BOLD, TXT_NORM, rss*pagesize/1024, TXT_BOLD, TXT_NORM, list_size(globals.irc_list)+2, TXT_BOLD, TXT_NORM, globals.datastat.rbytes, globals.datastat.wbytes);
 						}
 					}					
 				}
@@ -189,6 +189,14 @@ void process_queue_item(const queue_t * q_item)
 				respond(m_irccfg, "PRIVMSG %s :No modules loaded", target.field);
 			else
 				output_llist(m_irccfg, data, module_dirlist);
+		}
+		else if (is_value(result.command, "load"))
+		{
+			char errbuff[ERROR_LEN+1];
+			if (is_admin(data->sender))
+				if (load_module(result.args, errbuff))
+					respond(m_irccfg, "PRIVMSG %s :Error loading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
+				
 		}
 	}
 }
