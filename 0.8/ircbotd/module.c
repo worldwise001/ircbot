@@ -94,6 +94,7 @@ int load_module(char * mname, char * error)
 
 int unload_module(char * name, char * error)
 {
+	memset(error, 0, ERROR_LEN+1);
 	llist_t * m_iterator = module_list;
 	int i = 0;
 	while (m_iterator != NULL)
@@ -108,6 +109,8 @@ int unload_module(char * name, char * error)
 		m_iterator = m_iterator->next;
 		i++;
 	}
+	strncpy(error, ERROR_LEN, "Module is not loaded");
+	irc_printf(IRCERR, "Error unloading %s: %s\n", name, error);
 	return -1;
 }
 

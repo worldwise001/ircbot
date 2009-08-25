@@ -85,6 +85,7 @@ void process_input(irccfg_t * m_irccfg, char * line)
 	if (is_value(data.command, "ERROR"))
 	{
 		m_irccfg->alive = 0;
+		irc_printf(IRCOUT, "Connection to %s closed!\n", m_irccfg->host);
 		return;
 	}
 	
