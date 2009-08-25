@@ -51,7 +51,7 @@ void *handle_child(void * ptr)
 				else
 				{
 					child_loop(m_irccfg);
-					sleep(1);
+					sleep(2);
 					close(sockfd);
 					close_raw();
 					break;
