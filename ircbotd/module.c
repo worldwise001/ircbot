@@ -11,13 +11,6 @@ int load_module(char * mname, char * error)
 	llist_t * module_filelist = list_modules(FALSE);
 	memset(error, 0, ERROR_LEN+1);	
 	
-	if (module_filelist == NULL)
-	{
-		strncpy(error, "No modules in directory", ERROR_LEN);
-		irc_printf(IRCERR, "%s\n", error);
-		return -1;
-	}
-	
 	int module_loaded = FALSE;
 	
 	llist_t * mf_iterator = module_filelist;

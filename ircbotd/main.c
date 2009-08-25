@@ -123,10 +123,10 @@ int main(int argc, char** argv)
 			respond(i_irccfg, "QUIT :Terminated by %s", sigtype);
 		i_iterator = i_iterator->next;
 	}
-	sleep(2);
+	sleep(1);
 	globals.run = 0;
 	pthread_kill(globals.lib_tid, SIGUSR1);
-	sleep(2);
+	sleep(1);
 	
 	if (globals.irc_list != NULL)
 	{
