@@ -109,8 +109,8 @@ int unload_module(char * name, char * error)
 		m_iterator = m_iterator->next;
 		i++;
 	}
-	strncpy(error, ERROR_LEN, "Module is not loaded");
-	irc_printf(IRCERR, "Error unloading %s: %s\n", name, error);
+	snprintf(error, ERROR_LEN, "Error unloading %s: Module is not loaded", name);
+	irc_printf(IRCERR, "%s\n", error);
 	return -1;
 }
 
