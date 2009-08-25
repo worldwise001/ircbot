@@ -231,7 +231,7 @@ void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 	field_t target = get_target(data);
 	respond(m_irccfg, "PRIVMSG %s :%cBasic commands:%c help, commands, login, status, uptime, moddir, modlist, beep", target.field, TXT_BOLD, TXT_NORM);
 	if (is_admin(data->sender))
-		respond(m_irccfg, "PRIVMSG %s :%cAdmin commands:%c load, unload, raw", target.field, TXT_BOLD, TXT_NORM);
+		respond(m_irccfg, "PRIVMSG %s :%cAdmin commands:%c load, unload, reload, raw", target.field, TXT_BOLD, TXT_NORM);
 	
 	char buffer[MSG_FLD/2 + 1];
 	memset(buffer, 0, MSG_FLD/2 + 1);
