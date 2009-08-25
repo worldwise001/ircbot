@@ -286,7 +286,7 @@ void output_llist(const irccfg_t * m_irccfg, const msg_t * data, llist_t * llist
 		}
 		c_iterator = c_iterator->next;
 	}
-	if (command_list != NULL)
+	if (llist != NULL)
 		respond(m_irccfg, "PRIVMSG %s :%s", target.field, buffer);
 }
 
