@@ -120,10 +120,9 @@ int main(int argc, char** argv)
 	{
 		irccfg_t * i_irccfg = (irccfg_t *)(i_iterator->item);
 		if (i_irccfg->enabled)
-			respond(i_irccfg, "QUIT :Terminated by %s", sigtype);
+			respond(i_irccfg, "QUIT :Terminated by %s\r\n", sigtype);
 		i_iterator = i_iterator->next;
 	}
-	sleep(1);
 	globals.run = 0;
 	pthread_kill(globals.lib_tid, SIGUSR1);
 	sleep(1);
