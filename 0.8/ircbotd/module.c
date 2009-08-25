@@ -247,6 +247,8 @@ void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 		}
 		else
 		{
+			buffer[strlen(buffer)-1] = '\0';
+			buffer[strlen(buffer)-1] = '\0';
 			respond(m_irccfg, "PRIVMSG %s :%cModule commands:%c %s", target.field, TXT_BOLD, TXT_NORM, buffer);
 			memset(buffer, 0, MSG_FLD/2 + 1);
 			pos = 0;
@@ -257,7 +259,11 @@ void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 		c_iterator = c_iterator->next;
 	}
 	if (command_list != NULL)
+	{
+		buffer[strlen(buffer)-1] = '\0';
+		buffer[strlen(buffer)-1] = '\0';
 		respond(m_irccfg, "PRIVMSG %s :%cModule commands:%c %s", target.field, TXT_BOLD, TXT_NORM, buffer);
+	}
 }
 
 void output_llist(const irccfg_t * m_irccfg, const msg_t * data, llist_t * llist)
@@ -277,6 +283,8 @@ void output_llist(const irccfg_t * m_irccfg, const msg_t * data, llist_t * llist
 		}
 		else
 		{
+			buffer[strlen(buffer)-1] = '\0';
+			buffer[strlen(buffer)-1] = '\0';
 			respond(m_irccfg, "PRIVMSG %s :%s", target.field, buffer);
 			memset(buffer, 0, MSG_FLD/2 + 1);
 			pos = 0;
@@ -287,7 +295,11 @@ void output_llist(const irccfg_t * m_irccfg, const msg_t * data, llist_t * llist
 		c_iterator = c_iterator->next;
 	}
 	if (llist != NULL)
+	{
+		buffer[strlen(buffer)-1] = '\0';
+		buffer[strlen(buffer)-1] = '\0';
 		respond(m_irccfg, "PRIVMSG %s :%s", target.field, buffer);
+	}
 }
 
 llist_t * get_module_list()
