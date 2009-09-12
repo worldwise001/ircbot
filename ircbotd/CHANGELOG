@@ -9,6 +9,9 @@ Current TODO:
 - autoconf it for automake
 - Standardize boolean/check values
 
+August 25, 2009
+- Started updating modules
+
 August 22, 2009
 - Version 0.8 is fairly stable
 - Added IRC text formatting

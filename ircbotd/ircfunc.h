@@ -9,6 +9,7 @@ void respond(const irccfg_t * m_irccfg, char * format, ... );
 void _timetostr(char * buffer, time_t time);
 field_t get_nick(const char * sender);
 field_t get_target(const msg_t * data);
+field_t get_kicked_nick(const char * message);
 
 void print_usage(char * app_name);
 void print_version(char * app_name);
