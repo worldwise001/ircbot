@@ -5,8 +5,6 @@ extern globals_t globals;
 
 sigset_t sigset;
 
-#define sigcaught(x) sigismember(&sigset_pending, x)
-
 int main(int argc, char** argv)
 {
 	sigemptyset(&sigset);
@@ -125,7 +123,7 @@ int main(int argc, char** argv)
 	}
 	globals.run = 0;
 	pthread_kill(globals.lib_tid, SIGUSR1);
-	sleep(1);
+	sleep(2);
 	
 	if (globals.irc_list != NULL)
 	{

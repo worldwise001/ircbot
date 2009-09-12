@@ -89,4 +89,8 @@ typedef struct {
 	char field[CFG_FLD+1];
 } field_t;
 
+typedef struct {
+	char error[ERROR_LEN+1];
+} error_t;
+
 #endif /* DATATYPE_H_ */

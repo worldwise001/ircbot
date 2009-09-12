@@ -173,4 +173,16 @@ field_t get_nick(const char * sender)
 	return nick;
 }
 
-
+field_t get_kicked_nick(const char * message)
+{
+	char * ptr = index(message, ' ');
+	field_t kicked;
+	memset(&kicked, 0, sizeof(field_t));
+	if (ptr != NULL)
+	{
+		int length = ptr - message;
+		if (length > CFG_FLD) length = CFG_FLD;
+		strncpy(kicked.field, message, length);
+	}
+	return kicked;
+}
