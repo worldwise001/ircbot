@@ -116,25 +116,31 @@ int unload_module(char * name, char * error)
 
 int load_all_modules(char * error)
 {
-	llist_t * dir_iterator = list_module_dir();
+	llist_t * dir_list = list_module_dir();
+	llist_t * dir_iterator = dir_list;
 	while (dir_iterator != NULL)
 	{
 		char * filename = (char *)(dir_iterator->item);
 		load_module(filename, error);
 		dir_iterator = dir_iterator->next;
 	}
+	clear_list(dir_list);
 	return 0;
 }
 
 int unload_all_modules(char * error)
 {
-	llist_t * dir_iterator = list_modules(0);
+	llist_t * dir_list = list_modules(0);
+	llist_t * dir_iterator = dir_list;
 	while (dir_iterator != NULL)
 	{
 		char * filename = (char *)(dir_iterator->item);
 		unload_module(filename, error);
+		if (strlen(error) > 0)
+			irc_printf(IRCERR, "%s\n", error);
 		dir_iterator = dir_iterator->next;
 	}
+	clear_list(dir_list);
 	return 0;
 }
 

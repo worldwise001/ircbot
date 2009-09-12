@@ -23,12 +23,18 @@ void parse_raw_to_irc(char * line, msg_t * data)
 		strncpy(data->command, line, tlen);
 	}
 	
-	if (is_value(data->command, "JOIN") || is_value(data->command, "NICK") || is_value(data->command, "QUIT"))
+	if (is_value(data->command, "JOIN") || is_value(data->command, "NICK"))
 	{
 		spos_b++;
 		int tlen = (strlen(spos_b) < TGT_FLD)?strlen(spos_b):TGT_FLD;
-		if (tlen != 0)
-			strncpy(data->target, spos_b, tlen);
+		strncpy(data->target, spos_b, tlen);
+		return;
+	}
+	else if (is_value(data->command, "QUIT"))
+	{
+		spos_b++;
+		int tlen = (strlen(spos_b) < MSG_FLD)?strlen(spos_b):MSG_FLD;
+		strncpy(data->message, spos_b, tlen);
 		return;
 	}
 	else if (is_value(data->command, "PART"))
