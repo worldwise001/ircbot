@@ -11,10 +11,11 @@ pthread_mutex_t queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t set_up_lib_thread()
 {
 	pthread_t tid;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	int return_value = pthread_create(&tid, &attr, &lib_loop, NULL);
+	//pthread_attr_t attr;
+	//pthread_attr_init(&attr);
+	//pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	int return_value = pthread_create(&tid, NULL, &lib_loop, NULL);
+	//pthread_attr_destroy(&attr);
 	if (return_value)
 		irc_printf(IRCERR, "Creating the library thread returned error code %d\n", return_value);
 	else
@@ -43,6 +44,7 @@ void send_to_queue(const irccfg_t * m_irccfg, const msg_t * data)
 
 void * lib_loop(void * ptr)
 {
+	pthread_detach(pthread_self());
 	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 	char errormsg[ERROR_LEN+1];
 	if (load_all_modules(errormsg)) irc_printf(IRCERR, "Error loading modules: \n", errormsg);

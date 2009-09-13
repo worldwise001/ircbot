@@ -5,6 +5,7 @@ extern sigset_t sigset;
 
 void *handle_child(void * ptr)
 {
+	pthread_detach(pthread_self());
 	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 	irccfg_t * m_irccfg = (irccfg_t *)(ptr);
 	m_irccfg->alive = 1;
@@ -75,10 +76,11 @@ void *handle_child(void * ptr)
 void spawn_child(irccfg_t * m_irccfg)
 {
 	pthread_t tid;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	int return_value = pthread_create(&tid, &attr, &handle_child, m_irccfg);
+	//pthread_attr_t attr;
+	//pthread_attr_init(&attr);
+	//pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	int return_value = pthread_create(&tid, NULL, &handle_child, m_irccfg);
+	//pthread_attr_destroy(&attr);
 	if (return_value)
 		irc_printf(IRCERR, "There was an error in thread creation\n");
 	else
