@@ -13,7 +13,7 @@ pthread_t set_up_lib_thread()
 	pthread_t tid;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
-	//pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	int return_value = pthread_create(&tid, &attr, &lib_loop, NULL);
 	if (return_value)
 		irc_printf(IRCERR, "Creating the library thread returned error code %d\n", return_value);
