@@ -125,6 +125,7 @@ int main(int argc, char** argv)
 	globals.run = 0;
 	pthread_kill(globals.lib_tid, SIGUSR1);
 	sleep(2);
+	
 	if (globals.irc_list != NULL)
 	{
 		clear_list(globals.irc_list);
