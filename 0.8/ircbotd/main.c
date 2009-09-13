@@ -121,14 +121,10 @@ int main(int argc, char** argv)
 			respond(i_irccfg, "QUIT :Terminated by %s\r\n", sigtype);
 		i_iterator = i_iterator->next;
 	}
-	sleep(2);
+	usleep(500);
 	globals.run = 0;
 	pthread_kill(globals.lib_tid, SIGUSR1);
-	if (pthread_join(globals.lib_tid, NULL))
-		irc_printf(IRCERR, "There was an error joining the lib thread\n");
-	else
-		irc_printf(IRCOUT, "Lib thread successfully joined\n");
-	
+	sleep(2);
 	if (globals.irc_list != NULL)
 	{
 		clear_list(globals.irc_list);
