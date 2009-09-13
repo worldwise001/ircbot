@@ -124,7 +124,7 @@ int main(int argc, char** argv)
 	usleep(500);
 	globals.run = 0;
 	pthread_kill(globals.lib_tid, SIGUSR1);
-	sleep(4);
+	sleep(3);
 	
 	if (globals.irc_list != NULL)
 	{
