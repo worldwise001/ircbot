@@ -5,7 +5,7 @@ llist_t * seen_list = NULL;
 void parse(irccfg_t * info, msg_t * data)
 {
 	if (data->sender != NULL && index(data->sender, '!') != NULL)
-		add_event(info->pid, data);
+		add_event(info->tid, data);
 	bot_t temp = bot_command(data->message);
 	if (temp.command != NULL)
 	{
@@ -64,18 +64,18 @@ void name(char * string)
 	strcpy(string, "Seen Module v1.0");
 }
 
-void add_event(pid_t pid, msg_t * data)
+void add_event(pthread_t tid, msg_t * data)
 {
 	if (strlen(data->sender) == 0 || index(data->sender, '!') == NULL) return;
 	
 	field_t field = get_nick(data->sender);
 	
-	seen_t * seen_data = been_seen(pid, field.field);
+	seen_t * seen_data = been_seen(tid, field.field);
 	seen_t * kick_data = NULL;
 	if (is_value(data->command, "KICK"))
 	{
 		field_t knick = get_kicked_nick(data->message);
-		kick_data = been_seen(pid, knick.field);
+		kick_data = been_seen(tid, knick.field);
 	}
 	if (seen_data == NULL)
 	{
@@ -88,7 +88,7 @@ void add_event(pid_t pid, msg_t * data)
 		{
 			time(&(seen_data->time));
 			memcpy(&(seen_data->msg), data, sizeof(msg_t));
-			seen_data->pid = pid;
+			seen_data->tid = tid;
 			seen_list = result;
 		}
 	}
@@ -108,7 +108,7 @@ void add_event(pid_t pid, msg_t * data)
 		{
 			time(&(kick_data->time));
 			memcpy(&(kick_data->msg), data, sizeof(msg_t));
-			kick_data->pid = pid;
+			kick_data->tid = tid;
 			seen_list = result;
 		}
 	}
@@ -121,7 +121,7 @@ void add_event(pid_t pid, msg_t * data)
 
 void find_target_last(irccfg_t * info, char * nick, char * target)
 {
-	seen_t * seen_data = been_seen(info->pid, nick);
+	seen_t * seen_data = been_seen(info->tid, nick);
 	if (seen_data == NULL)
 		respond(info, "PRIVMSG %s :Sorry, I have not seen %s\n", target, nick);
 	else
@@ -153,19 +153,19 @@ void find_target_last(irccfg_t * info, char * nick, char * target)
 				respond(info, "PRIVMSG %s :%s was kicked by %s from %s (%s) %s ago", target, nick, field.field, msg->target, reason, buff);
 		}
 		else if (is_value(msg->command, "NOTICE"))
-			respond(info, "PRIVMSG %s :%s last noted \"%s\" to %s %s ago", target, nick, msg->message, msg->target, buff);
+			respond(info, "PRIVMSG %s :%s noted \"%s\" to %s %s ago", target, nick, msg->message, msg->target, buff);
 		else if (is_value(msg->command, "JOIN"))
-			respond(info, "PRIVMSG %s :%s last joined %s %s ago", target, nick, msg->target, buff);
+			respond(info, "PRIVMSG %s :%s joined %s %s ago", target, nick, msg->target, buff);
 		else if (is_value(msg->command, "MODE"))
 			respond(info, "PRIVMSG %s :%s set \"%s\" on %s %s ago", target, nick, msg->message, msg->target, buff);
 		else
-			respond(info, "PRIVMSG %s :%s last issued a %s on %s stating \"%s\" %s ago", target, nick, msg->command, msg->target, msg->message, buff);
+			respond(info, "PRIVMSG %s :%s issued a %s on %s stating \"%s\" %s ago", target, nick, msg->command, msg->target, msg->message, buff);
 	}
 }
 
 void find_target_seen(irccfg_t * info, char * nick, char * target)
 {
-	seen_t * seen_data = been_seen(info->pid, nick);
+	seen_t * seen_data = been_seen(info->tid, nick);
 	if (seen_data == NULL)
 		respond(info, "PRIVMSG %s :Sorry, I have not seen %s", target, nick);
 	else
@@ -185,13 +185,13 @@ void find_target_seen(irccfg_t * info, char * nick, char * target)
 	}
 }
 
-seen_t * been_seen(pid_t pid, char * nick)
+seen_t * been_seen(pthread_t tid, char * nick)
 {
 	llist_t * iterator = seen_list;
 	while (iterator != NULL)
 	{
 		seen_t * seen_data = (seen_t *)(iterator->item);
-		if (seen_data->pid == pid)
+		if (seen_data->tid == tid)
 		{
 			field_t anick = get_nick(seen_data->msg.sender);
 			if (strcasecmp(anick.field, nick) == 0)
@@ -208,17 +208,4 @@ seen_t * been_seen(pid_t pid, char * nick)
 	return NULL;
 }
 
-field_t get_kicked_nick(char * message)
-{
-	char * ptr = index(message, ' ');
-	field_t kicked;
-	memset(&kicked, 0, sizeof(field_t));
-	if (ptr != NULL)
-	{
-		int length = ptr - message;
-		if (length > CFG_FLD) length = CFG_FLD;
-		strncpy(kicked.field, message, length);
-	}
-	return kicked;
-}
 
