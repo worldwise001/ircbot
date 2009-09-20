@@ -136,7 +136,7 @@ void find_target_last(irccfg_t * info, char * nick, char * target)
 		if (is_value(msg->command, "PART"))
 			respond(info, "PRIVMSG %s :%s left channel %s stating \"%s\" %s ago", target, nick, msg->target, msg->message, buff);
 		else if (is_value(msg->command, "PRIVMSG"))
-			respond(info, "PRIVMSG %s :%s last said \"%s\" to %s %s ago", target, nick, msg->message, msg->target, buff);
+			respond(info, "PRIVMSG %s :%s said \"%s\" to %s %s ago", target, nick, msg->message, msg->target, buff);
 		else if (is_value(msg->command, "QUIT"))
 			respond(info, "PRIVMSG %s :%s quit the server stating \"%s\" %s ago", target, nick, msg->message, buff);
 		else if (is_value(msg->command, "KICK"))
@@ -158,6 +158,8 @@ void find_target_last(irccfg_t * info, char * nick, char * target)
 			respond(info, "PRIVMSG %s :%s joined %s %s ago", target, nick, msg->target, buff);
 		else if (is_value(msg->command, "MODE"))
 			respond(info, "PRIVMSG %s :%s set \"%s\" on %s %s ago", target, nick, msg->message, msg->target, buff);
+		else if (is_value(msg->command, "NICK"))
+			respond(info, "PRIVMSG %s :%s was last seen changing nicks to %s %s ago", target, nick, msg->target, buff);
 		else
 			respond(info, "PRIVMSG %s :%s issued a %s on %s stating \"%s\" %s ago", target, nick, msg->command, msg->target, msg->message, buff);
 	}
