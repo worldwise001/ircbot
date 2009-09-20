@@ -119,7 +119,7 @@ void process_queue_item(const queue_t * q_item)
 		else if (is_value(result.command, "commands"))
 			output_commands(m_irccfg, data);
 		else if (is_value(result.command, "login"))
-			if (is_value(result.args, m_irccfg->pass))
+			if (is_value(result.args, m_irccfg->auth))
 				if (add_admin(data->sender) == OKAY)
 					respond(m_irccfg, "PRIVMSG %s :User \"%s\" authenticated", target.field, data->sender);
 				else
