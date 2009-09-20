@@ -119,10 +119,13 @@ void process_queue_item(const queue_t * q_item)
 		else if (is_value(result.command, "commands"))
 			output_commands(m_irccfg, data);
 		else if (is_value(result.command, "login"))
-			if (add_admin(data->sender) == OKAY)
-				respond(m_irccfg, "PRIVMSG %s :User \"%s\" authenticated", target.field, data->sender);
+			if (is_value(result.args, m_irccfg->pass))
+				if (add_admin(data->sender) == OKAY)
+					respond(m_irccfg, "PRIVMSG %s :User \"%s\" authenticated", target.field, data->sender);
+				else
+					respond(m_irccfg, "PRIVMSG %s :There was a problem authenticating; perhaps you already logged in?", target.field);
 			else
-				respond(m_irccfg, "PRIVMSG %s :There was a problem authenticating; perhaps you already logged in?", target.field);
+				respond(m_irccfg, "PRIVMSG %s :Invalid password", target.field);
 		else if (is_value(result.command, "status"))
 		{
 			FILE * tmpfile = fopen("/proc/loadavg", "r");
