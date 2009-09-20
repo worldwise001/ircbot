@@ -7,7 +7,16 @@ pthread_mutex_t io_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void print_usage(char * app_name)
 {
-	printf("Usage: %s [-c|--config config.conf] [-d|--daemon] [-V|--version] [-h|--help] [-l|--log] [-r|--raw]\n", app_name);
+	printf("Usage: %s [options]\n", app_name);
+	printf("Options:\n");
+	printf("-c, --config config.conf        Use config.conf as configuration\n");
+	printf("-d, --daemon                    Run %s in the background\n", NAME);
+	printf("-V, --version                   Print version\n");
+	printf("-h, --help                      Print this help\n");
+	printf("-l, --log                       Log all output to %s\n", LOGDIR);
+	printf("-r, --raw                       Log all raw output to %s\n", LOGDIR);
+	printf("-p, --param                     Print compile-time parameters\n");
+	printf("-v[v[v[v...]]]                  Increase verbosity level (for debugging)\n");
 }
 
 void print_version(char * app_name)

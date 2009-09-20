@@ -224,6 +224,9 @@ void generate_command_list()
 			ptr = newptr+1;
 			newptr = index(ptr, ',');
 		}
+		char * entry = dup_string(ptr);
+		result = append_item(command_list, entry);
+		if (result != NULL) command_list = result;
 		m_iterator = m_iterator->next;
 	}
 }
