@@ -1,4 +1,4 @@
-#include "config.h"
+#include "conf.h"
 
 extern globals_t globals;
 

@@ -1,7 +1,7 @@
 #ifndef LIB_H_
 #define LIB_H_
 
-#include "config.h"
+#include "conf.h"
 #include "module.h"
 #include "admin.h"
 #include "parse.h"

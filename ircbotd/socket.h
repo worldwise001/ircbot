@@ -2,7 +2,7 @@
 #define SOCKET_H_
 
 #include "ircfunc.h"
-#include "config.h"
+#include "conf.h"
 #include "lib.h"
 #include "parse.h"
 
