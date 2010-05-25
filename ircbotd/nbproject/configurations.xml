@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="62">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>admin.h</itemPath>
+      <itemPath>child.h</itemPath>
+      <itemPath>conf.h</itemPath>
+      <itemPath>const.h</itemPath>
+      <itemPath>datatype.h</itemPath>
+      <itemPath>include.h</itemPath>
+      <itemPath>io.h</itemPath>
+      <itemPath>ircfunc.h</itemPath>
+      <itemPath>lib.h</itemPath>
+      <itemPath>llist.h</itemPath>
+      <itemPath>module.h</itemPath>
+      <itemPath>parse.h</itemPath>
+      <itemPath>socket.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>admin.c</itemPath>
+      <itemPath>child.c</itemPath>
+      <itemPath>conf.c</itemPath>
+      <itemPath>io.c</itemPath>
+      <itemPath>ircfunc.c</itemPath>
+      <itemPath>lib.c</itemPath>
+      <itemPath>llist.c</itemPath>
+      <itemPath>main.c</itemPath>
+      <itemPath>module.c</itemPath>
+      <itemPath>parse.c</itemPath>
+      <itemPath>socket.c</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="1">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <compileType>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerLibStdlibItem>PosixThreads</linkerLibStdlibItem>
+            <linkerLibStdlibItem>Dynamic Linking</linkerLibStdlibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+    <conf name="Release" type="1">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+  </confs>
+</configurationDescriptor>
