@@ -1,0 +1,130 @@
+CHANGELOG
+
+ircbotd size: 43166 bytes
+lines of code: 2070
+
+Current TODO:
+- Implement auto-avoid NICK collision
+- Commenting; lots of it
+- autoconf it for automake
+- Standardize boolean/check values
+
+August 25, 2009
+- Started updating modules
+
+August 22, 2009
+- Version 0.8 is fairly stable
+- Added IRC text formatting
+- !beep is implemented
+- All linked lists converted
+
+August 14, 2009
+- Version 0.7.1 is released
+
+August 12, 2009
+- Huge revamp for 0.8
+
+July 24, 2009
+- Uploaded source to subversion repository
+	http://code.assembla.com/devcodex/subversion/nodes
+- Begin revamp for 0.7.1
+- Added dedicated linked list functions
+- Changed various
+
+July 6, 2009
+- Added support for nick changes
+- Added status command, "status report"
+
+July 3, 2009
+- Fixed admin bug
+- Added "state/what is your designation", Borg-style
+- Added uptime command
+
+July 2, 2009
+- ircbotd now does hostname logging
+
+June 9, 2009
+- Changed log code; now cleaner
+- Code optimizations
+- Added raw logger feature/flag
+
+June 8, 2009
+- Added logging feature/flag
+- Implemented daemonizing
+
+June 5, 2009
+- More bugfixes
+
+May 31, 2009
+- IRCBot now has dynamic library loading capability
+- Fixed a weird bug in module queueing; apparently sending two strings
+	simultaneously into a socket will cause the socket to reject one of them
+
+May 30, 2009
+- Implemented poll()ing for checking on IPC and socket at the same time
+- Plugin environment working fine
+
+May 17, 2009
+- Starting plugin environment; need to think of IPC methods
+
+May 16, 2009
+- Found glaring bug in configuration code; attempting to fix, however encountering memleaks;
+	blaming this on how the signal handlers work; rewriting signal handlers
+- New files: sighand.h, sighand.c
+- Bot now randomly segfaults? Fixed; Also handing SIGPIPEs now
+- Reorganized code
+
+May 15, 2009
+- Completed parsing algorithm; need to bugcheck
+- Added support for PING and VERSION requests
+- Added support for custom sentinel command character
+
+May 13, 2009
+- Continuing parsing algorithm; porting over old 0.6.1 algorithm to pure C
+
+May 12, 2009
+- Began parsing algorithm
+- Created new type: msg_t
+
+May 8, 2009
+- Changed signal to sigaction
+
+April 22, 2009
+- Implemented auto-join channels
+- Added argument parser; has version, config, daemon, and help flags
+- Created a bash-based source versioning control; every 5 mins a new tarball is
+	made with the timestamp in the filename; tarballs are only made if the code
+	has been changed (i.e. the resulting md5sums don't match; every 2 hours the tarballs
+	are uploaded, if necessary)
+
+April 19, 2009
+- Code is getting unwieldy; starting to do some cleaning
+- Moved child set-up functions to new file from main;
+	aids in readibility of main.c
+- Used Greenbox's suggestion; renamed info type to info_t
+- Added args_t type for loaded arguments
+- Added function to datatype to parse arguments passed to commandline
+- Created cronjob to package all the files automatically so I don't have to do it
+- Files added: child.c, child.h
+
+April 18, 2009
+- Apparently not all servers output NOTICE AUTH;
+	checking for this has been removed
+- Nickserv identification implemented
+- Finished configuration file parser; no memleaks
+
+April 17, 2009
+- Began work on configuration file parser
+- Implemented info_cpy, free_info, free_ninfo
+- Learnt about dynamic lib loading; will be useful for plugin scheme
+- Files added: lib.c, lib.h
+
+April 4, 2009
+- It works!
+- Valgrinded until no memleaks
+
+April 3, 2009
+- Began work on C-version of existing IRCBot
+- Implemented most functions
+- Files created: main.c, socket.c, datatype.c, io.c
+	socket.h, io.h, datatype.h
