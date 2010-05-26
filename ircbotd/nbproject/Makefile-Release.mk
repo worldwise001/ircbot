@@ -32,16 +32,16 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/parse.o \
-	${OBJECTDIR}/admin.o \
-	${OBJECTDIR}/io.o \
 	${OBJECTDIR}/socket.o \
 	${OBJECTDIR}/conf.o \
 	${OBJECTDIR}/llist.o \
 	${OBJECTDIR}/lib.o \
+	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/admin.o \
+	${OBJECTDIR}/io.o \
 	${OBJECTDIR}/child.o \
 	${OBJECTDIR}/module.o \
-	${OBJECTDIR}/ircfunc.o \
-	${OBJECTDIR}/main.o
+	${OBJECTDIR}/ircfunc.o
 
 # C Compiler Flags
 CFLAGS=
@@ -57,7 +57,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=-lpthread -ldl
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -70,57 +70,57 @@ dist/Release/GNU-Linux-x86/circebot: ${OBJECTFILES}
 ${OBJECTDIR}/parse.o: nbproject/Makefile-${CND_CONF}.mk parse.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/parse.o parse.c
-
-${OBJECTDIR}/admin.o: nbproject/Makefile-${CND_CONF}.mk admin.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/admin.o admin.c
-
-${OBJECTDIR}/io.o: nbproject/Makefile-${CND_CONF}.mk io.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/io.o io.c
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/parse.o parse.c
 
 ${OBJECTDIR}/socket.o: nbproject/Makefile-${CND_CONF}.mk socket.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/socket.o socket.c
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/socket.o socket.c
 
 ${OBJECTDIR}/conf.o: nbproject/Makefile-${CND_CONF}.mk conf.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/conf.o conf.c
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/conf.o conf.c
 
 ${OBJECTDIR}/llist.o: nbproject/Makefile-${CND_CONF}.mk llist.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/llist.o llist.c
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/llist.o llist.c
 
 ${OBJECTDIR}/lib.o: nbproject/Makefile-${CND_CONF}.mk lib.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/lib.o lib.c
-
-${OBJECTDIR}/child.o: nbproject/Makefile-${CND_CONF}.mk child.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/child.o child.c
-
-${OBJECTDIR}/module.o: nbproject/Makefile-${CND_CONF}.mk module.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/module.o module.c
-
-${OBJECTDIR}/ircfunc.o: nbproject/Makefile-${CND_CONF}.mk ircfunc.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircfunc.o ircfunc.c
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/lib.o lib.c
 
 ${OBJECTDIR}/main.o: nbproject/Makefile-${CND_CONF}.mk main.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.c
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.c
+
+${OBJECTDIR}/admin.o: nbproject/Makefile-${CND_CONF}.mk admin.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/admin.o admin.c
+
+${OBJECTDIR}/io.o: nbproject/Makefile-${CND_CONF}.mk io.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/io.o io.c
+
+${OBJECTDIR}/child.o: nbproject/Makefile-${CND_CONF}.mk child.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/child.o child.c
+
+${OBJECTDIR}/module.o: nbproject/Makefile-${CND_CONF}.mk module.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/module.o module.c
+
+${OBJECTDIR}/ircfunc.o: nbproject/Makefile-${CND_CONF}.mk ircfunc.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircfunc.o ircfunc.c
 
 # Subprojects
 .build-subprojects:

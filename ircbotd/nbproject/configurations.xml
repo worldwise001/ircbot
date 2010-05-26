@@ -21,6 +21,9 @@
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
                    projectFiles="true">
+      <itemPath>CHANGELOG</itemPath>
+      <itemPath>README</itemPath>
+      <itemPath>ircbotd.conf</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
@@ -55,7 +58,11 @@
         <platform>2</platform>
       </toolsSet>
       <compileType>
+        <cTool>
+          <warningLevel>2</warningLevel>
+        </cTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/circebot</output>
           <linkerLibItems>
             <linkerLibStdlibItem>PosixThreads</linkerLibStdlibItem>
             <linkerLibStdlibItem>Dynamic Linking</linkerLibStdlibItem>
@@ -72,6 +79,7 @@
       <compileType>
         <cTool>
           <developmentMode>5</developmentMode>
+          <warningLevel>0</warningLevel>
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
@@ -81,6 +89,8 @@
         </fortranCompilerTool>
         <linkerTool>
           <linkerLibItems>
+            <linkerLibStdlibItem>PosixThreads</linkerLibStdlibItem>
+            <linkerLibStdlibItem>Dynamic Linking</linkerLibStdlibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
