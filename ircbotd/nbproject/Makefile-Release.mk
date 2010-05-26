@@ -61,11 +61,11 @@ LDLIBSOPTIONS=-lpthread -ldl
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	${MAKE}  -f nbproject/Makefile-Release.mk dist/Release/GNU-Linux-x86/circebot
+	${MAKE}  -f nbproject/Makefile-Release.mk dist/Release/GNU-Linux-x86/${EXECUTABLE}
 
-dist/Release/GNU-Linux-x86/circebot: ${OBJECTFILES}
+dist/Release/GNU-Linux-x86/${EXECUTABLE}: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/circebot ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/${EXECUTABLE} ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/parse.o: nbproject/Makefile-${CND_CONF}.mk parse.c 
 	${MKDIR} -p ${OBJECTDIR}
@@ -128,7 +128,7 @@ ${OBJECTDIR}/ircfunc.o: nbproject/Makefile-${CND_CONF}.mk ircfunc.c
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Release
-	${RM} dist/Release/GNU-Linux-x86/circebot
+	${RM} dist/Release/GNU-Linux-x86/${EXECUTABLE}
 
 # Subprojects
 .clean-subprojects:

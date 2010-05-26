@@ -50,6 +50,7 @@ CP=cp
 CCADMIN=CCadmin
 RANLIB=ranlib
 
+EXECUTABLE=ircbotd
 
 # build
 build: .build-post
