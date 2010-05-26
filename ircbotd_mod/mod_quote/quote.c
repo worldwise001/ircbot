@@ -1,4 +1,4 @@
-#include "../../module.h"
+#include "../../circebot/module.h"
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -26,7 +26,7 @@ int strcontains(char * haystack, char * needle)
 	return 0;
 }
 
-void parse(info_t * config, msg_t * data)
+void parse(irccfg_t * config, msg_t * data)
 {
 	if (data->command != NULL && strncmp(data->command, "PRIVMSG", 7) == 0)
 	{

@@ -30,7 +30,8 @@ include Makefile
 OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
-OBJECTFILES=
+OBJECTFILES= \
+	${OBJECTDIR}/quote.o
 
 # C Compiler Flags
 CFLAGS=
@@ -50,11 +51,16 @@ LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	${MAKE}  -f nbproject/Makefile-Debug.mk dist/Debug/GNU-Linux-x86/libmod_quote.so
+	${MAKE}  -f nbproject/Makefile-Debug.mk dist/Debug/GNU-Linux-x86/${LIBNAME}.so
 
-dist/Debug/GNU-Linux-x86/libmod_quote.so: ${OBJECTFILES}
+dist/Debug/GNU-Linux-x86/${LIBNAME}.so: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
-	${LINK.c} -shared -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libmod_quote.so -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.c} -shared -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/${LIBNAME}.so -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
+
+${OBJECTDIR}/quote.o: nbproject/Makefile-${CND_CONF}.mk quote.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -g -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/quote.o quote.c
 
 # Subprojects
 .build-subprojects:
@@ -62,7 +68,7 @@ dist/Debug/GNU-Linux-x86/libmod_quote.so: ${OBJECTFILES}
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Debug
-	${RM} dist/Debug/GNU-Linux-x86/libmod_quote.so
+	${RM} dist/Debug/GNU-Linux-x86/${LIBNAME}.so
 
 # Subprojects
 .clean-subprojects:

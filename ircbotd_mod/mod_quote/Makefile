@@ -50,6 +50,8 @@ CP=cp
 CCADMIN=CCadmin
 RANLIB=ranlib
 
+LIBNAME=mod_quote
+
 
 # build
 build: .build-post
