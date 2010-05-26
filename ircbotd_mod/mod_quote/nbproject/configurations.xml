@@ -29,6 +29,10 @@
         <platform>2</platform>
       </toolsSet>
       <compileType>
+        <cTool>
+          <commandLine>-shared</commandLine>
+          <warningLevel>2</warningLevel>
+        </cTool>
         <linkerTool>
           <linkerLibItems>
           </linkerLibItems>
