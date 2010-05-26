@@ -1,13 +1,18 @@
 CHANGELOG
 
-ircbotd size: 43166 bytes
-lines of code: 2070
-
 Current TODO:
 - Implement auto-avoid NICK collision
 - Commenting; lots of it
-- autoconf it for automake
+- autoconf it
 - Standardize boolean/check values
+
+May 26, 2010
+- Reorganized subversion tree
+- Added folders for future modules
+- Adding Makefiles to all the modules
+
+May 25, 2010
+- Added netbeans-based Makefile to ircbotd
 
 August 25, 2009
 - Started updating modules
@@ -25,8 +30,6 @@ August 12, 2009
 - Huge revamp for 0.8
 
 July 24, 2009
-- Uploaded source to subversion repository
-	http://code.assembla.com/devcodex/subversion/nodes
 - Begin revamp for 0.7.1
 - Added dedicated linked list functions
 - Changed various

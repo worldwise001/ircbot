@@ -3,6 +3,9 @@ README
 To compile:
 	gcc -Wall -rdynamic -lpthread -ldl *.c -oircbotd
 
+Alternatively, run make:
+        make
+
 Any modules must be placed in the "./module" subdirectory.
 Default configuration file is ./ircbotd.conf; a custom one may be set
 through flags:
@@ -11,7 +14,7 @@ ircbotd -c conffile
 
 To make custom modules:
 
-- Include at least module.h
+- Include at least ircbotd.h
 - Implement the following prototype, or else the module will not be loaded:
 		void parse(const irccfg_t * config, const msg_t * data);
 	Take a look at datatype.h to see what is in the custom data types.
