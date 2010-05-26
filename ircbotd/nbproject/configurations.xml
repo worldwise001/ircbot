@@ -59,10 +59,11 @@
       </toolsSet>
       <compileType>
         <cTool>
+          <commandLine>-rdynamic</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/circebot</output>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/${EXECUTABLE}</output>
           <linkerLibItems>
             <linkerLibStdlibItem>PosixThreads</linkerLibStdlibItem>
             <linkerLibStdlibItem>Dynamic Linking</linkerLibStdlibItem>
@@ -79,6 +80,7 @@
       <compileType>
         <cTool>
           <developmentMode>5</developmentMode>
+          <commandLine>-rdynamic</commandLine>
           <warningLevel>0</warningLevel>
         </cTool>
         <ccTool>
