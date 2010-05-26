@@ -34,6 +34,7 @@
           <warningLevel>2</warningLevel>
         </cTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/${LIBNAME}.so</output>
           <linkerLibItems>
           </linkerLibItems>
         </linkerTool>
