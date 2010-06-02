@@ -67,7 +67,6 @@ void * lib_loop(void * ptr)
 	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 	char errormsg[ERROR_LEN+1];
 	if (load_all_modules(errormsg)) irc_printf(IRCERR, "Error loading modules: \n", errormsg);
-	
 	sigset_t sigset_lib;
 	sigemptyset(&sigset_lib);
 	sigaddset(&sigset_lib, SIGUSR1);
@@ -196,6 +195,10 @@ void process_queue_item(const queue_t * q_item)
 			time(&now);
 			_timetostr(buffer, now - globals.start);
 			respond(m_irccfg, "PRIVMSG %s :%s", target.field, buffer);
+		}
+                else if (is_value(result.command, "version"))
+		{
+			respond(m_irccfg, "PRIVMSG %s :%s %s written in C (http://circebot.sourceforge.net)", target.field, NAME, VERSION);
 		}
 		else if (is_value(result.command, "moddir"))
 		{

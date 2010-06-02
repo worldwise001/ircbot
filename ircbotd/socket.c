@@ -131,13 +131,13 @@ void autojoin(const irccfg_t * m_irccfg)
 	char * chanptr = chancpy + strlen(chancpy) + 1;
 	while (chanptr > chancpy)
 	{
-		while (*(--chanptr) != ' ' && chanptr > chancpy);
+		while (*(--chanptr) != ',' && chanptr > chancpy);
 		if (chanptr > chancpy) chanptr++;
 		write_data(m_irccfg->sfd, "JOIN ");
 		write_data(m_irccfg->sfd, chanptr);
 		write_data(m_irccfg->sfd, "\r\n");
 		if (chanptr > chancpy) chanptr--;
-		if (*chanptr == ' ') *chanptr = '\0';
+		if (*chanptr == ',') *chanptr = '\0';
 	}
 }
 

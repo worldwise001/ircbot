@@ -42,7 +42,7 @@ void print_usage(char * app_name)
 void print_version(char * app_name)
 {
 	printf("CirceBot %s: IRC Bot written in C\n", VERSION);
-	printf("Copyright (C) 2010 Sarah Harvey\n");
+	printf("Copyright (C) 2009-2010 Sarah Harvey\n");
 	printf("http://circebot.sourceforge.net\n");
 }
 

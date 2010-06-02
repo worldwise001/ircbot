@@ -34,6 +34,8 @@ int main(int argc, char** argv)
 	sigaddset(&sigset, SIGQUIT);
 	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 
+        //signal(SIGUSR1, SIG_IGN);
+
 	args_t args;
 	memset(&args, 0, sizeof(args_t));
 	memset(&globals, 0, sizeof(globals_t));

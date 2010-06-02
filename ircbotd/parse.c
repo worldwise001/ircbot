@@ -97,7 +97,7 @@ void parse_raw_to_irc(char * line, msg_t * data)
 		if (mpos[0] == ':') mpos++;
 		int tlen = (strlen(mpos) < MSG_FLD)?strlen(mpos):MSG_FLD;
 		strncpy(data->message, mpos, tlen);
-		printf("%s\n", data->message);
+		//printf("%s\n", data->message);
 	}
 }
 

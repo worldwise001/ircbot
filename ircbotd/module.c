@@ -41,6 +41,7 @@ int load_module(char * mname, char * error)
 			module_loaded = TRUE;
 			break;
 		}
+                mf_iterator = mf_iterator->next;
 	}
 	clear_list(module_filelist);
 	if (module_loaded)

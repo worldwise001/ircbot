@@ -22,6 +22,7 @@
                    displayName="Resource Files"
                    projectFiles="true">
       <itemPath>CHANGELOG</itemPath>
+      <itemPath>COPYING</itemPath>
       <itemPath>README</itemPath>
       <itemPath>ircbotd.conf</itemPath>
     </logicalFolder>
