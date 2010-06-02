@@ -21,7 +21,7 @@
 #define LIB_H_
 
 #include "conf.h"
-#include "module.h"
+#include "modfunc.h"
 #include "admin.h"
 #include "parse.h"
 
