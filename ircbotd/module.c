@@ -124,6 +124,7 @@ int unload_module(char * name, char * error)
 		{
 			dlclose(module->dlhandle);
 			module_list = delete_item(module_list, i);
+                        generate_command_list();
 			return 0;
 		}
 		m_iterator = m_iterator->next;
@@ -131,6 +132,7 @@ int unload_module(char * name, char * error)
 	}
 	snprintf(error, ERROR_LEN, "Module is not loaded");
 	irc_printf(IRCERR, "Error unloading %s: %s\n", name, error);
+        generate_command_list();
 	return -1;
 }
 
@@ -235,18 +237,21 @@ void generate_command_list()
 		module_t * module = (module_t *)(m_iterator->item);
 		
 		char * ptr = module->commands;
-		char * newptr = index(ptr, ',');
-		while (newptr != NULL)
-		{
-			char * entry = dup_nstring(ptr, newptr - ptr);
-			result = append_item(command_list, entry);
-			if (result != NULL) command_list = result;
-			ptr = newptr+1;
-			newptr = index(ptr, ',');
-		}
-		char * entry = dup_string(ptr);
-		result = append_item(command_list, entry);
-		if (result != NULL) command_list = result;
+                if (ptr != NULL && strlen(ptr) != 0)
+                {
+                    char * newptr = index(ptr, ',');
+                    while (newptr != NULL)
+                    {
+                            char * entry = dup_nstring(ptr, newptr - ptr);
+                            result = append_item(command_list, entry);
+                            if (result != NULL) command_list = result;
+                            ptr = newptr+1;
+                            newptr = index(ptr, ',');
+                    }
+                    char * entry = dup_string(ptr);
+                    result = append_item(command_list, entry);
+                    if (result != NULL) command_list = result;
+                }
 		m_iterator = m_iterator->next;
 	}
 }
