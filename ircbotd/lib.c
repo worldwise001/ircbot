@@ -262,6 +262,20 @@ void process_queue_item(const queue_t * q_item)
 			else
 				respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);
 		}
+                else if (is_value(result.command, "network"))
+		{
+                    if (strcmp(result.args, "display") == 0)
+                        respond(m_irccfg, "PRIVMSG %s :I need another argument\n", target.field);
+                    else if (strncmp(result.args, "display ", 8) == 0)
+                    {
+                        char * val = result.args+8;
+                        int id = atoi(val);
+                        if (id <= 0)
+                            respond(m_irccfg, "PRIVMSG %s :Invalid id!\n", target.field);
+                        else
+                            display_network(id, m_irccfg, target.field);
+                    }
+		}
 	}
 }
 

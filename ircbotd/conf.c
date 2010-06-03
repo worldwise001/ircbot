@@ -420,3 +420,55 @@ void irc_print_raw(const char * line)
 	fprintf(ircraw, "%ld000 %s\n", rawtime, line);
 	fflush(ircraw);
 }
+
+int add_network()
+{
+    return 0;
+}
+
+int set_network_param(int id, irccfg_param param, field_t value)
+{
+    return 0;
+}
+
+int get_network_param(int id, irccfg_param param)
+{
+    return 0;
+}
+
+int del_network(int id)
+{
+    return 0;
+}
+
+irccfg_t * get_network(int id)
+{
+    llist_t * ircptr = globals.irc_list;
+
+    while (ircptr != NULL)
+    {
+        irccfg_t * item = ircptr->item;
+        if (item->id == id)
+            return item;
+        ircptr = ircptr->next;
+    }
+
+    return NULL;
+}
+
+void display_network(int id, const irccfg_t * irccfg, const char * target)
+{
+    irccfg_t * network = get_network(id);
+    if (network == NULL)
+    {
+        respond(irccfg, "PRIVMSG %s :Network %c%d%c does not exist\n", target, TXT_BOLD, id, TXT_NORM);
+        return;
+    }
+
+    respond(irccfg, "PRIVMSG %s :Network information for %c%d-%s%c:\n", target, TXT_BOLD, id, network->serv, TXT_NORM);
+    respond(irccfg, "PRIVMSG %s :  Server:    %s:%d\n", target, network->host, network->port);
+    respond(irccfg, "PRIVMSG %s :  Nickname:  %s\n", target, network->nick);
+    respond(irccfg, "PRIVMSG %s :  Username:  %s\n", target, network->user);
+    respond(irccfg, "PRIVMSG %s :  Real Name: %s\n", target, network->real);
+    respond(irccfg, "PRIVMSG %s :  Channels:  %s\n", target, network->chan);
+}

@@ -22,12 +22,6 @@
 
 #include "circebot.h"
 
-//signal constants
-#define _INIT 0
-#define _PARENT 1
-#define _CHILD 2
-#define _LIB 3
-
 //output/error identifiers
 #define IRCOUT 0
 #define IRCERR 1
@@ -39,6 +33,7 @@
 #define sigcaught(x) sigismember(&sigset_pending, x)
 
 //type definitions
+typedef enum { NICK = 1, USER = 2, REAL = 3, PASS = 4, CHAN = 5, HOST = 6, PORT = 7, AUTH = 8 } irccfg_param;
 
 typedef struct {
 	char * conf_file;

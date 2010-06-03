@@ -39,8 +39,6 @@ int main(int argc, char** argv)
 	sigaddset(&sigset, SIGQUIT);
 	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 
-        //signal(SIGUSR1, SIG_IGN);
-
 	args_t args;
 	memset(&args, 0, sizeof(args_t));
 	memset(&globals, 0, sizeof(globals_t));
@@ -50,12 +48,12 @@ int main(int argc, char** argv)
 		print_usage(argv[0]);
 		return EXIT_FAILURE;
 	}
-	if (args.version > 0)
+	if (args.version)
 	{
 		print_version(argv[0]);
 		return EXIT_SUCCESS;
 	}
-	if (args.help > 0)
+	if (args.help)
 	{
 		print_usage(argv[0]);
 		return EXIT_SUCCESS;
@@ -143,8 +141,7 @@ int main(int argc, char** argv)
 	while (i_iterator != NULL)
 	{
 		irccfg_t * i_irccfg = (irccfg_t *)(i_iterator->item);
-		if (i_irccfg->enabled)
-			respond(i_irccfg, "QUIT :Terminated by %s\r\n", sigtype);
+		if (i_irccfg->enabled) respond(i_irccfg, "QUIT :Terminated by %s\r\n", sigtype);
 		i_iterator = i_iterator->next;
 	}
 	usleep(500);

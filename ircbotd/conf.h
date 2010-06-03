@@ -41,4 +41,13 @@ void close_raw();
 
 void clean_up();
 
+int add_network();
+int set_network_param(int id, irccfg_param param, field_t value);
+int get_network_param(int id, irccfg_param param);
+int del_network(int id);
+
+irccfg_t * get_network(int id);
+
+void display_network(int id, const irccfg_t * irccfg, const char * target);
+
 #endif
