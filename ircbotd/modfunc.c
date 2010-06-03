@@ -60,7 +60,7 @@ int load_module(char * mname, char * error)
 	if (!lib_handle)
 	{
 		strncpy(error, dlerror(), ERROR_LEN);
-		irc_printf(IRCERR, "Error loading %s: %s\n", mname, error);
+		irc_printf(IRCERR, "Error: unable to load %s (%s)\n", mname, error);
 		dlerror();
 		return -1;
 	}
@@ -75,7 +75,7 @@ int load_module(char * mname, char * error)
 	if ((lerror = dlerror()) != NULL)
 	{
 		strncpy(error, lerror, ERROR_LEN);
-		irc_printf(IRCERR, "Error binding \"parse\" in %s: %s\n", mname, error);
+		irc_printf(IRCERR, "Error: unable to bind \"parse\" in %s (%s)\n", mname, error);
 		free(module);
 		dlerror();
 		return -1;
@@ -85,7 +85,7 @@ int load_module(char * mname, char * error)
 	commands = dlsym(lib_handle, "commands");
 	if ((lerror = dlerror()) != NULL)
 	{
-		irc_printf(IRCERR, "Error binding \"commands\" in %s, skipping: %s\n", mname, lerror);
+		irc_printf(IRCERR, "Warning: unable to bind \"commands\" in %s (%s)\n", mname, lerror);
 		dlerror();
 	}
 	else
@@ -95,7 +95,7 @@ int load_module(char * mname, char * error)
 	name = dlsym(lib_handle, "name");
 	if ((lerror = dlerror()) != NULL)
 	{
-		irc_printf(IRCERR, "Error binding \"name\" in %s, skipping: %s\n", mname, lerror);
+		irc_printf(IRCERR, "Warning: unable to bind \"name\" in %s (%s)\n", mname, lerror);
 		dlerror();
 	}
 	else
@@ -131,7 +131,7 @@ int unload_module(char * name, char * error)
 		i++;
 	}
 	snprintf(error, ERROR_LEN, "Module is not loaded");
-	irc_printf(IRCERR, "Error unloading %s: %s\n", name, error);
+	irc_printf(IRCERR, "Error: unable to unload %s (%s)\n", name, error);
         generate_command_list();
 	return -1;
 }
@@ -259,9 +259,10 @@ void generate_command_list()
 void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 {
 	field_t target = get_target(data);
-	respond(m_irccfg, "PRIVMSG %s :%cBasic commands:%c help, commands, login, status, uptime, moddir, modlist, beep, network", target.field, TXT_BOLD, TXT_NORM);
 	if (is_admin(data->sender))
-		respond(m_irccfg, "PRIVMSG %s :%cAdmin commands:%c load, unload, reload, raw", target.field, TXT_BOLD, TXT_NORM);
+		respond(m_irccfg, "PRIVMSG %s :%cCommands:%c login, info, uptime, module, beep, network, raw", target.field, TXT_BOLD, TXT_NORM);
+        else
+                respond(m_irccfg, "PRIVMSG %s :%cCommands:%c login, info, uptime, module, beep, network", target.field, TXT_BOLD, TXT_NORM);
 	
 	char buffer[MSG_FLD/2 + 1];
 	memset(buffer, 0, MSG_FLD/2 + 1);
@@ -279,7 +280,7 @@ void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 		{
 			buffer[strlen(buffer)-1] = '\0';
 			buffer[strlen(buffer)-1] = '\0';
-			respond(m_irccfg, "PRIVMSG %s :%cModule commands:%c %s", target.field, TXT_BOLD, TXT_NORM, buffer);
+			respond(m_irccfg, "PRIVMSG %s :%cAdditional commands:%c %s", target.field, TXT_BOLD, TXT_NORM, buffer);
 			memset(buffer, 0, MSG_FLD/2 + 1);
 			pos = 0;
 			
@@ -292,7 +293,7 @@ void output_commands(const irccfg_t * m_irccfg, const msg_t * data)
 	{
 		buffer[strlen(buffer)-1] = '\0';
 		buffer[strlen(buffer)-1] = '\0';
-		respond(m_irccfg, "PRIVMSG %s :%cModule commands:%c %s", target.field, TXT_BOLD, TXT_NORM, buffer);
+		respond(m_irccfg, "PRIVMSG %s :%cAdditional commands:%c %s", target.field, TXT_BOLD, TXT_NORM, buffer);
 	}
 }
 

@@ -98,6 +98,7 @@ void respond(const irccfg_t * m_irccfg, char * format, ... )
 bot_t bot_command(const char * message)
 {
 	bot_t temp;
+        int i = 0;
 	memset(&temp, 0, sizeof(bot_t));
 	if (message == NULL) return temp;
 	if (strlen(message) < strlen(SENTINEL)) return temp;
@@ -116,6 +117,24 @@ bot_t bot_command(const char * message)
 		if (end[0] == ' ') end++;
 		if (end[0] == '\0') return temp;
 		strncpy(temp.args, end, MSG_FLD);
+
+                char * aptr = temp.args;
+                char * naptr = index(temp.args, ' ');
+                while (naptr != NULL && i < MAX_ARG)
+                {
+                    length = naptr-aptr;
+                    if (length > CFG_FLD) length = CFG_FLD;
+                    strncpy(temp.arg[i].field, aptr, length);
+                    aptr = naptr+1;
+                    naptr = index(aptr, ' ');
+                    i++;
+                }
+                if (i < MAX_ARG)
+                {
+                    length = strlen(aptr);
+                    if (length > CFG_FLD) length = CFG_FLD;
+                    strncpy(temp.arg[i].field, aptr, length);
+                }
 	}
 	return temp;
 }

@@ -144,7 +144,7 @@ void process_queue_item(const queue_t * q_item)
 					respond(m_irccfg, "PRIVMSG %s :There was a problem authenticating; perhaps you already logged in?", target.field);
 			else
 				respond(m_irccfg, "PRIVMSG %s :Invalid password", target.field);
-		else if (is_value(result.command, "status"))
+		else if (is_value(result.command, "info"))
 		{
 			FILE * tmpfile = fopen("/proc/loadavg", "r");
 			if (tmpfile == NULL) respond(m_irccfg, "PRIVMSG %s :Error opening /proc/avg for status: %s", target.field, strerror(errno));
@@ -200,61 +200,7 @@ void process_queue_item(const queue_t * q_item)
 		{
 			respond(m_irccfg, "PRIVMSG %s :%s %s written in C (http://circebot.sourceforge.net)", target.field, NAME, VERSION);
 		}
-		else if (is_value(result.command, "moddir"))
-		{
-			llist_t * module_dirlist = list_module_dir();
-			respond(m_irccfg, "PRIVMSG %s :Listing contents of module directory (%s):", target.field, MODULEDIR);
-			if (list_size(module_dirlist) == 0)
-				respond(m_irccfg, "PRIVMSG %s :No modules present", target.field);
-			else
-				output_llist(m_irccfg, data, module_dirlist);
-		}
-		else if (is_value(result.command, "modlist"))
-		{
-			llist_t * module_dirlist = list_modules(1);
-			respond(m_irccfg, "PRIVMSG %s :Listing loaded modules:", target.field);
-			if (list_size(module_dirlist) == 0)
-				respond(m_irccfg, "PRIVMSG %s :No modules loaded", target.field);
-			else
-				output_llist(m_irccfg, data, module_dirlist);
-		}
-		else if (is_value(result.command, "load"))
-		{
-			char errbuff[ERROR_LEN+1];
-			if (is_admin(data->sender))
-				if (load_module(result.args, errbuff))
-					respond(m_irccfg, "PRIVMSG %s :Error loading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
-				else
-					respond(m_irccfg, "PRIVMSG %s :Module %c%s%c loaded successfully", target.field, TXT_BOLD, result.args, TXT_NORM);
-			else
-				respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);
-		}
-		else if (is_value(result.command, "unload"))
-		{
-			char errbuff[ERROR_LEN+1];
-			if (is_admin(data->sender))
-				if (unload_module(result.args, errbuff))
-					respond(m_irccfg, "PRIVMSG %s :Error unloading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
-				else
-					respond(m_irccfg, "PRIVMSG %s :Module %c%s%c unloaded successfully", target.field, TXT_BOLD, result.args, TXT_NORM);
-			else
-				respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);
-		}
-		else if (is_value(result.command, "reload"))
-		{
-			char errbuff[ERROR_LEN+1];
-			if (is_admin(data->sender))
-			{
-				if (unload_module(result.args, errbuff))
-					respond(m_irccfg, "PRIVMSG %s :Error unloading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
-				else if (load_module(result.args, errbuff))
-					respond(m_irccfg, "PRIVMSG %s :Error reloading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
-				else
-					respond(m_irccfg, "PRIVMSG %s :Module %c%s%c reloaded successfully", target.field, TXT_BOLD, result.args, TXT_NORM);
-			}
-			else
-				respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);
-		}
+		
 		else if (is_value(result.command, "raw"))
 		{
 			if (is_admin(data->sender))
@@ -264,18 +210,97 @@ void process_queue_item(const queue_t * q_item)
 		}
                 else if (is_value(result.command, "network"))
 		{
-                    if (strcmp(result.args, "display") == 0)
-                        respond(m_irccfg, "PRIVMSG %s :I need another argument\n", target.field);
-                    else if (strncmp(result.args, "display ", 8) == 0)
+                    if (is_value(result.arg[0].field, "display"))
                     {
-                        char * val = result.args+8;
+                        char * val = result.arg[1].field;
                         int id = atoi(val);
                         if (id <= 0)
                             respond(m_irccfg, "PRIVMSG %s :Invalid id!\n", target.field);
                         else
                             display_network(id, m_irccfg, target.field);
                     }
+                    else
+                        respond(m_irccfg, "PRIVMSG %s :Invalid network command", target.field);
 		}
+                else if (is_value(result.command, "module"))
+                {
+                    if (is_value(result.arg[0].field, "dir"))
+                    {
+                            llist_t * module_dirlist = list_module_dir();
+                            respond(m_irccfg, "PRIVMSG %s :Listing contents of module directory (%s):", target.field, MODULEDIR);
+                            if (list_size(module_dirlist) == 0)
+                                    respond(m_irccfg, "PRIVMSG %s :No modules present", target.field);
+                            else
+                                    output_llist(m_irccfg, data, module_dirlist);
+                    }
+                    else if (is_value(result.arg[0].field, "list"))
+                    {
+                            llist_t * module_dirlist = list_modules(1);
+                            respond(m_irccfg, "PRIVMSG %s :Listing loaded modules:", target.field);
+                            if (list_size(module_dirlist) == 0)
+                                    respond(m_irccfg, "PRIVMSG %s :No modules loaded", target.field);
+                            else
+                                    output_llist(m_irccfg, data, module_dirlist);
+                    }
+                    else if (is_value(result.arg[0].field, "load"))
+                    {
+                            char * filename = result.arg[1].field;
+                            if (strlen(filename) == 0)
+                                respond(m_irccfg, "PRIVMSG %s :I need another argument\n", target.field);
+                            else
+                            {
+                                char errbuff[ERROR_LEN+1];
+                                if (is_admin(data->sender))
+                                        if (load_module(result.args, errbuff))
+                                                respond(m_irccfg, "PRIVMSG %s :Error loading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
+                                        else
+                                                respond(m_irccfg, "PRIVMSG %s :Module %c%s%c loaded successfully", target.field, TXT_BOLD, result.args, TXT_NORM);
+                                else
+                                        respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);
+                            }
+                    }
+                    else if (is_value(result.arg[0].field, "unload"))
+                    {
+                            char * filename = result.arg[1].field;
+                            if (strlen(filename) == 0)
+                                respond(m_irccfg, "PRIVMSG %s :I need another argument\n", target.field);
+                            else
+                            {
+                                char errbuff[ERROR_LEN+1];
+                                if (is_admin(data->sender))
+                                        if (unload_module(result.args, errbuff))
+                                                respond(m_irccfg, "PRIVMSG %s :Error unloading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
+                                        else
+                                                respond(m_irccfg, "PRIVMSG %s :Module %c%s%c unloaded successfully", target.field, TXT_BOLD, result.args, TXT_NORM);
+                                else
+                                        respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);
+                            }
+                    }
+                    else if (is_value(result.arg[0].field, "unload"))
+                    {
+                            char * filename = result.arg[1].field;
+                            if (strlen(filename) == 0)
+                                respond(m_irccfg, "PRIVMSG %s :I need another argument\n", target.field);
+                            else
+                            {
+                                char errbuff[ERROR_LEN+1];
+                                if (is_admin(data->sender))
+                                {
+                                        if (unload_module(result.args, errbuff))
+                                                respond(m_irccfg, "PRIVMSG %s :Error unloading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
+                                        else if (load_module(result.args, errbuff))
+                                                respond(m_irccfg, "PRIVMSG %s :Error reloading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
+                                        else
+                                                respond(m_irccfg, "PRIVMSG %s :Module %c%s%c reloaded successfully", target.field, TXT_BOLD, result.args, TXT_NORM);
+                                }
+                                else
+                                        respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);
+                            }
+                    }
+                    else
+                        respond(m_irccfg, "PRIVMSG %s :Invalid module command", target.field);
+                }
+
 	}
 }
 

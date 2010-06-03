@@ -128,6 +128,16 @@ void process_input(irccfg_t * m_irccfg, char * line)
 		strncpy(m_irccfg->serv, servname, length);
 		m_irccfg->serv[length] = '\0';
 	}
+        if (is_value(data.command, "002"))
+	{
+		char * hostname = data.message + 13;
+		int length = strlen(hostname);
+		if (index(hostname, '[') != NULL)
+			length = index(hostname, '[') - hostname;
+		if (length > CFG_FLD) length = CFG_FLD;
+		strncpy(m_irccfg->host, hostname, length);
+		m_irccfg->host[length] = '\0';
+	}
 	else if (is_value(data.command, "NICK"))
 	{
 		if (strcasecmp(ptarget.field, m_irccfg->nick) == 0)

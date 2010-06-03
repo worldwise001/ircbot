@@ -103,6 +103,8 @@
 #define CMD_FLD 8
 #define MSG_FLD 512
 
+#define MAX_ARG 8
+
 //some formatting stuff
 #define TXT_BOLD '\x002'
 #define TXT_ULIN '\x015'
@@ -172,8 +174,13 @@ typedef struct {
 } irccfg_t;
 
 typedef struct {
+	char field[CFG_FLD+1];
+} field_t;
+
+typedef struct {
 	char command[MSG_FLD+1];
 	char args[MSG_FLD+1];
+        field_t arg[MAX_ARG];
 } bot_t;
 
 typedef struct {
@@ -182,10 +189,6 @@ typedef struct {
 	char command[CMD_FLD+1];
 	char message[MSG_FLD+1];
 } msg_t;
-
-typedef struct {
-	char field[CFG_FLD+1];
-} field_t;
 
 //functions
 char * dup_string(const char * string);
