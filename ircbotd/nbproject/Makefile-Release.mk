@@ -32,6 +32,7 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/parse.o \
+	${OBJECTDIR}/modfunc.o \
 	${OBJECTDIR}/socket.o \
 	${OBJECTDIR}/conf.o \
 	${OBJECTDIR}/llist.o \
@@ -40,11 +41,10 @@ OBJECTFILES= \
 	${OBJECTDIR}/admin.o \
 	${OBJECTDIR}/io.o \
 	${OBJECTDIR}/child.o \
-	${OBJECTDIR}/module.o \
 	${OBJECTDIR}/ircfunc.o
 
 # C Compiler Flags
-CFLAGS=
+CFLAGS=-rdynamic
 
 # CC Compiler Flags
 CCFLAGS=
@@ -61,16 +61,21 @@ LDLIBSOPTIONS=-lpthread -ldl
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	${MAKE}  -f nbproject/Makefile-Release.mk dist/Release/GNU-Linux-x86/${EXECUTABLE}
+	${MAKE}  -f nbproject/Makefile-Release.mk dist/Release/GNU-Linux-x86/circebot
 
-dist/Release/GNU-Linux-x86/${EXECUTABLE}: ${OBJECTFILES}
+dist/Release/GNU-Linux-x86/circebot: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/${EXECUTABLE} ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/circebot ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/parse.o: nbproject/Makefile-${CND_CONF}.mk parse.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/parse.o parse.c
+
+${OBJECTDIR}/modfunc.o: nbproject/Makefile-${CND_CONF}.mk modfunc.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/modfunc.o modfunc.c
 
 ${OBJECTDIR}/socket.o: nbproject/Makefile-${CND_CONF}.mk socket.c 
 	${MKDIR} -p ${OBJECTDIR}
@@ -112,11 +117,6 @@ ${OBJECTDIR}/child.o: nbproject/Makefile-${CND_CONF}.mk child.c
 	${RM} $@.d
 	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/child.o child.c
 
-${OBJECTDIR}/module.o: nbproject/Makefile-${CND_CONF}.mk module.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -w -MMD -MP -MF $@.d -o ${OBJECTDIR}/module.o module.c
-
 ${OBJECTDIR}/ircfunc.o: nbproject/Makefile-${CND_CONF}.mk ircfunc.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
@@ -128,7 +128,7 @@ ${OBJECTDIR}/ircfunc.o: nbproject/Makefile-${CND_CONF}.mk ircfunc.c
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Release
-	${RM} dist/Release/GNU-Linux-x86/${EXECUTABLE}
+	${RM} dist/Release/GNU-Linux-x86/circebot
 
 # Subprojects
 .clean-subprojects:

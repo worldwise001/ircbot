@@ -32,6 +32,7 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/parse.o \
+	${OBJECTDIR}/modfunc.o \
 	${OBJECTDIR}/socket.o \
 	${OBJECTDIR}/conf.o \
 	${OBJECTDIR}/llist.o \
@@ -40,11 +41,10 @@ OBJECTFILES= \
 	${OBJECTDIR}/admin.o \
 	${OBJECTDIR}/io.o \
 	${OBJECTDIR}/child.o \
-	${OBJECTDIR}/module.o \
 	${OBJECTDIR}/ircfunc.o
 
 # C Compiler Flags
-CFLAGS=
+CFLAGS=-rdynamic
 
 # CC Compiler Flags
 CCFLAGS=
@@ -71,6 +71,11 @@ ${OBJECTDIR}/parse.o: nbproject/Makefile-${CND_CONF}.mk parse.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/parse.o parse.c
+
+${OBJECTDIR}/modfunc.o: nbproject/Makefile-${CND_CONF}.mk modfunc.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/modfunc.o modfunc.c
 
 ${OBJECTDIR}/socket.o: nbproject/Makefile-${CND_CONF}.mk socket.c 
 	${MKDIR} -p ${OBJECTDIR}
@@ -111,11 +116,6 @@ ${OBJECTDIR}/child.o: nbproject/Makefile-${CND_CONF}.mk child.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/child.o child.c
-
-${OBJECTDIR}/module.o: nbproject/Makefile-${CND_CONF}.mk module.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/module.o module.c
 
 ${OBJECTDIR}/ircfunc.o: nbproject/Makefile-${CND_CONF}.mk ircfunc.c 
 	${MKDIR} -p ${OBJECTDIR}
