@@ -14,6 +14,7 @@
       <itemPath>ircfunc.h</itemPath>
       <itemPath>lib.h</itemPath>
       <itemPath>llist.h</itemPath>
+      <itemPath>modfunc.h</itemPath>
       <itemPath>module.h</itemPath>
       <itemPath>parse.h</itemPath>
       <itemPath>socket.h</itemPath>
@@ -37,7 +38,7 @@
       <itemPath>lib.c</itemPath>
       <itemPath>llist.c</itemPath>
       <itemPath>main.c</itemPath>
-      <itemPath>module.c</itemPath>
+      <itemPath>modfunc.c</itemPath>
       <itemPath>parse.c</itemPath>
       <itemPath>socket.c</itemPath>
     </logicalFolder>

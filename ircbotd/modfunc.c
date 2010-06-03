@@ -17,7 +17,7 @@
  *  along with CirceBot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "module.h"
+#include "modfunc.h"
 
 extern globals_t globals;
 
