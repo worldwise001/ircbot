@@ -21,7 +21,7 @@
 #define CONFIG_H_
 
 #include "io.h"
-#include "ircfunc.h"
+#include "core.h"
 
 boolean is_value(const char * field, const char * type);			//convenient shortcut
 

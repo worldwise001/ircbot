@@ -17,8 +17,31 @@
  *  along with CirceBot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONST_H_
-#define CONST_H_
+#ifndef _CIRCEBOT_H
+#define	_CIRCEBOT_H
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <signal.h>
+#include <dlfcn.h>
+#include <dirent.h>
+#include <netdb.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <pthread.h>
+#include <limits.h>
+
+#ifdef USECURL
+#include <curl/curl.h>
+#endif
 
 //module directory
 #ifndef MODULEDIR
@@ -80,16 +103,6 @@
 #define CMD_FLD 8
 #define MSG_FLD 512
 
-//signal constants
-#define _INIT 0
-#define _PARENT 1
-#define _CHILD 2
-#define _LIB 3
-
-//output/error identifiers
-#define IRCOUT 0
-#define IRCERR 1
-
 //some formatting stuff
 #define TXT_BOLD '\x002'
 #define TXT_ULIN '\x015'
@@ -118,11 +131,72 @@
 
 #define MAX_RECON_CYCLE 120
 
-#define VERBOSE(x) globals.verbose == (x)
-#define FIELD_SCPY(x) if (strlen(i_irccfg->x) == 0) strcpy(i_irccfg->x, d_irccfg.x)
-#define FIELD_ICPY(x) if (i_irccfg->x == 0) i_irccfg->x = d_irccfg.x
+//internal linked list structure and functions
+typedef struct {
+	void * item;
+	void * next;
+} llist_t;
 
-#define sigcaught(x) sigismember(&sigset_pending, x)
+llist_t * append_item(llist_t * first, void * item);
+llist_t * insert_item(llist_t * first, void * item, int location);
+llist_t * delete_item(llist_t * first, int location);
+void clear_list(llist_t * first);
+llist_t * get_item(llist_t * first, int location);
+int list_size(llist_t * first);
 
-#endif //CONST_H_
+//data structures
+typedef enum { FALSE = 0, TRUE = 1 } boolean;
+typedef enum { OKAY = 0, ERROR = -1 } check;
+
+typedef struct {
+	unsigned long rbytes;
+	unsigned long wbytes;
+} datastat_t;
+
+typedef struct {
+	boolean enabled;
+	volatile sig_atomic_t alive;
+	unsigned int id;
+	pthread_t tid;
+	char nick[CFG_FLD+1];
+	char user[CFG_FLD+1];
+	char real[CFG_FLD+1];
+	char pass[CFG_FLD+1];
+	char chan[CFG_FLD*8+1];
+	char auth[CFG_FLD+1];
+	char serv[CFG_FLD+1];
+	char host[CFG_FLD+1];
+	unsigned short int port;
+	int sfd;
+	datastat_t datastat;
+} irccfg_t;
+
+typedef struct {
+	char command[MSG_FLD+1];
+	char args[MSG_FLD+1];
+} bot_t;
+
+typedef struct {
+	char sender[SND_FLD+1];
+	char target[TGT_FLD+1];
+	char command[CMD_FLD+1];
+	char message[MSG_FLD+1];
+} msg_t;
+
+typedef struct {
+	char field[CFG_FLD+1];
+} field_t;
+
+//functions
+char * dup_string(const char * string);
+char * dup_nstring(const char * string, int length);
+
+bot_t bot_command(const char * message);
+void respond(const irccfg_t * m_irccfg, char * format, ... );
+void _timetostr(char * buffer, time_t time);
+field_t get_nick(const char * sender);
+field_t get_target(const msg_t * data);
+field_t get_kicked_nick(const char * message);
+
+#endif	/* _CIRCEBOT_H */
 

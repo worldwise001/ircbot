@@ -20,7 +20,6 @@
 #ifndef SOCKET_H_
 #define SOCKET_H_
 
-#include "ircfunc.h"
 #include "conf.h"
 #include "lib.h"
 #include "parse.h"

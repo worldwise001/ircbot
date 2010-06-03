@@ -406,6 +406,10 @@ void clean_up()
 	pthread_key_delete(globals.key_ircout);
 	pthread_key_delete(globals.key_ircraw);
 	pthread_key_delete(globals.key_datastat);
+
+        #ifdef USECURL
+        curl_global_cleanup();
+        #endif
 }
 
 void irc_print_raw(const char * line)

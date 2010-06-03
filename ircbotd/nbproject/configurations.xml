@@ -6,16 +6,12 @@
                    projectFiles="true">
       <itemPath>admin.h</itemPath>
       <itemPath>child.h</itemPath>
+      <itemPath>circebot.h</itemPath>
       <itemPath>conf.h</itemPath>
-      <itemPath>const.h</itemPath>
-      <itemPath>datatype.h</itemPath>
-      <itemPath>include.h</itemPath>
+      <itemPath>core.h</itemPath>
       <itemPath>io.h</itemPath>
-      <itemPath>ircfunc.h</itemPath>
       <itemPath>lib.h</itemPath>
-      <itemPath>llist.h</itemPath>
       <itemPath>modfunc.h</itemPath>
-      <itemPath>module.h</itemPath>
       <itemPath>parse.h</itemPath>
       <itemPath>socket.h</itemPath>
     </logicalFolder>

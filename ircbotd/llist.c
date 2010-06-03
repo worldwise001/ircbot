@@ -17,7 +17,7 @@
  *  along with CirceBot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "llist.h"
+#include "core.h"
 
 void clear_list(llist_t * first)
 {

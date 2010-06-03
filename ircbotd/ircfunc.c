@@ -18,7 +18,7 @@
  */
 
 
-#include "ircfunc.h"
+#include "io.h"
 
 globals_t globals;
 

@@ -17,43 +17,28 @@
  *  along with CirceBot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DATATYPE_H_
-#define DATATYPE_H_
+#ifndef CORE_H_
+#define CORE_H_
 
-#include "include.h"
-#include "const.h"
-#include "llist.h"
+#include "circebot.h"
 
-typedef enum { FALSE = 0, TRUE = 1 } boolean;
-typedef enum { OKAY = 0, ERROR = -1 } check;
+//signal constants
+#define _INIT 0
+#define _PARENT 1
+#define _CHILD 2
+#define _LIB 3
 
-typedef struct {
-	unsigned long rbytes;
-	unsigned long wbytes;
-} datastat_t;
+//output/error identifiers
+#define IRCOUT 0
+#define IRCERR 1
 
-typedef struct {
-	boolean enabled;
-	volatile sig_atomic_t alive;
-	unsigned int id;
-	pthread_t tid;
-	char nick[CFG_FLD+1];
-	char user[CFG_FLD+1];
-	char real[CFG_FLD+1];
-	char pass[CFG_FLD+1];
-	char chan[CFG_FLD*8+1];
-	char auth[CFG_FLD+1];
-	char serv[CFG_FLD+1];
-	char host[CFG_FLD+1];
-	unsigned short int port;
-	int sfd;
-	datastat_t datastat;
-} irccfg_t;
+#define VERBOSE(x) globals.verbose == (x)
+#define FIELD_SCPY(x) if (strlen(i_irccfg->x) == 0) strcpy(i_irccfg->x, d_irccfg.x)
+#define FIELD_ICPY(x) if (i_irccfg->x == 0) i_irccfg->x = d_irccfg.x
 
-typedef struct {
-	char command[MSG_FLD+1];
-	char args[MSG_FLD+1];
-} bot_t;
+#define sigcaught(x) sigismember(&sigset_pending, x)
+
+//type definitions
 
 typedef struct {
 	char * conf_file;
@@ -64,13 +49,6 @@ typedef struct {
 	boolean log;
 	boolean raw;
 } args_t;
-
-typedef struct {
-	char sender[SND_FLD+1];
-	char target[TGT_FLD+1];
-	char command[CMD_FLD+1];
-	char message[MSG_FLD+1];
-} msg_t;
 
 typedef struct {
 	const irccfg_t * m_irccfg;
@@ -105,11 +83,14 @@ typedef struct {
 } module_t;
 
 typedef struct {
-	char field[CFG_FLD+1];
-} field_t;
-
-typedef struct {
 	char error[ERROR_LEN+1];
 } error_t;
 
-#endif /* DATATYPE_H_ */
+//functions
+void print_usage(char * app_name);
+void print_version(char * app_name);
+void irc_printf(unsigned int type, char * string, ... );
+
+void irc_print_raw(const char * line);
+
+#endif /* CORE_H_ */

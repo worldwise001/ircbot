@@ -20,7 +20,7 @@
 #ifndef MODULE_H_
 #define MODULE_H_
 
-#include "ircfunc.h"
+#include "core.h"
 #include "admin.h"
 
 int load_module(char * name, char * error);
