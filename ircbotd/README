@@ -14,10 +14,10 @@ ircbotd -c conffile
 
 To make custom modules:
 
-- Include at least ircbotd.h
+- Include at least circebot.h
 - Implement the following prototype, or else the module will not be loaded:
 		void parse(const irccfg_t * config, const msg_t * data);
-	Take a look at datatype.h to see what is in the custom data types.
+	Take a look at circebot.h to see what is in the custom data types.
 - Please use the following prototype for writing output to the stream:
 		void respond(irccfg_t * config, char * format, ... );
 	this allows for proper signaling to the parent thread to send/flush the stream;

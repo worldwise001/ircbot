@@ -6,6 +6,13 @@ Current TODO:
 - autoconf it
 - Standardize boolean/check values
 
+June 3, 2010
+- Added better parsing for bot commands
+- Started network family of commands
+
+June 2, 2010
+- Fixed multiple module loading problem
+
 May 26, 2010
 - Reorganized subversion tree
 - Added folders for future modules
