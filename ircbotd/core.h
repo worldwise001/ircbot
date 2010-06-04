@@ -27,7 +27,7 @@
 #define IRCERR 1
 
 #define VERBOSE(x) globals.verbose == (x)
-#define FIELD_SCPY(x) if (strlen(i_irccfg->x) == 0) strcpy(i_irccfg->x, d_irccfg.x)
+#define FIELD_SCPY(x) if (strlen(i_irccfg->x) == 0) strncpy(i_irccfg->x, d_irccfg.x, strlen(d_irccfg.x));
 #define FIELD_ICPY(x) if (i_irccfg->x == 0) i_irccfg->x = d_irccfg.x
 
 #define sigcaught(x) sigismember(&sigset_pending, x)
@@ -64,6 +64,7 @@ typedef struct {
 	pthread_key_t key_ircout;
 	pthread_key_t key_ircraw;
 	pthread_key_t key_datastat;
+        irccfg_t defconf;
 	FILE * _ircerr;
 	datastat_t datastat;
 } globals_t;

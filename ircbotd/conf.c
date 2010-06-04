@@ -33,6 +33,17 @@ llist_t * load_irccfg(const char * filename)
 	irccfg_t d_irccfg, * i_irccfg = NULL;
 	llist_t * first = NULL, * iterator = NULL;
 	memset(&d_irccfg, 0, sizeof(irccfg_t));
+
+        d_irccfg.enabled = TRUE;
+        strcpy(d_irccfg.nick, "CirceBot");
+        strcpy(d_irccfg.user, "CirceBot");
+        strcpy(d_irccfg.real, "http://circebot.sourceforge.net");
+        strcpy(d_irccfg.host, "irc.freenode.net");
+        d_irccfg.port = 6667;
+        strcpy(d_irccfg.chan, "#circebot");
+        strcpy(d_irccfg.auth, "circe");
+        strcpy(d_irccfg.serv, "Freenode");
+
 	int irccfg_fd = open(filename, O_RDONLY);
 	if (irccfg_fd == -1)
 	{
@@ -128,7 +139,10 @@ llist_t * load_irccfg(const char * filename)
 			if (strlen(strid) > 0)
 				strncpy(i_irccfg->nick, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
+                        {
+                                memset(&d_irccfg.nick, 0, CFG_FLD+1);
 				strncpy(d_irccfg.nick, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+                        }
 			free(buff);
 			continue;
 		}
@@ -137,7 +151,10 @@ llist_t * load_irccfg(const char * filename)
 			if (strlen(strid) > 0)
 				strncpy(i_irccfg->user, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
+                        {
+                                memset(&d_irccfg.user, 0, CFG_FLD+1);
 				strncpy(d_irccfg.user, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+                        }
 			free(buff);
 			continue;
 		}
@@ -146,7 +163,10 @@ llist_t * load_irccfg(const char * filename)
 			if (strlen(strid) > 0)
 				strncpy(i_irccfg->real, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
+                        {
+                                memset(&d_irccfg.real, 0, CFG_FLD+1);
 				strncpy(d_irccfg.real, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+                        }
 			free(buff);
 			continue;
 		}
@@ -155,7 +175,10 @@ llist_t * load_irccfg(const char * filename)
 			if (strlen(strid) > 0)
 				strncpy(i_irccfg->pass, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
+                        {
+                                memset(&d_irccfg.pass, 0, CFG_FLD+1);
 				strncpy(d_irccfg.pass, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+                        }
 			free(buff);
 			continue;
 		}
@@ -164,7 +187,10 @@ llist_t * load_irccfg(const char * filename)
 			if (strlen(strid) > 0)
 				strncpy(i_irccfg->host, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
+                        {
+                                memset(&d_irccfg.host, 0, CFG_FLD+1);
 				strncpy(d_irccfg.host, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+                        }
 			free(buff);
 			continue;
 		}
@@ -185,7 +211,10 @@ llist_t * load_irccfg(const char * filename)
 			if (strlen(strid) > 0)
 				strncpy(i_irccfg->chan, vstr, (v_len > CFG_FLD*8)?CFG_FLD*8:v_len);
 			else
+                        {
+                                memset(&d_irccfg.chan, 0, CFG_FLD*8+1);
 				strncpy(d_irccfg.chan, vstr, (v_len > CFG_FLD*8)?CFG_FLD*8:v_len);
+                        }
 			free(buff);
 			continue;
 		}
@@ -194,7 +223,10 @@ llist_t * load_irccfg(const char * filename)
 			if (strlen(strid) > 0)
 				strncpy(i_irccfg->auth, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
 			else
+                        {
+                                memset(&d_irccfg.auth, 0, CFG_FLD+1);
 				strncpy(d_irccfg.auth, vstr, (v_len > CFG_FLD)?CFG_FLD:v_len);
+                        }
 			free(buff);
 			continue;
 		}
@@ -227,7 +259,9 @@ llist_t * load_irccfg(const char * filename)
 		FIELD_ICPY(enabled);
 		iterator = iterator->next;
 	}
-	
+
+        memcpy(&globals.defconf, &d_irccfg, sizeof(irccfg_t));
+
 	if (VERBOSE(2)) print_irccfg(first);
 	return first;
 }
@@ -423,6 +457,30 @@ void irc_print_raw(const char * line)
 
 int add_network()
 {
+    int i, length;
+    length = list_size(globals.irc_list);
+    for (i = 1; i < length+1; i++) if (get_network(i) == NULL) break;
+
+    irccfg_t * i_irccfg = malloc(sizeof(irccfg_t));
+    if (i_irccfg == NULL)
+    {
+            irc_printf(IRCERR, "Unable to create configuration block: %s\n", strerror(errno));
+            return -1;
+    }
+    memcpy(i_irccfg, &globals.defconf, sizeof(irccfg_t));
+    i_irccfg->id = i;
+    llist_t * result = append_item(globals.irc_list, i_irccfg);
+    if (result == NULL)
+    {
+            irc_printf(IRCERR, "Unable to add configuration block: %s\n", strerror(errno));
+            free(i_irccfg);
+            return -1;
+    }
+    else globals.irc_list = result;
+
+    irc_printf(IRCOUT, "Spawning child with id %d\n", i_irccfg->id);
+    spawn_child(i_irccfg);
+
     return 0;
 }
 
@@ -465,10 +523,23 @@ void display_network(int id, const irccfg_t * irccfg, const char * target)
         return;
     }
 
-    respond(irccfg, "PRIVMSG %s :Network information for %c%d-%s%c:\n", target, TXT_BOLD, id, network->serv, TXT_NORM);
+    respond(irccfg, "PRIVMSG %s :Network information for %c%s%c:\n", target, TXT_BOLD, network->serv, TXT_NORM);
     respond(irccfg, "PRIVMSG %s :  Server:    %s:%d\n", target, network->host, network->port);
     respond(irccfg, "PRIVMSG %s :  Nickname:  %s\n", target, network->nick);
     respond(irccfg, "PRIVMSG %s :  Username:  %s\n", target, network->user);
     respond(irccfg, "PRIVMSG %s :  Real Name: %s\n", target, network->real);
     respond(irccfg, "PRIVMSG %s :  Channels:  %s\n", target, network->chan);
+}
+
+void display_network_list(const irccfg_t * irccfg, const char * target)
+{
+    llist_t * ircptr = globals.irc_list;
+    respond(irccfg, "PRIVMSG %s :Network List:\n", target);
+
+    while (ircptr != NULL)
+    {
+        irccfg_t * item = ircptr->item;
+        respond(irccfg, "PRIVMSG %s :%3d) %c%s%c (%s:%d)\n", target, item->id, TXT_BOLD, item->serv, TXT_NORM, item->host, item->port);
+        ircptr = ircptr->next;
+    }
 }

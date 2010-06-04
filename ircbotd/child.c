@@ -72,9 +72,15 @@ void *handle_child(void * ptr)
 				{
 					child_loop(m_irccfg);
 					sleep(2);
-					close(sockfd);
+                                        close(sockfd);
 					close_raw();
-					break;
+                                        if (globals.run == 0)
+                                            break;
+                                        else
+                                        {
+                                            irc_printf(IRCERR, "Socket closed for some reason; restarting\n");
+                                            m_irccfg->alive = 1;
+                                        }
 				}
 			}
 		}

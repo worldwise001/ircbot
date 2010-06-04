@@ -219,6 +219,10 @@ void process_queue_item(const queue_t * q_item)
                         else
                             display_network(id, m_irccfg, target.field);
                     }
+                    else if (is_value(result.arg[0].field, "list"))
+                        display_network_list(m_irccfg, target.field);
+                    else if (is_value(result.arg[0].field, "add"))
+                        add_network();
                     else
                         respond(m_irccfg, "PRIVMSG %s :Invalid network command", target.field);
 		}
@@ -276,7 +280,7 @@ void process_queue_item(const queue_t * q_item)
                                         respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);
                             }
                     }
-                    else if (is_value(result.arg[0].field, "unload"))
+                    else if (is_value(result.arg[0].field, "reload"))
                     {
                             char * filename = result.arg[1].field;
                             if (strlen(filename) == 0)

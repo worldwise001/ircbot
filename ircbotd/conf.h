@@ -22,6 +22,7 @@
 
 #include "io.h"
 #include "core.h"
+#include "child.h"
 
 boolean is_value(const char * field, const char * type);			//convenient shortcut
 
@@ -49,5 +50,6 @@ int del_network(int id);
 irccfg_t * get_network(int id);
 
 void display_network(int id, const irccfg_t * irccfg, const char * target);
+void display_network_list(const irccfg_t * irccfg, const char * target);
 
 #endif
