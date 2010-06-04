@@ -22,7 +22,7 @@
 
 #include "circebot.h"
 
-//output/error identifiers
+/*output/error identifiers*/
 #define IRCOUT 0
 #define IRCERR 1
 
@@ -32,7 +32,7 @@
 
 #define sigcaught(x) sigismember(&sigset_pending, x)
 
-//type definitions
+/*type definitions*/
 typedef enum { NICK = 1, USER = 2, REAL = 3, PASS = 4, CHAN = 5, HOST = 6, PORT = 7, AUTH = 8 } irccfg_param;
 
 typedef struct {
@@ -82,7 +82,7 @@ typedef struct {
 	char error[ERROR_LEN+1];
 } error_t;
 
-//functions
+/*functions*/
 void print_usage(char * app_name);
 void print_version(char * app_name);
 void irc_printf(unsigned int type, char * string, ... );

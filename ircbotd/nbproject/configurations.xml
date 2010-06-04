@@ -57,7 +57,7 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <commandLine>-rdynamic -DVERSION=${VERSION}</commandLine>
+          <commandLine>-rdynamic -DVERSION=${VERSION} -std=gnu89</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <linkerTool>

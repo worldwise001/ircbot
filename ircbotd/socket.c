@@ -23,7 +23,8 @@ extern globals_t globals;
 
 int sock_connect(char* host, int port)
 {
-	struct addrinfo hints, *result, *res_ptr;
+	struct addrinfo hints;
+        struct addrinfo *result, *res_ptr;
 	int sfd, ai_res;
 
 	memset(&hints, 0, sizeof(struct addrinfo));

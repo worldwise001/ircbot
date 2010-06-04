@@ -69,7 +69,7 @@ int load_module(char * mname, char * error)
 	memset(module, 0, sizeof(module_t));
 	strncpy(module->filename, mname, CFG_FLD);
 	
-	//begin shared object symbol resolution
+	/*begin shared object symbol resolution*/
 	module->parse = dlsym(lib_handle, "parse");
 	char * lerror = NULL;
 	if ((lerror = dlerror()) != NULL)
@@ -130,7 +130,7 @@ int unload_module(char * name, char * error)
 		m_iterator = m_iterator->next;
 		i++;
 	}
-	snprintf(error, ERROR_LEN, "Module is not loaded");
+	sprintf(error, "Module is not loaded");
 	irc_printf(IRCERR, "Error: unable to unload %s (%s)\n", name, error);
         generate_command_list();
 	return -1;

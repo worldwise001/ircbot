@@ -37,4 +37,4 @@ llist_t * list_modules(int show_names);
 
 llist_t * get_module_list();
 
-#endif //MODULE_H_
+#endif /*MODULE_H_*/

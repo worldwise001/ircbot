@@ -23,11 +23,13 @@ extern globals_t globals;
 
 char * get_next_line(int fd)
 {
-	char * buffer = malloc(INIT_SIZE);
-	if (buffer == NULL)
-		return NULL;
-	char c = EOF;
-	int count = 0;
+        int count;
+        char c, * buffer;
+
+        buffer = malloc(INIT_SIZE);
+	if (buffer == NULL) return NULL;
+	c = EOF;
+	count = 0;
 	while ((c = get_next_char(fd)) != EOF && c != '\n')
 	{
 		if ((count - (INIT_SIZE - 1)) % INC_SIZE == 0 && count >= (INIT_SIZE - 1))

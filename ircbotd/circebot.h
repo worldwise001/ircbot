@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <strings.h>
 #include <errno.h>
 #include <signal.h>
 #include <dlfcn.h>
@@ -44,61 +45,61 @@
 #include <curl/curl.h>
 #endif
 
-//module directory
+/*module directory*/
 #ifndef MODULEDIR
 #define MODULEDIR "./modules"
 #endif
 
-//log directory
+/*log directory*/
 #ifndef LOGDIR
 #define LOGDIR "./logs"
 #endif
 
-//socket timeout value
+/*socket timeout value*/
 #ifndef SOCK_TIMEOUT
 #define SOCK_TIMEOUT -1
 #endif
 
-//delay after writing each line to stream
+/*delay after writing each line to stream*/
 #ifndef UDELAY
 #define UDELAY 200
 #endif
 
 #define NAME "CirceBot"
 
-//version of IRCBot
+/*version of IRCBot*/
 #ifndef VERSION
 #define VERSION "svn-unstable"
 #endif
 
-//initial receiving buffer size
+/*initial receiving buffer size*/
 #define INIT_SIZE 128
-//incremental increases in buffer size
+/*incremental increases in buffer size*/
 #define INC_SIZE 32
 
-//static receiving buffer size
+/*static receiving buffer size*/
 #ifndef BUFF_SIZE
 #define BUFF_SIZE 1024
 #endif
 
-//sentinel for commands, "!" for !help, etc.
+/*sentinel for commands, "!" for !help, etc.*/
 #ifndef SENTINEL
 #define SENTINEL "!"
 #endif
 
-//default module extension
+/*default module extension*/
 #define EXT ".so"
 
-//default filename length
+/*default filename length*/
 #define FILENAME_LEN 256
 
-//default error length
+/*default error length*/
 #define ERROR_LEN 256
 
-//character field length for irc configuration
+/*character field length for irc configuration*/
 #define CFG_FLD 80
 
-//character field length for irc messages
+/*character field length for irc messages*/
 #define SND_FLD 256
 #define TGT_FLD 64
 #define CMD_FLD 8
@@ -106,7 +107,7 @@
 
 #define MAX_ARG 8
 
-//some formatting stuff
+/*some formatting stuff*/
 #define TXT_BOLD '\x002'
 #define TXT_ULIN '\x015'
 #define TXT_ITAL '\x009'
@@ -134,7 +135,7 @@
 
 #define MAX_RECON_CYCLE 120
 
-//internal linked list structure and functions
+/*internal linked list structure and functions*/
 typedef struct {
 	void * item;
 	void * next;
@@ -147,7 +148,7 @@ void clear_list(llist_t * first);
 llist_t * get_item(llist_t * first, int location);
 int list_size(llist_t * first);
 
-//data structures
+/*data structures*/
 typedef enum { FALSE = 0, TRUE = 1 } boolean;
 typedef enum { OKAY = 0, ERROR = -1 } check;
 
@@ -191,7 +192,7 @@ typedef struct {
 	char message[MSG_FLD+1];
 } msg_t;
 
-//functions
+/*functions*/
 char * dup_string(const char * string);
 char * dup_nstring(const char * string, int length);
 

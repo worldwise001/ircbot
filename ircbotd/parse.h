@@ -27,4 +27,4 @@ void process_input(irccfg_t * m_irccfg, char * line);
 
 void print_msg(int id, const msg_t * data);
 
-#endif //PARSE_H_
+#endif /*PARSE_H_*/
