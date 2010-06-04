@@ -1,4 +1,4 @@
-#include "../../circebot/ircfunc.h"
+#include "../../circebot/circebot.h"
 #include <string.h>
 
 void parse(irccfg_t * config, msg_t * data)
