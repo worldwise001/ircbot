@@ -51,6 +51,7 @@ CCADMIN=CCadmin
 RANLIB=ranlib
 
 EXECUTABLE=ircbotd
+VERSION=`echo \"unstable_rev\`svn info | grep Revision | cut -f2 -d' '\`\"`
 
 # build
 build: .build-post
