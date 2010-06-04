@@ -5,9 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "../../datatype.h"
-#include "../../ircfunc.h"
-#include "../../config.h"
+#include "../../circebot/circebot.h"
 
 typedef struct {
 	msg_t msg;
