@@ -44,7 +44,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/ircfunc.o
 
 # C Compiler Flags
-CFLAGS=-rdynamic
+CFLAGS=-rdynamic -DVERSION=${VERSION} -std=gnu89
 
 # CC Compiler Flags
 CCFLAGS=

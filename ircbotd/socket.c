@@ -66,7 +66,12 @@ int sock_connect(char* host, int port)
 
 check sock_handshake(irccfg_t * m_irccfg)
 {
+        char nickbuff[CFG_FLD+1];
+        int rand, npos;
+        unsigned int seed;
 	char * line  = NULL;
+
+        memset(nickbuff, 0, CFG_FLD+1);
 
 	write_data(m_irccfg->sfd, "\r\n");
 	write_data(m_irccfg->sfd, "NICK ");
@@ -112,8 +117,48 @@ check sock_handshake(irccfg_t * m_irccfg)
 			free(line);
 			continue;
 		}
+                else if (strstr(line, " 433 * ") != NULL)
+                {
+                        irc_printf(IRCERR, "Nick collision detected!\n");
+                        seed = time(NULL);
+                        rand = rand_r(&seed) % 9999;
+
+                        npos = CFG_FLD - 4;
+                        if ((CFG_FLD - strlen(m_irccfg->nick)) > 4)
+                            npos = strlen(m_irccfg->nick);
+
+                        memset(nickbuff, 0, CFG_FLD+1);
+                        memcpy(nickbuff, m_irccfg->nick, npos);
+                        snprintf(nickbuff+npos, 5, "%04d", rand);
+
+                        write_data(m_irccfg->sfd, "\r\n");
+                        write_data(m_irccfg->sfd, "NICK ");
+                        write_data(m_irccfg->sfd, nickbuff);
+                        write_data(m_irccfg->sfd, "\r\n");
+
+                        if (errno)
+                        {
+                                irc_printf(IRCERR, "Error writing to stream: %s\n", strerror(errno));
+                                close(m_irccfg->sfd);
+                                return ERROR;
+                        }
+                        write_data(m_irccfg->sfd, "USER ");
+                        write_data(m_irccfg->sfd, m_irccfg->user);
+                        write_data(m_irccfg->sfd, " * * :");
+                        write_data(m_irccfg->sfd, m_irccfg->real);
+                        write_data(m_irccfg->sfd, "\r\n");
+                        
+                        if (errno)
+                        {
+                                irc_printf(IRCERR, "Error writing to stream: %s\n", strerror(errno));
+                                close(m_irccfg->sfd);
+                                return ERROR;
+                        }
+                }
 		else
 		{
+                        if (strlen(nickbuff) > 0)
+                                memcpy(m_irccfg->nick, nickbuff, CFG_FLD+1);
 			if (strlen(m_irccfg->pass) > 0)
 				identify(m_irccfg);
 			if (strlen(m_irccfg->chan) > 0)
