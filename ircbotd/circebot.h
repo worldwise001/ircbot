@@ -38,6 +38,7 @@
 #include <sys/stat.h>
 #include <pthread.h>
 #include <limits.h>
+#include <ctype.h>
 
 #ifdef USECURL
 #include <curl/curl.h>
