@@ -1,7 +1,4 @@
-#include "../../circebot/module.h"
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
+#include "../../circebot/circebot.h"
 
 int strcontains(char * haystack, char * needle)
 {
