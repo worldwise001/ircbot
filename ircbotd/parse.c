@@ -24,7 +24,9 @@ extern globals_t globals;
 void parse_raw_to_irc(char * line, msg_t * data)
 {
 	memset(data, 0, sizeof(msg_t));
-	char * spos_a = index(line, ' ')+1;
+	char * spos_a = index(line, ' ');
+        if (spos_a == NULL) return;
+        spos_a++;
 	int a_length = (spos_a != NULL)?(spos_a - line - 1):0;
 	char * spos_b = index(spos_a, ' ')+1;
 	int b_length = (spos_b != NULL)?(spos_b - spos_a - 1):0;
@@ -127,16 +129,11 @@ void process_input(irccfg_t * m_irccfg, char * line)
 		if (length > CFG_FLD) length = CFG_FLD;
 		strncpy(m_irccfg->serv, servname, length);
 		m_irccfg->serv[length] = '\0';
-	}
-        if (is_value(data.command, "002"))
-	{
-		char * hostname = data.message + 13;
-		int length = strlen(hostname);
-		if (index(hostname, '[') != NULL)
-			length = index(hostname, '[') - hostname;
-		if (length > CFG_FLD) length = CFG_FLD;
-		strncpy(m_irccfg->host, hostname, length);
-		m_irccfg->host[length] = '\0';
+
+                length = strlen(data.sender);
+                if (length > CFG_FLD) length = CFG_FLD;
+                strncpy(m_irccfg->host, data.sender, length);
+                m_irccfg->host[length] = '\0';
 	}
 	else if (is_value(data.command, "NICK"))
 	{
