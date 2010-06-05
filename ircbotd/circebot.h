@@ -41,10 +41,6 @@
 #include <limits.h>
 #include <ctype.h>
 
-#ifdef USECURL
-#include <curl/curl.h>
-#endif
-
 /*module directory*/
 #ifndef MODULEDIR
 #define MODULEDIR "./modules"
@@ -195,6 +191,8 @@ typedef struct {
 /*functions*/
 char * dup_string(const char * string);
 char * dup_nstring(const char * string, int length);
+
+boolean is_value(const char * field, const char * type);			/*convenient shortcut*/
 
 bot_t bot_command(const char * message);
 void respond(const irccfg_t * m_irccfg, char * format, ... );

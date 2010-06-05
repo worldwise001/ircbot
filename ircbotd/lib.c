@@ -255,10 +255,10 @@ void process_queue_item(const queue_t * q_item)
                             {
                                 char errbuff[ERROR_LEN+1];
                                 if (is_admin(data->sender))
-                                        if (load_module(result.args, errbuff))
-                                                respond(m_irccfg, "PRIVMSG %s :Error loading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
+                                        if (load_module(result.arg[1].field, errbuff))
+                                                respond(m_irccfg, "PRIVMSG %s :Error loading module %c%s%c: %s", target.field, TXT_BOLD, result.arg[1].field, TXT_NORM, errbuff);
                                         else
-                                                respond(m_irccfg, "PRIVMSG %s :Module %c%s%c loaded successfully", target.field, TXT_BOLD, result.args, TXT_NORM);
+                                                respond(m_irccfg, "PRIVMSG %s :Module %c%s%c loaded successfully", target.field, TXT_BOLD, result.arg[1].field, TXT_NORM);
                                 else
                                         respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);
                             }
@@ -272,10 +272,10 @@ void process_queue_item(const queue_t * q_item)
                             {
                                 char errbuff[ERROR_LEN+1];
                                 if (is_admin(data->sender))
-                                        if (unload_module(result.args, errbuff))
-                                                respond(m_irccfg, "PRIVMSG %s :Error unloading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
+                                        if (unload_module(result.arg[1].field, errbuff))
+                                                respond(m_irccfg, "PRIVMSG %s :Error unloading module %c%s%c: %s", target.field, TXT_BOLD, result.arg[1].field, TXT_NORM, errbuff);
                                         else
-                                                respond(m_irccfg, "PRIVMSG %s :Module %c%s%c unloaded successfully", target.field, TXT_BOLD, result.args, TXT_NORM);
+                                                respond(m_irccfg, "PRIVMSG %s :Module %c%s%c unloaded successfully", target.field, TXT_BOLD, result.arg[1].field, TXT_NORM);
                                 else
                                         respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);
                             }
@@ -290,12 +290,12 @@ void process_queue_item(const queue_t * q_item)
                                 char errbuff[ERROR_LEN+1];
                                 if (is_admin(data->sender))
                                 {
-                                        if (unload_module(result.args, errbuff))
-                                                respond(m_irccfg, "PRIVMSG %s :Error unloading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
-                                        else if (load_module(result.args, errbuff))
-                                                respond(m_irccfg, "PRIVMSG %s :Error reloading module %c%s%c: %s", target.field, TXT_BOLD, result.args, TXT_NORM, errbuff);
+                                        if (unload_module(result.arg[1].field, errbuff))
+                                                respond(m_irccfg, "PRIVMSG %s :Error unloading module %c%s%c: %s", target.field, TXT_BOLD, result.arg[1].field, TXT_NORM, errbuff);
+                                        else if (load_module(result.arg[1].field, errbuff))
+                                                respond(m_irccfg, "PRIVMSG %s :Error reloading module %c%s%c: %s", target.field, TXT_BOLD, result.arg[1].field, TXT_NORM, errbuff);
                                         else
-                                                respond(m_irccfg, "PRIVMSG %s :Module %c%s%c reloaded successfully", target.field, TXT_BOLD, result.args, TXT_NORM);
+                                                respond(m_irccfg, "PRIVMSG %s :Module %c%s%c reloaded successfully", target.field, TXT_BOLD, result.arg[1].field, TXT_NORM);
                                 }
                                 else
                                         respond(m_irccfg, "PRIVMSG %s :You are not logged in", target.field);

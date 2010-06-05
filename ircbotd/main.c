@@ -26,10 +26,6 @@ sigset_t sigset;
 
 int main(int argc, char** argv)
 {
-        #ifdef USECURL
-        if (curl_global_init(CURL_GLOBAL_ALL))
-            fprintf(stderr, "Unable to set up curl; continuing anyway\n");
-        #endif
 
 	sigemptyset(&sigset);
 	sigaddset(&sigset, SIGABRT);

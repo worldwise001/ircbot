@@ -24,8 +24,6 @@
 #include "core.h"
 #include "child.h"
 
-boolean is_value(const char * field, const char * type);			/*convenient shortcut*/
-
 llist_t * load_irccfg(const char * filename);					/*load configuration from filename into linked list*/
 void print_irccfg(llist_t * irclist);                                           /*print configuration (V == 2)*/
 
