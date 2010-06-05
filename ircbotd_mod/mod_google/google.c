@@ -1,8 +1,8 @@
 #include "../../circebot/circebot.h"
 #include "../../circebot/socket.h"
 
-#define GOOGLEAPIKEY ""
-#define SITE ""
+#define GOOGLEAPIKEY "ABQIAAAA9bUsRkRSPH0x-_8JU9eFBBSiokulqXNIcez5TPzzzOGQ5XAc6hS9oNprae1b68fJb5zSCS3dxLFYrA"
+#define SITE "circebot.sourceforge.net"
 
 #define RESULT_BUFF 4096
 
@@ -67,15 +67,6 @@ void parse(irccfg_t * config, msg_t * data)
                     rptr = buff;
                     while ((c = get_next_char(sfd)) != EOF && (rptr - buff) < RESULT_BUFF+1) *rptr++ = c;
                     close(sfd);
-
-                    printf("%s\n", buff);
-
-                    if (errno)
-                    {
-                        respond(config, "PRIVMSG %s :Error getting data from Google\n", target.field);
-                        errno = 0;
-                        return;
-                    }
 
                     /*extracting url*/
                     rptr = strstr(buff, "\"unescapedUrl\":");
