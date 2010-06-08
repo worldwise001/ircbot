@@ -45,10 +45,19 @@ int __ircenv_logout_db (IRCENV * ircenv, IRC * irc, const char * nick);
 int __ircenv_is_auth_db (IRCENV * ircenv, IRC * irc, const char * sender);
 int __ircenv_deauth_all_db (IRCENV * ircenv);
 
+void __ircenv_irc_display_irclist (IRCENV * ircenv, int id, const IRCMSG * ircmsg);
+void __ircenv_irc_display_all_irclist (IRCENV * ircenv, const IRCMSG * ircmsg);
+
+void __ircenv_irc_display_db (IRCENV * ircenv, int id, const IRCMSG * ircmsg);
+void __ircenv_irc_display_all_db (IRCENV * ircenv, const IRCMSG * ircmsg);
+
 int __ircenv_log (IRCENV * ircenv, __irc_logtype type, const char * format, ...);
 
 int __ircenv___open_log(IRCENV * ircenv, __irc_logtype type);
 int __ircenv___close_log(IRCENV * ircenv, __irc_logtype type);
+
+int __ircenv___size_irclist (IRCENV * ircenv);
+int __ircenv___size_db (IRCENV * ircenv);
 
 /* IRCQ function implementations */
 int __ircq_init (IRCQ * ircq);

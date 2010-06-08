@@ -130,6 +130,11 @@ extern "C" {
 
 typedef struct { char data[__CIRCLE_LEN_LINE+1]; } __irc_line;
 
+typedef struct {
+    int id;
+    char user[CIRCLE_FIELD_SENDER + 1];
+} __irc_auth;
+
 typedef enum {
     IRC_LOG_NORM = 0,
     IRC_LOG_ERR = 1,

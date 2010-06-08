@@ -30,6 +30,9 @@ void __circle_ircenv (IRCENV * ircenv)
     ircenv->logout = &__ircenv_logout_irclist;
     ircenv->is_auth = &__ircenv_is_auth_irclist;
     ircenv->deauth_all = &__ircenv_deauth_all_irclist;
+    ircenv->irc_display = &__ircenv_irc_display_irclist;
+    ircenv->irc_display_all = &__ircenv_irc_display_all_irclist;
+    ircenv->__size = &__ircenv___size_irclist;
     #endif /* CIRCLE_USE_INTERNAL */
 
     #ifdef CIRCLE_USE_DB
@@ -40,6 +43,9 @@ void __circle_ircenv (IRCENV * ircenv)
     ircenv->logout = &__ircenv_logout_db;
     ircenv->is_auth = &__ircenv_is_auth_db;
     ircenv->deauth_all = &__ircenv_deauth_all_db;
+    ircenv->irc_display = &__ircenv_irc_display_db;
+    ircenv->irc_display_all = &__ircenv_irc_display_all_db;
+    ircenv->__size = &__ircenv___size_db
     #endif /* CIRCLE_USE_DB */
 }
 
@@ -317,6 +323,8 @@ int __ircenv_log (IRCENV * ircenv, __irc_logtype type, const char * format, ...)
 
     va_end( listPointer );
     pthread_mutex_unlock( &ircenv->__mutex_log );
+
+    return 0;
 }
 
 #ifdef CIRCLE_USE_INTERNAL
@@ -521,4 +529,123 @@ int __ircenv_irc_destroy_irclist (IRCENV * ircenv, int id)
     if (i == -1) return -1;
     return irclist_remove(&ircenv->__list_irc, i);
 }
+
+int __ircenv_login_irclist (IRCENV * ircenv, IRC * irc, const char * sender)
+{
+    __irc_auth * auth;
+    if (ircenv->is_auth(ircenv, irc, sender)) return -1;
+    auth = malloc(sizeof(__irc_auth));
+    if (auth == NULL) return -1;
+    memset(auth, 0, sizeof(__irc_auth));
+    strncpy(auth->user, sender, CIRCLE_FIELD_SENDER);
+    auth->id = irc->id;
+    irclist_append(&ircenv->__list_auth, auth);
+    return 0;
+}
+
+int __ircenv_logout_irclist (IRCENV * ircenv, IRC * irc, const char * nick)
+{
+    IRCLIST * iterator;
+    __irc_auth * auth;
+    char buff[CIRCLE_FIELD_SENDER+1], *end;
+    int i;
+
+    i = 0;
+    iterator = ircenv->__list_auth;
+    while (iterator != NULL)
+    {
+        auth = (__irc_auth *)(iterator->item);
+        memset(buff, 0, CIRCLE_FIELD_SENDER+1);
+        end = index(auth->user, '!');
+        if (end == NULL) end = auth->user + strlen(auth->user);
+        if ((end - auth->user) > CIRCLE_FIELD_SENDER) end = auth->user + CIRCLE_FIELD_SENDER;
+        strncpy(buff, auth->user, end - auth->user);
+        if (strcmp(nick, buff) == 0 && auth->id == irc->id)
+        {
+            iterator = iterator->next;
+            irclist_remove(&ircenv->__list_auth, i);
+        }
+        else
+        {
+            iterator = iterator->next;
+            i++;
+        }
+    }
+    return 0;
+}
+
+int __ircenv_is_auth_irclist (IRCENV * ircenv, IRC * irc, const char * sender)
+{
+    IRCLIST * iterator;
+    __irc_auth * auth;
+
+    if (ircenv->__list_auth == NULL) return 0;
+    iterator = ircenv->__list_auth;
+    while (iterator != NULL)
+    {
+        auth = (__irc_auth *)(iterator->item);
+
+        if (strcmp(auth->user, sender) == 0 && auth->id == irc->id) return 1;
+        else iterator = iterator->next;
+    }
+    return 0;
+}
+
+int __ircenv_deauth_all_irclist (IRCENV * ircenv)
+{
+    return irclist_clear(&ircenv->__list_auth);
+}
+
+void __ircenv_irc_display_irclist (IRCENV * ircenv, int id, const IRCMSG * ircmsg)
+{
+    int i;
+    IRC * irc, * network;
+    field_t target, nick;
+
+    irc = ircmsg->irc;
+    i = irclist_get_irc_id(&ircenv->__list_irc, id);
+    target = irc->get_target(ircmsg);
+    nick = irc->get_nick(ircmsg->sender);
+    if (i == -1)
+    {
+        irc->respond(irc, "PRIVMSG %s :%s - No such network at id %c%d%c", target.data, nick.data, IRC_TXT_BOLD, id, IRC_TXT_NORM);
+        return;
+    }
+    network = (IRC *)(irclist_get(&ircenv->__list_irc, i));
+    if (network == NULL)
+    {
+        irc->respond(irc, "PRIVMSG %s :%s - Internal id/network mismatch!", target.data, nick.data);
+        return;
+    }
+
+    irc->respond(irc, "PRIVMSG %s :%s - Network information for %c%s%c:", target.data, nick.data, IRC_TXT_BOLD, network->name, IRC_TXT_NORM);
+    irc->respond(irc, "PRIVMSG %s :       Host: %s:%d", target.data, network->host, network->port);
+    irc->respond(irc, "PRIVMSG %s :       Nick: %s", target.data, network->nickname);
+    irc->respond(irc, "PRIVMSG %s :       User: %s", target.data, network->username);
+    irc->respond(irc, "PRIVMSG %s :       Real: %s", target.data, network->realname);
+}
+
+void __ircenv_irc_display_all_irclist (IRCENV * ircenv, const IRCMSG * ircmsg)
+{
+    IRCLIST * iterator;
+    IRC * irc, * network;
+    field_t target, nick;
+
+    irc = ircmsg->irc;
+    irc->respond(irc, "PRIVMSG %s :%s - Network List:", target.data, nick.data);
+
+    iterator = ircenv->__list_irc;
+    while (iterator != NULL)
+    {
+        network = (IRC *)(iterator->item);
+        irc->respond(irc, "PRIVMSG %s :       %c%s%c (%d)", target.data, IRC_TXT_BOLD, network->name, IRC_TXT_NORM, network->id);
+        iterator = iterator->next;
+    }
+}
+
+int __ircenv___size_irclist (IRCENV * ircenv)
+{
+    return irclist_size(&ircenv->__list_irc);
+}
+
 #endif /* CIRCLE_USE_INTERNAL */
