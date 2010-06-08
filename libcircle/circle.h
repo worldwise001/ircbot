@@ -167,6 +167,9 @@ int     irclist_clear   (IRCLIST ** first);
 void *  irclist_get     (IRCLIST ** first, int location);
 void *  irclist_take    (IRCLIST ** first, int location);
 int     irclist_size    (IRCLIST ** first);
+
+int     irclist_get_max_irc_id (IRCLIST ** first);
+int     irclist_get_irc_id (IRCLIST ** first, unsigned int id);
  #endif /* CIRCLE_USE_INTERNAL */
 
 /******************************************************************************
@@ -355,6 +358,7 @@ struct __ircenv {
     __args __ircargs;
     FILE * __irclog;
     FILE * __ircerr;
+    pthread_mutex_t __mutex_log;
 
     #ifdef CIRCLE_USE_INTERNAL
     IRCLIST * __list_irc;

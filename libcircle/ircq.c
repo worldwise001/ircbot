@@ -18,6 +18,8 @@ void __circle_ircq (IRCQ * ircq)
     ircq->unload_all = &__ircq_unload_all_irclist;
     ircq->commands = &__ircq_commands_irclist;
     ircq->list = &__ircq_list_irclist;
+    ircq->__process = &__ircq___process_irclist;
+    ircq->__gen_commands = &__ircq___gen_commands_irclist;
     #endif /* CIRCLE_USE_INTERNAL */
 
     #ifdef CIRCLE_USE_DB
@@ -31,14 +33,14 @@ void __circle_ircq (IRCQ * ircq)
     ircq->unload_all = &__ircq_unload_all;
     ircq->commands = &__ircq_commands;
     ircq->list = &__ircq_list;
+    ircq->__process = &__ircq___process;
+    ircq->__gen_commands = &__ircq___gen_commands;
     #endif /* CIRCLE_USE_DB */
 
     ircq->dir = &__ircq_dir;
 
     ircq->__thread_loop = &__ircq___thread_loop;
     ircq->__eval = &__ircq___eval;
-    ircq->__process = &__ircq___process;
-    ircq->__gen_commands = &__ircq___gen_commands;
 }
 
 int __ircq_init (IRCQ * ircq)
@@ -59,13 +61,13 @@ int __ircq_init (IRCQ * ircq)
 int __ircq_kill (IRCQ * ircq)
 {
     pthread_kill(ircq->__pthread_q, SIGUSR1);
+    return 0;
 }
 
 void * __ircq___thread_loop (void * ptr)
 {
     IRCQ * ircq = (IRCQ *)(ptr);
-    char errormsg[CIRCLE_FIELD_ERROR+1];
-    int signal, size;
+    int signal;
     IRCMSG ircmsg;
     pthread_mutexattr_t attr;
     
@@ -109,7 +111,8 @@ void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg)
 {
     IRCCALL irccall;
     IRC * irc;
-    field_t target, nick;
+    field_t target, nick, temp;
+    time_t now;
     FILE * file;
     char buff[3][CIRCLE_FIELD_DEFAULT+1], *str;
 
@@ -176,11 +179,9 @@ void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg)
         }
         else if (!strcmp(irccall.command, "uptime"))
         {
-            memset(buff[0], 0, CIRCLE_FIELD_DEFAULT+1);
-            time_t now;
             time(&now);
-            __circle_time(buff[0], now - ircq->__ircenv->time_start);
-            irc->respond(irc, "PRIVMSG %s :%s - %cUptime:%c %s", target.data, nick.data, IRC_TXT_BOLD, IRC_TXT_NORM, buff[0]);
+            temp = __circle_time(now - ircq->__ircenv->time_start);
+            irc->respond(irc, "PRIVMSG %s :%s - %cUptime:%c %s", target.data, nick.data, IRC_TXT_BOLD, IRC_TXT_NORM, temp.data);
         }
         else if (!strcmp(irccall.command, "version"))
         {

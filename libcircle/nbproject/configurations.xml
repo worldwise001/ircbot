@@ -16,6 +16,7 @@
                    projectFiles="true">
       <itemPath>irc.c</itemPath>
       <itemPath>ircenv.c</itemPath>
+      <itemPath>ircfunc.c</itemPath>
       <itemPath>irclist.c</itemPath>
       <itemPath>ircq.c</itemPath>
       <itemPath>ircsock.c</itemPath>
@@ -37,6 +38,7 @@
       <compileType>
         <cTool>
           <commandLine>-rdynamic</commandLine>
+          <warningLevel>2</warningLevel>
         </cTool>
         <archiverTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libcircle.a</output>

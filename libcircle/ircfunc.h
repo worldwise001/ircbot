@@ -69,7 +69,8 @@ int __ircq_load_all_irclist (IRCQ * ircq);
 int __ircq_unload_all_irclist (IRCQ * ircq);
 void __ircq_commands_irclist (IRCQ * ircq, const IRCMSG * ircmsg);
 void __ircq_list_irclist (IRCQ * ircq, const IRCMSG * ircmsg);
-void __ircq_dir (IRCQ * ircq, const IRCMSG * ircmsg);
+void __ircq___process_irclist (IRCQ * ircq, const IRCMSG * ircmsg);
+void __ircq___gen_commands_irclist (IRCQ * ircq);
 
 int __ircq_load_db (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
 int __ircq_unload_db (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
@@ -78,23 +79,17 @@ int __ircq_load_all_db (IRCQ * ircq);
 int __ircq_unload_all_db (IRCQ * ircq);
 void __ircq_commands_db (IRCQ * ircq, const IRCMSG * ircmsg);
 void __ircq_list_db (IRCQ * ircq, const IRCMSG * ircmsg);
+void __ircq___gen_commands_db (IRCQ * ircq);
+
+void __ircq_dir (IRCQ * ircq, const IRCMSG * ircmsg);
 
 void * __ircq___thread_loop (void * ptr);
-void __ircq___process (IRCQ * ircq, const IRCMSG * ircmsg);
 void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg);
-void __ircq___gen_commands (IRCQ * ircq);
 
 
 __args __circle_parse_args(int argc, char ** argv);
-void __circle_set_field(char * dest, char * src, int maxlen)
-{
-    int len = strlen(src);
-    if (len > maxlen) len = maxlen;
-    memset(dest, 0, maxlen+1);
-    strncpy(dest, src, len);
-}
-
-void __circle_time(char * buffer, time_t time);
+void __circle_set_field(char * dest, char * src, int maxlen);
+field_t __circle_time(time_t time);
 
 
 #ifdef	__cplusplus

@@ -68,7 +68,7 @@ void __ircenv_version()
 int __ircenv_init(IRCENV * ircenv)
 {
     pid_t pid, sid;
-    int signal, err;
+    int signal;
     char * sigtype;
     
     time(&ircenv->time_start);
@@ -198,21 +198,21 @@ int __ircenv_load_args (IRCENV * ircenv, int argc, char ** argv)
                 switch (*buff)
                 {
                 case 'v': (ircenv->__ircargs.verbose)++; break;
-                case 'd': ircenv->__ircargs.mode == IRC_MODE_DAEMON; break;
+                case 'd': ircenv->__ircargs.mode = IRC_MODE_DAEMON; break;
                 case 'c': expected_args++; break;
-                case 'V': ircenv->__ircargs.mode == IRC_MODE_VERSION; break;
-                case 'h': ircenv->__ircargs.mode == IRC_MODE_USAGE; break;
+                case 'V': ircenv->__ircargs.mode = IRC_MODE_VERSION; break;
+                case 'h': ircenv->__ircargs.mode = IRC_MODE_USAGE; break;
                 case 'l': ircenv->__ircargs.log = 1; break;
                 case 'r': ircenv->__ircargs.raw = 1; break;
                 case '-':
                     if (strcmp(&buff[1], "daemon") == 0)
-                        ircenv->__ircargs.mode == IRC_MODE_DAEMON;
+                        ircenv->__ircargs.mode = IRC_MODE_DAEMON;
                     else if (strcmp(&buff[1], "config") == 0)
                         expected_args++;
                     else if (strcmp(&buff[1], "version") == 0)
-                        ircenv->__ircargs.mode == IRC_MODE_VERSION;
+                        ircenv->__ircargs.mode = IRC_MODE_VERSION;
                     else if (strcmp(&buff[1], "help") == 0)
-                        ircenv->__ircargs.mode == IRC_MODE_USAGE;
+                        ircenv->__ircargs.mode = IRC_MODE_USAGE;
                     else if (strcmp(&buff[1], "log") == 0)
                         ircenv->__ircargs.log = 1;
                     else if (strcmp(&buff[1], "raw") == 0)
@@ -281,6 +281,42 @@ int __ircenv___close_log(IRCENV * ircenv, __irc_logtype type)
     ret = fclose(*fptr);
     if (ret) return errno;
     return 0;
+}
+
+int __ircenv_log (IRCENV * ircenv, __irc_logtype type, const char * format, ...)
+{
+    pthread_mutexattr_t attr;
+    va_list listPointer;
+    FILE ** fptr, *std;
+    
+    pthread_mutexattr_init(&attr);
+    pthread_mutex_init(&ircenv->__mutex_log, &attr);
+    pthread_mutex_lock( &ircenv->__mutex_log );
+
+    va_start( listPointer, format );
+
+    switch (type)
+    {
+        case IRC_LOG_ERR:
+            fptr = &ircenv->__ircerr;
+            std = stderr;
+            break;
+        case IRC_LOG_NORM:
+        default:
+            fptr = &ircenv->__irclog;
+            std = stdout;
+            break;
+    }
+
+    if (ircenv->__ircargs.log)
+    {
+        vfprintf(*fptr, format, listPointer);
+        fflush(*fptr);
+    }
+    if (ircenv->__ircargs.mode == IRC_MODE_NORMAL) vfprintf(std, format, listPointer);
+
+    va_end( listPointer );
+    pthread_mutex_unlock( &ircenv->__mutex_log );
 }
 
 #ifdef CIRCLE_USE_INTERNAL
@@ -374,7 +410,7 @@ int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
 
                 irc->id = atoi(strid);
 
-                result = irclist_insert(&first, irc, irc->id);
+                result = irclist_append(&first, irc);
                 if (result)
                 {
                     ircenv->log(ircenv, IRC_LOG_ERR, "%s: Unable to add configuration block: %s\n", ircenv->appname, strerror(errno));
@@ -448,15 +484,41 @@ int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
     }
 
     ircenv->__list_irc = first;
+    return 0;
 }
 
 int __ircenv_irc_create_irclist (IRCENV * ircenv)
 {
+    IRC * irc;
+    int result;
+    
+    irc = malloc(sizeof(IRC));
+    if (irc == NULL)
+    {
+        ircenv->log(ircenv, IRC_LOG_ERR, "%s: Unable to create configuration block: %s\n", ircenv->appname, strerror(errno));
+        return -1;
+    }
+    memset(irc, 0, sizeof(IRC));
+    memcpy(irc, &ircenv->__default, sizeof(IRC));
+    irc->id = irclist_get_max_irc_id(&ircenv->__list_irc);
 
+    result = irclist_append(&ircenv->__list_irc, irc);
+    if (result)
+    {
+        ircenv->log(ircenv, IRC_LOG_ERR, "%s: Unable to add configuration block: %s\n", ircenv->appname, strerror(errno));
+        free(irc);
+        return -1;
+    }
+
+    return 0;
 }
 
 int __ircenv_irc_destroy_irclist (IRCENV * ircenv, int id)
 {
-    
+    int i;
+
+    i = irclist_get_irc_id(&ircenv->__list_irc, id);
+    if (i == -1) return -1;
+    return irclist_remove(&ircenv->__list_irc, i);
 }
 #endif /* CIRCLE_USE_INTERNAL */
