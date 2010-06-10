@@ -6,9 +6,11 @@ void __circle_ircq (IRCQ * ircq)
 
     ircq->init = &__ircq_init;
     ircq->kill = &__ircq_kill;
+    ircq->dir = &__ircq_dir;
 
     #ifdef CIRCLE_USE_INTERNAL
     ircq->queue = &__ircq_queue_irclist;
+    ircq->get_item = &__ircq_get_item_irclist;
     ircq->clear = &__ircq_clear_irclist;
 
     ircq->load = &__ircq_load_irclist;
@@ -20,24 +22,25 @@ void __circle_ircq (IRCQ * ircq)
     ircq->list = &__ircq_list_irclist;
     ircq->__process = &__ircq___process_irclist;
     ircq->__gen_commands = &__ircq___gen_commands_irclist;
+    ircq->__empty = &__ircq___empty_irclist;
     #endif /* CIRCLE_USE_INTERNAL */
 
     #ifdef CIRCLE_USE_DB
-    ircq->queue = &__ircq_queue;
-    ircq->clear = &__ircq_clear;
+    ircq->queue = &__ircq_queue_db;
+    ircq->get_item = &__ircq_get_item_db;
+    ircq->clear = &__ircq_clear_db;
 
-    ircq->load = &__ircq_load;
-    ircq->unload = &__ircq_unload;
-    ircq->reload = &__ircq_reload;
-    ircq->load_all = &__ircq_load_all;
-    ircq->unload_all = &__ircq_unload_all;
-    ircq->commands = &__ircq_commands;
-    ircq->list = &__ircq_list;
+    ircq->load = &__ircq_load_db;
+    ircq->unload = &__ircq_unload_db;
+    ircq->reload = &__ircq_reload_db;
+    ircq->load_all = &__ircq_load_all_db;
+    ircq->unload_all = &__ircq_unload_all_db;
+    ircq->commands = &__ircq_commands_db;
+    ircq->list = &__ircq_list_db;
     ircq->__process = &__ircq___process;
-    ircq->__gen_commands = &__ircq___gen_commands;
+    ircq->__gen_commands = &__ircq___gen_commands_db;
+    ircq->__empty = &__ircq___empty_db;
     #endif /* CIRCLE_USE_DB */
-
-    ircq->dir = &__ircq_dir;
 
     ircq->__thread_loop = &__ircq___thread_loop;
     ircq->__eval = &__ircq___eval;
@@ -47,6 +50,11 @@ int __ircq_init (IRCQ * ircq)
 {
     pthread_attr_t attr;
     int ret;
+    pthread_mutexattr_t mattr;
+
+    pthread_mutexattr_init(&mattr);
+    pthread_mutex_init(&ircq->__mutex, &mattr);
+
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
     ret = pthread_create(&ircq->__pthread_q, &attr, ircq->__thread_loop, ircq);
@@ -67,14 +75,11 @@ int __ircq_kill (IRCQ * ircq)
 void * __ircq___thread_loop (void * ptr)
 {
     IRCQ * ircq = (IRCQ *)(ptr);
-    int signal;
+    int signal, res;
     IRCMSG ircmsg;
-    pthread_mutexattr_t attr;
     
     pthread_detach(pthread_self());
     pthread_sigmask(SIG_BLOCK, &ircq->__ircenv->__sigset, NULL);
-    pthread_mutexattr_init(&attr);
-    pthread_mutex_init(&ircq->__mutex, &attr);
     
     if (ircq->load_all(ircq)) ircq->__ircenv->log(ircq->__ircenv, IRC_LOG_ERR, "%s: Error loading modules\n", ircq->__ircenv->appname);
 
@@ -91,8 +96,11 @@ void * __ircq___thread_loop (void * ptr)
 
             while (!ircq->__empty(ircq))
             {
-                ircmsg = ircq->get_item(ircq);
-                ircq->__eval(ircq, &ircmsg);
+                res = ircq->get_item(ircq, &ircmsg);
+                if (!res)
+                {
+                    ircq->__eval(ircq, &ircmsg);
+                }
 
             }
             pthread_mutex_unlock( &ircq->__mutex );
@@ -239,5 +247,440 @@ void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg)
     }
 }
 
-void __ircq___process (IRCQ * ircq, const IRCMSG * ircmsg);
-void __ircq___gen_commands (IRCQ * ircq);
+void __ircq_dir (IRCQ * ircq, const IRCMSG * ircmsg)
+{
+    DIR * dir;
+    struct dirent * dir_entry;
+    char *ext, buff[CIRCLE_FIELD_FORMAT+1], * str;
+    int res, pos;
+    IRC * irc;
+    field_t target;
+
+    irc = ircmsg->irc;
+    target = irc->get_target(ircmsg);
+
+    dir = opendir(CIRCLE_DIR_MODULES);
+    if (dir == NULL)
+    {
+        errno = 0;
+        irc->respond(irc, "PRIVMSG %s :Error opening %c%s%c for listing", target.data, IRC_TXT_BOLD, CIRCLE_DIR_MODULES, IRC_TXT_NORM);
+        return;
+    }
+
+    pos = 0;
+
+    irc->respond(irc, "PRIVMSG %s :Listing modules directory (%c%s%c):", target.data, IRC_TXT_BOLD, CIRCLE_DIR_MODULES, IRC_TXT_NORM);
+
+    res = 0;
+    while ((dir_entry = readdir(dir)) != NULL)
+    {
+        if (strcmp(dir_entry->d_name, ".") == 0 || strcmp(dir_entry->d_name, "..") == 0) continue;
+        ext = rindex(dir_entry->d_name, '.');
+        if (ext == NULL) continue;
+        if (strcmp(ext, CIRCLE_MODULE_EXT) != 0) continue;
+
+        str = dir_entry->d_name;
+        if (strlen(str) < (CIRCLE_FIELD_FORMAT - pos - 2))
+        {
+            irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
+            memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
+            pos = 0;
+        }
+        if (strlen(buff) > 0)
+        {
+            strcpy(buff+pos, ", ");
+            pos += 2;
+        }
+        strcpy(buff+pos, str);
+        pos += strlen(str);
+
+        res++;
+    }
+    closedir(dir);
+    if (errno) errno = 0;
+
+    if (strlen(buff) > 0 && ++res) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
+    if (!res) irc->respond(irc, "PRIVMSG %s :Nothing in directory", target.data);
+}
+
+#ifdef CIRCLE_USE_INTERNAL
+
+int __ircq_queue_irclist (IRCQ * ircq, IRCMSG ircmsg)
+{
+    IRCMSG * q;
+    int ret, result;;
+
+    pthread_mutex_lock( &ircq->__mutex );
+
+    q = malloc(sizeof(IRCMSG));
+    if (q == NULL) result = -1;
+    else
+    {
+        memcpy(q, &ircmsg, sizeof(IRCMSG));
+        ret = irclist_append(&ircq->__list_queue, q);
+        if (ret)
+        {
+            free(q);
+            result = -1;
+        }
+        else result = 0;
+    }
+
+    pthread_mutex_unlock( &ircq->__mutex );
+    pthread_kill(ircq->__pthread_q, SIGUSR1);
+    return result;
+}
+
+int __ircq_clear_irclist (IRCQ * ircq)
+{
+    pthread_mutex_lock( &ircq->__mutex );
+    irclist_clear(&ircq->__list_queue);
+    pthread_mutex_unlock( &ircq->__mutex );
+    return 0;
+}
+
+int __ircq_get_item_irclist(IRCQ * ircq, IRCMSG * ircmsg)
+{
+    IRCMSG * im;
+    int ret;
+
+    pthread_mutex_lock( &ircq->__mutex );
+    im = (IRCMSG *)(irclist_take(&ircq->__list_queue, 0));
+    if (im == NULL) ret = -1;
+    else
+    {
+        memcpy(ircmsg, im, sizeof(IRCMSG));
+        free(im);
+        ret = 0;
+    }
+    pthread_mutex_lock( &ircq->__mutex );
+    return ret;
+}
+
+int __ircq_load_irclist (IRCQ * ircq, const IRCMSG * ircmsg, char * file)
+{
+    void * mhandle;
+    IRC * irc;
+    IRCLIST * iterator;
+    IRCMOD * mod;
+    char mfile[__CIRCLE_LEN_FILENAME+1], *error;
+    void (*func)(char * string);
+    field_t nick, target;
+    
+    iterator = ircq->__list_modules;
+    while (iterator != NULL)
+    {
+        mod = (IRCMOD *)(iterator->item);
+        if (strcmp(file, mod->filename) == 0)
+        {
+            if (ircmsg != NULL)
+            {
+                irc = ircmsg->irc;
+                target = irc->get_target(ircmsg);
+                nick = irc->get_nick(ircmsg->sender);
+                irc->respond(irc, "PRIVMSG %s :%s - Error loading %c%s%c: file already loaded", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
+            }
+            return -1;
+        }
+        iterator = iterator->next;
+    }
+
+    memset(mfile, 0, __CIRCLE_LEN_FILENAME+1);
+    snprintf(mfile, __CIRCLE_LEN_FILENAME, "%s/%s", CIRCLE_DIR_MODULES, file);
+
+    mhandle = dlopen(mfile, RTLD_NOW);
+    if (!mhandle)
+    {
+        error = dlerror();
+        if (ircmsg != NULL)
+        {
+            irc = ircmsg->irc;
+            target = irc->get_target(ircmsg);
+            nick = irc->get_nick(ircmsg->sender);
+            irc->respond(irc, "PRIVMSG %s :%s - Error opening %c%s%c: %s", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM, error);
+        }
+
+        dlerror();
+        return -1;
+    }
+
+    mod = malloc(sizeof(IRCMOD));
+    memset(mod, 0, sizeof(IRCMOD));
+    strncpy(mod->filename, file, CIRCLE_FIELD_DEFAULT);
+
+    mod->parse = dlsym(mhandle, "parse");
+
+    if ((error = dlerror()))
+    {
+        if (ircmsg != NULL)
+        {
+            irc = ircmsg->irc;
+            target = irc->get_target(ircmsg);
+            nick = irc->get_nick(ircmsg->sender);
+            irc->respond(irc, "PRIVMSG %s :%s - Error binding %c%s%c: %s", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM, error);
+        }
+        dlerror();
+        free(mod);
+        return -1;
+    }
+
+    func = dlsym(mhandle, "commands");
+    if (dlerror()) dlerror();
+    else (*func)(mod->commands);
+
+    func = dlsym(mhandle, "name");
+    if (dlerror()) dlerror();
+    else (*func)(mod->name);
+
+    mod->dlhandle = mhandle;
+    irclist_append(&ircq->__list_modules, mod);
+    ircq->__gen_commands(ircq);
+
+    if (ircmsg != NULL)
+    {
+        irc = ircmsg->irc;
+        target = irc->get_target(ircmsg);
+        nick = irc->get_nick(ircmsg->sender);
+        irc->respond(irc, "PRIVMSG %s :%s - Successfully loaded %c%s%c", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
+    }
+
+    return 0;
+}
+
+int __ircq_unload_irclist (IRCQ * ircq, const IRCMSG * ircmsg, char * file)
+{
+    IRC * irc;
+    IRCLIST * iterator;
+    IRCMOD * mod;
+    int i;
+    field_t nick, target;
+
+    i = 0;
+    iterator = ircq->__list_modules;
+    while (iterator != NULL)
+    {
+        mod = (IRCMOD *)(iterator->item);
+        if (strcmp(file, mod->filename) == 0) break;
+        i++;
+        iterator = iterator->next;
+    }
+
+    irc = ircmsg->irc;
+    target = irc->get_target(ircmsg);
+    nick = irc->get_nick(ircmsg->sender);
+
+    if (iterator == NULL)
+    {
+        if (ircmsg != NULL) irc->respond(irc, "PRIVMSG %s :%s - Error unloading %c%s%c: module does not exist", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
+        return 0;
+    }
+    else
+    {
+        mod = (IRCMOD *)(irclist_take(&ircq->__list_modules, i));
+        dlclose(mod->dlhandle);
+
+        if (ircmsg != NULL) irc->respond(irc, "PRIVMSG %s :%s - Successfully unloaded %c%s%c", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
+        return 0;
+    }
+}
+
+int __ircq_reload_irclist (IRCQ * ircq, const IRCMSG * ircmsg, char * file)
+{
+    int res;
+    res = ircq->unload(ircq, ircmsg, file);
+    if (res) return res;
+    return ircq->load(ircq, ircmsg, file);
+}
+
+int __ircq_load_all_irclist (IRCQ * ircq)
+{
+    DIR * dir;
+    struct dirent * dir_entry;
+    char *ext;
+    int res, r;
+
+    dir = opendir(CIRCLE_DIR_MODULES);
+    if (dir == NULL)
+    {
+        errno = 0;
+        return 1;
+    }
+
+    res = 0;
+    while ((dir_entry = readdir(dir)) != NULL)
+    {
+        if (strcmp(dir_entry->d_name, ".") == 0 || strcmp(dir_entry->d_name, "..") == 0) continue;
+        ext = rindex(dir_entry->d_name, '.');
+        if (ext == NULL) continue;
+        if (strcmp(ext, CIRCLE_MODULE_EXT) != 0) continue;
+        if ((r = ircq->load(ircq, NULL, dir_entry->d_name))) res = r;
+    }
+    closedir(dir);
+    if (errno) errno = 0;
+    return res;
+}
+
+int __ircq_unload_all_irclist (IRCQ * ircq)
+{
+    IRCLIST * iterator;
+    IRCMOD * mod;
+    int res, r;
+
+    res = 0;
+    iterator = ircq->__list_modules;
+    while (iterator != NULL)
+    {
+        mod = (IRCMOD *)(iterator->item);
+        if ((r = ircq->unload(ircq, NULL, mod->filename))) res = r;
+        iterator = iterator->next;
+    }
+    return res;
+}
+
+void __ircq_commands_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
+{
+    IRCLIST * iterator;
+    IRC * irc;
+    char buff[CIRCLE_FIELD_FORMAT+1], * str;
+    int pos;
+    field_t target;
+
+    irc = ircmsg->irc;
+    iterator = ircq->__list_commands;
+    memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
+    pos = 0;
+    target = irc->get_target(ircmsg);
+
+    irc->respond(irc, "PRIVMSG %s :%cCommands:%c help, commands, login, network, info, beep", target.data, IRC_TXT_BOLD, IRC_TXT_NORM);
+
+    while (iterator != NULL)
+    {
+        str = (char *)(iterator->item);
+        if (strlen(str) < (CIRCLE_FIELD_FORMAT - pos - 2))
+        {
+            irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
+            memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
+            pos = 0;
+        }
+        if (strlen(buff) > 0)
+        {
+            strcpy(buff+pos, ", ");
+            pos += 2;
+        }
+        strcpy(buff+pos, str);
+        pos += strlen(str);
+        iterator = iterator->next;
+    }
+
+    if (strlen(buff) > 0) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
+}
+
+void __ircq_list_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
+{
+    IRCLIST * iterator;
+    IRC * irc;
+    IRCMOD * mod;
+    char buff[CIRCLE_FIELD_FORMAT+1], buff2[CIRCLE_FIELD_DEFAULT+1];
+    int pos, res;
+    field_t target;
+
+    irc = ircmsg->irc;
+    iterator = ircq->__list_modules;
+    memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
+    pos = 0;
+    res = 0;
+    target = irc->get_target(ircmsg);
+    irc->respond(irc, "PRIVMSG %s :Listing all loaded modules", target.data);
+
+    while (iterator != NULL)
+    {
+        mod = (IRCMOD *)(iterator->item);
+        memset(buff2, 0, CIRCLE_FIELD_DEFAULT+1);
+        if (strlen(mod->name) > 0)
+            snprintf(buff2, CIRCLE_FIELD_DEFAULT, "%c%s%c", IRC_TXT_BOLD, mod->filename, IRC_TXT_NORM);
+        else
+            snprintf(buff2, CIRCLE_FIELD_DEFAULT, "%s (%c%s%c)", mod->name, IRC_TXT_BOLD, mod->filename, IRC_TXT_NORM);
+        if (strlen(buff2) < (CIRCLE_FIELD_FORMAT - pos - 2))
+        {
+            irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
+            memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
+            pos = 0;
+            res++;
+        }
+        if (strlen(buff) > 0)
+        {
+            strcpy(buff+pos, ", ");
+            pos += 2;
+        }
+        strcpy(buff+pos, buff2);
+        pos += strlen(buff2);
+        iterator = iterator->next;
+    }
+
+    if (strlen(buff) > 0 && ++res) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
+    if (!res) irc->respond(irc, "PRIVMSG %s :No modules loaded", target.data);
+}
+
+void __ircq___gen_commands_irclist (IRCQ * ircq)
+{
+    IRCLIST * iterator;
+    IRCMOD * mod;
+    char * p, * n, * str;
+
+    irclist_clear(&ircq->__list_commands);
+    iterator = ircq->__list_modules;
+    while (iterator != NULL)
+    {
+        mod = (IRCMOD *)(iterator->item);
+        if (strlen(mod->commands) == 0)
+        {
+            iterator = iterator->next;
+            continue;
+        }
+        p = mod->commands;
+        n = index(mod->commands, ',');
+        while (n != NULL)
+        {
+            str = malloc(n-p+1);
+            if (str)
+            {
+                memset(str, 0, n-p+1);
+                strncpy(str, p, n-p);
+                irclist_append(&ircq->__list_commands, str);
+            }
+            p = n+1;
+            n = index(p, ',');
+        }
+        str = malloc(strlen(p)+1);
+        if (str)
+        {
+            memset(str, 0, strlen(p)+1);
+            strncpy(str, p, strlen(p));
+            irclist_append(&ircq->__list_commands, str);
+        }
+        iterator = iterator->next;
+    }
+}
+
+void __ircq___process_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
+{
+    IRCLIST * iterator;
+    IRCMOD * mod;
+
+    iterator = ircq->__list_modules;
+    while (iterator != NULL)
+    {
+        mod = (IRCMOD *)(iterator->item);
+        mod->parse(ircmsg);
+        iterator = iterator->next;
+    }
+}
+
+int __ircq___empty_irclist (IRCQ * ircq)
+{
+    pthread_mutex_lock( &ircq->__mutex );
+    return irclist_size(&ircq->__list_queue);
+    pthread_mutex_unlock( &ircq->__mutex );
+}
+
+#endif /* CIRCLE_USE_INTERNAL */

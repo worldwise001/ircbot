@@ -74,6 +74,7 @@ extern "C" {
 #define CIRCLE_FIELD_COMMAND    8           /* command field length (msg_t) */
 #define CIRCLE_FIELD_MESSAGE    512         /* message field length (msg_t) */
 #define CIRCLE_FIELD_ERROR      256         /* error field length */
+#define CIRCLE_FIELD_FORMAT     384         /* default send buffer length */
 
 #define CIRCLE_LEN_MAX_CHAN     8           /* max chans a bot can autojoin */
 #define CIRCLE_LEN_BOT_ARGS     8           /* max args for bot commands */
@@ -290,7 +291,7 @@ struct __ircq {
     int (*init) (IRCQ * ircq);
     int (*kill) (IRCQ * ircq);
     int (*queue) (IRCQ * ircq, IRCMSG ircmsg);
-    IRCMSG (*get_item) (IRCQ * ircq);
+    int (*get_item) (IRCQ * ircq, IRCMSG * ircmsg);
     int (*clear) (IRCQ * ircq);
 
     int (*load) (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
@@ -309,9 +310,9 @@ struct __ircq {
     sigset_t __sigset;
 
     #ifdef CIRCLE_USE_INTERNAL
-    IRCLIST __list_queue;
-    IRCLIST __list_modules;
-    IRCLIST __list_commands;
+    IRCLIST * __list_queue;
+    IRCLIST * __list_modules;
+    IRCLIST * __list_commands;
     #endif /* CIRCLE_USE_INTERNAL */
     #ifdef CIRCLE_USE_DB
     DB * __db_queue;

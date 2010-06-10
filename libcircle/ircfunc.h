@@ -65,11 +65,11 @@ int __ircq_kill (IRCQ * ircq);
 
 int __ircq_queue_irclist (IRCQ * ircq, IRCMSG ircmsg);
 int __ircq_clear_irclist (IRCQ * ircq);
-IRCMSG __ircq_get_item_irclist(IRCQ * ircq);
+int __ircq_get_item_irclist(IRCQ * ircq, IRCMSG * ircmsg);
 
 int __ircq_queue_db (IRCQ * ircq, IRCMSG ircmsg);
 int __ircq_clear_db (IRCQ * ircq);
-IRCMSG __ircq_get_item_db(IRCQ * ircq);
+int __ircq_get_item_db(IRCQ * ircq, IRCMSG * ircmsg);
 
 int __ircq_load_irclist (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
 int __ircq_unload_irclist (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
@@ -80,6 +80,7 @@ void __ircq_commands_irclist (IRCQ * ircq, const IRCMSG * ircmsg);
 void __ircq_list_irclist (IRCQ * ircq, const IRCMSG * ircmsg);
 void __ircq___process_irclist (IRCQ * ircq, const IRCMSG * ircmsg);
 void __ircq___gen_commands_irclist (IRCQ * ircq);
+int __ircq___empty_irclist (IRCQ * ircq);
 
 int __ircq_load_db (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
 int __ircq_unload_db (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
@@ -89,6 +90,7 @@ int __ircq_unload_all_db (IRCQ * ircq);
 void __ircq_commands_db (IRCQ * ircq, const IRCMSG * ircmsg);
 void __ircq_list_db (IRCQ * ircq, const IRCMSG * ircmsg);
 void __ircq___gen_commands_db (IRCQ * ircq);
+int __ircq___empty_db (IRCQ * ircq);
 
 void __ircq_dir (IRCQ * ircq, const IRCMSG * ircmsg);
 

@@ -121,6 +121,7 @@ void *  irclist_get     (IRCLIST ** first, int location)
 void *  irclist_take    (IRCLIST ** first, int location)
 {
     IRCLIST * node, *tmp, * n_iterator, * p_iterator;
+    void * item;
     int i;
     if (first == NULL) return NULL;
     if (location > irclist_size(first)-1 || location < 0) return NULL;
@@ -129,7 +130,9 @@ void *  irclist_take    (IRCLIST ** first, int location)
         node = (*first)->next;
         tmp = *first;
         *first = node;
-        return tmp;
+        item = tmp->item;
+        free(tmp);
+        return item;
     }
     else
     {
@@ -144,7 +147,9 @@ void *  irclist_take    (IRCLIST ** first, int location)
         }
         tmp = n_iterator;
         p_iterator->next = n_iterator->next;
-        return tmp;
+        item = tmp->item;
+        free(tmp);
+        return item;
     }
 }
 
