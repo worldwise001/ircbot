@@ -59,6 +59,12 @@ int __ircenv___close_log(IRCENV * ircenv, __irc_logtype type);
 int __ircenv___size_irclist (IRCENV * ircenv);
 int __ircenv___size_db (IRCENV * ircenv);
 
+int __ircenv___start_all_irclist (IRCENV * ircenv);
+int __ircenv___start_irclist (IRCENV * ircenv, int id);
+
+int __ircenv___start_all_db (IRCENV * ircenv);
+int __ircenv___start_db (IRCENV * ircenv, int id);
+
 /* IRCQ function implementations */
 int __ircq_init (IRCQ * ircq);
 int __ircq_kill (IRCQ * ircq);
@@ -97,6 +103,25 @@ void __ircq_dir (IRCQ * ircq, const IRCMSG * ircmsg);
 void * __ircq___thread_loop (void * ptr);
 void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg);
 
+/* IRC function implementations */
+int __irc_init (IRC * irc);
+int __irc_shutdown (IRC * irc);
+void __irc_respond (IRC * irc, char * format, ...);
+int __irc_kill (IRC * irc);
+
+int __irc_log (IRC * irc, __irc_logtype type, const char * message, ...);
+
+int __irc___open_log (IRC * irc, __irc_logtype type);
+int __irc___close_log (IRC * irc, __irc_logtype type);
+void * __irc___thread_loop (void * ptr);
+void __irc___process (IRC * irc, IRCMSG * ircmsg);
+
+IRCMSG __irc_parse (const char * raw);
+IRCCALL __irc_get_directive (const char * message);
+
+field_t __irc_get_nick (const char * sender);
+field_t __irc_get_target (const IRCMSG * ircmsg);
+field_t __irc_get_kicked_nick (const char * message);
 
 __args __circle_parse_args(int argc, char ** argv);
 void __circle_set_field(char * dest, char * src, int maxlen);

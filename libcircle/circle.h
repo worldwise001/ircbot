@@ -238,10 +238,10 @@ struct __ircsock {
 struct __irc {
     int (*init) (IRC * irc);
     int (*shutdown) (IRC * irc);
-    int (*respond) (IRC * irc, char * format, ...);
+    void (*respond) (IRC * irc, char * format, ...);
     int (*kill) (IRC * irc);
 
-    int (*log) (IRC * irc, __irc_logtype type, const char * message);
+    int (*log) (IRC * irc, __irc_logtype type, const char * message, ...);
 
     IRCMSG (*parse) (const char * raw);
     IRCCALL (*get_directive) (const char * message);
@@ -253,6 +253,7 @@ struct __irc {
     unsigned int id;
     unsigned int enable:1;
     volatile sig_atomic_t active;
+    volatile sig_atomic_t run;
     IRCSOCK socket;
 
     char nickname[CIRCLE_FIELD_DEFAULT+1];
@@ -272,6 +273,7 @@ struct __irc {
     FILE * __ircraw;
     FILE * __ircerr;
     pthread_t __pthread_irc;
+    pthread_mutex_t __mutex;
 
     int (*__open_log) (IRC * irc, __irc_logtype type);
     int (*__close_log) (IRC * irc, __irc_logtype type);
@@ -379,6 +381,8 @@ struct __ircenv {
     int (*__open_log) (IRCENV * ircenv, __irc_logtype type);
     int (*__close_log) (IRCENV * ircenv, __irc_logtype type);
     int (*__size) (IRCENV * ircenv);
+    int (*__start_all) (IRCENV * ircenv);
+    int (*__start) (IRCENV * ircenv, int id);
 };
 
 /******************************************************************************

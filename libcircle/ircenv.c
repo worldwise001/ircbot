@@ -33,6 +33,8 @@ void __circle_ircenv (IRCENV * ircenv)
     ircenv->irc_display = &__ircenv_irc_display_irclist;
     ircenv->irc_display_all = &__ircenv_irc_display_all_irclist;
     ircenv->__size = &__ircenv___size_irclist;
+    ircenv->__start = &__ircenv___start_irclist;
+    ircenv->__start_all = &__ircenv___start_all_irclist;
     #endif /* CIRCLE_USE_INTERNAL */
 
     #ifdef CIRCLE_USE_DB
@@ -45,7 +47,9 @@ void __circle_ircenv (IRCENV * ircenv)
     ircenv->deauth_all = &__ircenv_deauth_all_db;
     ircenv->irc_display = &__ircenv_irc_display_db;
     ircenv->irc_display_all = &__ircenv_irc_display_all_db;
-    ircenv->__size = &__ircenv___size_db
+    ircenv->__size = &__ircenv___size_db;
+    ircenv->__start = &__ircenv___start_db;
+    ircenv->__start_all = &__ircenv___start_all_db;
     #endif /* CIRCLE_USE_DB */
 }
 
@@ -138,6 +142,9 @@ int __ircenv_init(IRCENV * ircenv)
     __circle_irc(&ircenv->__default);
     __circle_ircq(&ircenv->ircq);
     ircenv->ircq.init(&ircenv->ircq);
+
+    ircenv->load_config(ircenv, ircenv->__ircargs.conf);
+    ircenv->__start_all(ircenv);
 
     sigwait(&ircenv->__sigset, &signal);
 
@@ -646,6 +653,41 @@ void __ircenv_irc_display_all_irclist (IRCENV * ircenv, const IRCMSG * ircmsg)
 int __ircenv___size_irclist (IRCENV * ircenv)
 {
     return irclist_size(&ircenv->__list_irc);
+}
+
+int __ircenv___start_all_irclist (IRCENV * ircenv)
+{
+    IRCLIST * iterator;
+    IRC * irc;
+
+    iterator = ircenv->__list_irc;
+    while (iterator != NULL)
+    {
+        irc = (IRC *)(iterator->item);
+        irc->init(irc);
+        iterator = iterator->next;
+    }
+    return 0;
+}
+
+int __ircenv___start_irclist (IRCENV * ircenv, int id)
+{
+    IRCLIST * iterator;
+    IRC * irc;
+
+    iterator = ircenv->__list_irc;
+    while (iterator != NULL)
+    {
+        irc = (IRC *)(iterator->item);
+        if (irc->id == id) break;
+        iterator = iterator->next;
+    }
+    if (iterator != NULL)
+    {
+        irc->init(irc);
+        return 0;
+    }
+    return -1;
 }
 
 #endif /* CIRCLE_USE_INTERNAL */
