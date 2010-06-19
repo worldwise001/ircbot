@@ -6,6 +6,7 @@ int     irclist_append  (IRCLIST ** first, void * item)
     IRCLIST * node, *iterator;
     if (first == NULL) return -1;
     node = malloc(sizeof(IRCLIST));
+    memset(node, 0, sizeof(IRCLIST));
     if (node == NULL) return -1;
     node->item = item;
     if (*first == NULL) *first = node;
@@ -25,6 +26,7 @@ int     irclist_insert  (IRCLIST ** first, void * item, int location)
     if (first == NULL) return -1;
     if (location > irclist_size(first) || location < 0) return -1;
     node = malloc(sizeof(IRCLIST));
+    memset(node, 0, sizeof(IRCLIST));
     if (node == NULL) return -1;
     node->item = item;
     if (location == 0)
@@ -87,10 +89,10 @@ int     irclist_clear   (IRCLIST ** first)
     IRCLIST *tmp, * iterator;
     if (first == NULL) return -1;
     if (*first == NULL) return 0;
-    iterator  = *first;
+    iterator = *first;
     *first = NULL;
     tmp = iterator;
-    while (iterator->next != NULL)
+    while (iterator != NULL)
     {
         tmp = iterator;
         iterator = iterator->next;

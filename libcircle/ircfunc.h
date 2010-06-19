@@ -25,6 +25,8 @@ void __ircenv_version (void);
 void __ircenv_usage (IRCENV * ircenv);
 
 int __ircenv_init (IRCENV * ircenv);
+int __ircenv_clean_irclist (IRCENV * ircenv);
+int __ircenv_clean_db (IRCENV * ircenv);
 int __ircenv_load_args (IRCENV * ircenv, int argc, char ** argv);
 
 int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf);
@@ -60,6 +62,7 @@ int __ircenv___size_irclist (IRCENV * ircenv);
 int __ircenv___size_db (IRCENV * ircenv);
 
 int __ircenv___start_all_irclist (IRCENV * ircenv);
+int __ircenv___kill_all_irclist (IRCENV * ircenv);
 int __ircenv___start_irclist (IRCENV * ircenv, int id);
 
 int __ircenv___start_all_db (IRCENV * ircenv);
@@ -68,6 +71,8 @@ int __ircenv___start_db (IRCENV * ircenv, int id);
 /* IRCQ function implementations */
 int __ircq_init (IRCQ * ircq);
 int __ircq_kill (IRCQ * ircq);
+
+int __ircq_log (IRCQ * ircq, __irc_logtype type, const char * format, ...);
 
 int __ircq_queue_irclist (IRCQ * ircq, IRCMSG ircmsg);
 int __ircq_clear_irclist (IRCQ * ircq);
@@ -123,9 +128,26 @@ field_t __irc_get_nick (const char * sender);
 field_t __irc_get_target (const IRCMSG * ircmsg);
 field_t __irc_get_kicked_nick (const char * message);
 
+/* IRCSOCK function implementation */
+int __ircsock_connect (IRCSOCK * sock);
+int __ircsock_disconnect (IRCSOCK * sock);
+
+int __ircsock_handshake (IRCSOCK * sock, IRC * irc);
+void __ircsock_identify (IRCSOCK * sock, IRC * irc);
+void __ircsock_autojoin (IRCSOCK * sock, IRC * irc);
+void __ircsock_quit (IRCSOCK * sock, IRC * irc, char * message);
+
+int __ircsock_read (IRCSOCK * sock, __irc_line * line);
+int __ircsock_write (IRCSOCK * sock, char * line);
+int __ircsock_writef (IRCSOCK * sock, char * format, ...);
+
+int __ircsock___getc (IRCSOCK * sock);
+
+/* Miscellaneous "hidden" functions */
 __args __circle_parse_args(int argc, char ** argv);
 void __circle_set_field(char * dest, char * src, int maxlen);
 field_t __circle_time(time_t time);
+
 
 
 #ifdef	__cplusplus

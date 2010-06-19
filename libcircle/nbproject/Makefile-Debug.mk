@@ -32,9 +32,11 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/ircq.o \
+	${OBJECTDIR}/ircfunc.o \
 	${OBJECTDIR}/irclist.o \
 	${OBJECTDIR}/ircsock.o \
 	${OBJECTDIR}/ircenv.o \
+	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/irc.o
 
 # C Compiler Flags
@@ -48,45 +50,53 @@ CXXFLAGS=
 FFLAGS=
 
 # Assembler Flags
-ASFLAGS=-lpthread -ldl
+ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=-lpthread -ldl
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	${MAKE}  -f nbproject/Makefile-Debug.mk dist/Debug/GNU-Linux-x86/libcircle.a
+	${MAKE}  -f nbproject/Makefile-Debug.mk dist/Debug/GNU-Linux-x86/libcircle
 
-dist/Debug/GNU-Linux-x86/libcircle.a: ${OBJECTFILES}
+dist/Debug/GNU-Linux-x86/libcircle: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
-	${RM} dist/Debug/GNU-Linux-x86/libcircle.a
-	${AR} rv ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libcircle.a ${OBJECTFILES} 
-	$(RANLIB) dist/Debug/GNU-Linux-x86/libcircle.a
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libcircle ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/ircq.o: nbproject/Makefile-${CND_CONF}.mk ircq.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircq.o ircq.c
+	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircq.o ircq.c
+
+${OBJECTDIR}/ircfunc.o: nbproject/Makefile-${CND_CONF}.mk ircfunc.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircfunc.o ircfunc.c
 
 ${OBJECTDIR}/irclist.o: nbproject/Makefile-${CND_CONF}.mk irclist.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/irclist.o irclist.c
+	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/irclist.o irclist.c
 
 ${OBJECTDIR}/ircsock.o: nbproject/Makefile-${CND_CONF}.mk ircsock.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircsock.o ircsock.c
+	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircsock.o ircsock.c
 
 ${OBJECTDIR}/ircenv.o: nbproject/Makefile-${CND_CONF}.mk ircenv.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircenv.o ircenv.c
+	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircenv.o ircenv.c
+
+${OBJECTDIR}/main.o: nbproject/Makefile-${CND_CONF}.mk main.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.c
 
 ${OBJECTDIR}/irc.o: nbproject/Makefile-${CND_CONF}.mk irc.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/irc.o irc.c
+	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/irc.o irc.c
 
 # Subprojects
 .build-subprojects:
@@ -94,7 +104,7 @@ ${OBJECTDIR}/irc.o: nbproject/Makefile-${CND_CONF}.mk irc.c
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Debug
-	${RM} dist/Debug/GNU-Linux-x86/libcircle.a
+	${RM} dist/Debug/GNU-Linux-x86/libcircle
 
 # Subprojects
 .clean-subprojects:

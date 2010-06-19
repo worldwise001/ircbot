@@ -231,6 +231,7 @@ struct __ircsock {
     unsigned int __w;
     int __sockfd;
     char __buffer[__CIRCLE_BUFF_RECV_STATIC];
+    int __pos;
 
     int (*__getc) (IRCSOCK * sock);
 };
@@ -305,11 +306,16 @@ struct __ircq {
     void (*list) (IRCQ * ircq, const IRCMSG * ircmsg);
     void (*dir) (IRCQ * ircq, const IRCMSG * ircmsg);
 
+    int (*log) (IRCQ * ircq, __irc_logtype type, const char * format, ...);
+
+    int queue_num;
+
     pthread_t __pthread_q;
     IRCENV * __ircenv;
     IRCSOCK __socket;
     pthread_mutex_t __mutex;
     sigset_t __sigset;
+    volatile sig_atomic_t active;
 
     #ifdef CIRCLE_USE_INTERNAL
     IRCLIST * __list_queue;
@@ -336,6 +342,7 @@ struct __ircenv {
 
     /* starts bot */
     int (*init) (IRCENV * ircenv);
+    int (*clean) (IRCENV * ircenv);
 
     /* configuration functions */
     int (*load_args) (IRCENV * ircenv, int argc, char ** argv);
@@ -383,6 +390,7 @@ struct __ircenv {
     int (*__size) (IRCENV * ircenv);
     int (*__start_all) (IRCENV * ircenv);
     int (*__start) (IRCENV * ircenv, int id);
+    int (*__kill_all) (IRCENV * ircenv);
 };
 
 /******************************************************************************

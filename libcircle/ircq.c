@@ -7,6 +7,7 @@ void __circle_ircq (IRCQ * ircq)
     ircq->init = &__ircq_init;
     ircq->kill = &__ircq_kill;
     ircq->dir = &__ircq_dir;
+    ircq->log = &__ircq_log;
 
     #ifdef CIRCLE_USE_INTERNAL
     ircq->queue = &__ircq_queue_irclist;
@@ -48,27 +49,75 @@ void __circle_ircq (IRCQ * ircq)
 
 int __ircq_init (IRCQ * ircq)
 {
-    pthread_attr_t attr;
     int ret;
     pthread_mutexattr_t mattr;
 
     pthread_mutexattr_init(&mattr);
     pthread_mutex_init(&ircq->__mutex, &mattr);
 
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    ret = pthread_create(&ircq->__pthread_q, &attr, ircq->__thread_loop, ircq);
-    pthread_attr_destroy(&attr);
-    if (ret)
-        ircq->__ircenv->log(ircq->__ircenv, IRC_LOG_ERR, "%s: Creating the library thread returned error code %d\n", ircq->__ircenv->appname, ret);
-    else
-        ircq->__ircenv->log(ircq->__ircenv, IRC_LOG_NORM, "Module thread created successfully\n");
+    ircq->active = 1;
+    ret = pthread_create(&ircq->__pthread_q, NULL, ircq->__thread_loop, ircq);
+    if (ret) ircq->log(ircq, IRC_LOG_ERR, "Creating the library thread returned error code %d\n", ret);
+    else ircq->log(ircq, IRC_LOG_NORM, "Module thread created successfully\n");
     return ret;
 }
 
 int __ircq_kill (IRCQ * ircq)
 {
+    ircq->active = 0;
     pthread_kill(ircq->__pthread_q, SIGUSR1);
+    pthread_kill(ircq->__pthread_q, SIGUSR1);
+    return pthread_join(ircq->__pthread_q, NULL);
+}
+
+int __ircq_log (IRCQ * ircq, __irc_logtype type, const char * format, ...)
+{
+    pthread_mutexattr_t attr;
+    va_list listPointer;
+    FILE ** fptr, *std;
+
+    time_t now;
+    char buff[27];
+    memset(buff, 0, 27);
+
+    time(&now);
+    ctime_r(&now, buff);
+    buff[strlen(buff)-1] = '\0';
+
+    pthread_mutexattr_init(&attr);
+    pthread_mutex_init(&ircq->__ircenv->__mutex_log, &attr);
+    pthread_mutex_lock( &ircq->__ircenv->__mutex_log );
+
+    va_start( listPointer, format );
+
+    switch (type)
+    {
+        case IRC_LOG_ERR:
+            fptr = &ircq->__ircenv->__ircerr;
+            std = stderr;
+            break;
+        case IRC_LOG_NORM:
+        default:
+            fptr = &ircq->__ircenv->__irclog;
+            std = stdout;
+            break;
+    }
+
+    if (ircq->__ircenv->__ircargs.log)
+    {
+        fprintf(*fptr, "[%s] [Q] ", buff);
+        vfprintf(*fptr, format, listPointer);
+        fflush(*fptr);
+    }
+    if (ircq->__ircenv->__ircargs.mode == IRC_MODE_NORMAL)
+    {
+        fprintf(std, "[%s] [Q] ", buff);
+        vfprintf(std, format, listPointer);
+    }
+
+    va_end( listPointer );
+    pthread_mutex_unlock( &ircq->__ircenv->__mutex_log );
+
     return 0;
 }
 
@@ -78,39 +127,37 @@ void * __ircq___thread_loop (void * ptr)
     int signal, res;
     IRCMSG ircmsg;
     
-    pthread_detach(pthread_self());
     pthread_sigmask(SIG_BLOCK, &ircq->__ircenv->__sigset, NULL);
     
-    if (ircq->load_all(ircq)) ircq->__ircenv->log(ircq->__ircenv, IRC_LOG_ERR, "%s: Error loading modules\n", ircq->__ircenv->appname);
+    if (ircq->load_all(ircq)) ircq->log(ircq, IRC_LOG_ERR, "Error loading modules\n");
 
     sigemptyset(&ircq->__sigset);
     sigaddset(&ircq->__sigset, SIGUSR1);
     pthread_sigmask(SIG_BLOCK, &ircq->__sigset, NULL);
     signal = 0;
-    while (ircq->__ircenv->__active)
+    while (ircq->active)
     {
         sigwait(&ircq->__sigset, &signal);
         if (signal == SIGUSR1)
         {
             pthread_mutex_lock( &ircq->__mutex );
-
-            while (!ircq->__empty(ircq))
+            if (!ircq->__ircenv->__active) ircq->clear(ircq);
+            else
             {
-                res = ircq->get_item(ircq, &ircmsg);
-                if (!res)
+                while (!ircq->__empty(ircq))
                 {
-                    ircq->__eval(ircq, &ircmsg);
+                    res = ircq->get_item(ircq, &ircmsg);
+                    if (!res) ircq->__eval(ircq, &ircmsg);
                 }
-
             }
             pthread_mutex_unlock( &ircq->__mutex );
         }
     }
-    ircq->clear(ircq);
-    
-    ircq->__ircenv->log(ircq->__ircenv, IRC_LOG_NORM, "Queue cleared\n");
 
-    if (ircq->load_all(ircq)) ircq->__ircenv->log(ircq->__ircenv, IRC_LOG_ERR, "%s: Error unloading modules\n", ircq->__ircenv->appname);
+    ircq->clear(ircq);
+    ircq->log(ircq, IRC_LOG_NORM, "Queue cleared: %d hiding\n", ircq->queue_num);
+
+    if (ircq->unload_all(ircq)) ircq->log(ircq, IRC_LOG_ERR, "Error unloading modules\n");
 
     return NULL;
 }
@@ -308,7 +355,7 @@ void __ircq_dir (IRCQ * ircq, const IRCMSG * ircmsg)
 int __ircq_queue_irclist (IRCQ * ircq, IRCMSG ircmsg)
 {
     IRCMSG * q;
-    int ret, result;;
+    int ret, result;
 
     pthread_mutex_lock( &ircq->__mutex );
 
@@ -326,6 +373,8 @@ int __ircq_queue_irclist (IRCQ * ircq, IRCMSG ircmsg)
         else result = 0;
     }
 
+    if (!result) ircq->queue_num++;
+
     pthread_mutex_unlock( &ircq->__mutex );
     pthread_kill(ircq->__pthread_q, SIGUSR1);
     return result;
@@ -333,9 +382,7 @@ int __ircq_queue_irclist (IRCQ * ircq, IRCMSG ircmsg)
 
 int __ircq_clear_irclist (IRCQ * ircq)
 {
-    pthread_mutex_lock( &ircq->__mutex );
     irclist_clear(&ircq->__list_queue);
-    pthread_mutex_unlock( &ircq->__mutex );
     return 0;
 }
 
@@ -344,7 +391,6 @@ int __ircq_get_item_irclist(IRCQ * ircq, IRCMSG * ircmsg)
     IRCMSG * im;
     int ret;
 
-    pthread_mutex_lock( &ircq->__mutex );
     im = (IRCMSG *)(irclist_take(&ircq->__list_queue, 0));
     if (im == NULL) ret = -1;
     else
@@ -352,8 +398,8 @@ int __ircq_get_item_irclist(IRCQ * ircq, IRCMSG * ircmsg)
         memcpy(ircmsg, im, sizeof(IRCMSG));
         free(im);
         ret = 0;
+        ircq->queue_num--;
     }
-    pthread_mutex_lock( &ircq->__mutex );
     return ret;
 }
 
@@ -678,9 +724,7 @@ void __ircq___process_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
 
 int __ircq___empty_irclist (IRCQ * ircq)
 {
-    pthread_mutex_lock( &ircq->__mutex );
-    return irclist_size(&ircq->__list_queue);
-    pthread_mutex_unlock( &ircq->__mutex );
+    return irclist_size(&ircq->__list_queue) == 0;
 }
 
 #endif /* CIRCLE_USE_INTERNAL */

@@ -32,9 +32,11 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/ircq.o \
+	${OBJECTDIR}/ircfunc.o \
 	${OBJECTDIR}/irclist.o \
 	${OBJECTDIR}/ircsock.o \
 	${OBJECTDIR}/ircenv.o \
+	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/irc.o
 
 # C Compiler Flags
@@ -68,6 +70,11 @@ ${OBJECTDIR}/ircq.o: nbproject/Makefile-${CND_CONF}.mk ircq.c
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircq.o ircq.c
 
+${OBJECTDIR}/ircfunc.o: nbproject/Makefile-${CND_CONF}.mk ircfunc.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircfunc.o ircfunc.c
+
 ${OBJECTDIR}/irclist.o: nbproject/Makefile-${CND_CONF}.mk irclist.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
@@ -82,6 +89,11 @@ ${OBJECTDIR}/ircenv.o: nbproject/Makefile-${CND_CONF}.mk ircenv.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircenv.o ircenv.c
+
+${OBJECTDIR}/main.o: nbproject/Makefile-${CND_CONF}.mk main.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.c
 
 ${OBJECTDIR}/irc.o: nbproject/Makefile-${CND_CONF}.mk irc.c 
 	${MKDIR} -p ${OBJECTDIR}

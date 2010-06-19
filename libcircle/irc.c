@@ -27,14 +27,9 @@ void __circle_irc (IRC * irc)
 int __irc_init (IRC * irc)
 {
     pthread_t tid;
-    pthread_attr_t attr;
     int ret;
-
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
     
-    ret = pthread_create(&tid, &attr, irc->__thread_loop, irc);
-    pthread_attr_destroy(&attr);
+    ret = pthread_create(&tid, NULL, irc->__thread_loop, irc);
     if (ret) irc->__ircenv->log(irc->__ircenv, IRC_LOG_ERR, "Error in thread creation for id %d\n", irc->id);
     else irc->__ircenv->log(irc->__ircenv, IRC_LOG_NORM, "Child created at id %d\n", irc->id);
     irc->__pthread_irc = tid;
@@ -44,8 +39,9 @@ int __irc_init (IRC * irc)
 int __irc_shutdown (IRC * irc)
 {
     irc->active = 0;
+    irc->run = 0;
     irc->kill(irc);
-    return 0;
+    return pthread_join(irc->__pthread_irc, NULL);
 }
 
 void __irc_respond (IRC * irc, char * format, ...)
@@ -79,6 +75,13 @@ int __irc_log (IRC * irc, __irc_logtype type, const char * format, ...)
 {
     va_list listPointer;
     FILE ** fptr, *std;
+    time_t now;
+    char buff[27];
+    memset(buff, 0, 27);
+
+    time(&now);
+    ctime_r(&now, buff);
+    buff[strlen(buff)-1] = '\0';
 
     va_start( listPointer, format );
 
@@ -101,10 +104,15 @@ int __irc_log (IRC * irc, __irc_logtype type, const char * format, ...)
 
     if (irc->__ircenv->__ircargs.log)
     {
+        fprintf(*fptr, "[%s] [%d] ", buff, irc->id);
         vfprintf(*fptr, format, listPointer);
         fflush(*fptr);
     }
-    if (irc->__ircenv->__ircargs.mode == IRC_MODE_NORMAL && std != NULL) vfprintf(std, format, listPointer);
+    if (irc->__ircenv->__ircargs.mode == IRC_MODE_NORMAL && std != NULL)
+    {
+        fprintf(std, "[%s] [%d] ", buff, irc->id);
+        vfprintf(std, format, listPointer);
+    }
 
     va_end( listPointer );
 
@@ -165,15 +173,14 @@ void * __irc___thread_loop (void * ptr)
     IRC * irc;
     IRCSOCK * s;
     IRCMSG ircmsg;
-    sigset_t sigset;
     int sleeptime, tmpsleep;
     __irc_line line;
     time_t msgtime;
 
-    pthread_detach(pthread_self());
-    pthread_sigmask(SIG_BLOCK, &sigset, NULL);
-
     irc = (IRC *)(ptr);
+
+    pthread_sigmask(SIG_BLOCK, &irc->__ircenv->__sigset, NULL);
+
     irc->run = 1;
     if (irc->__ircenv->__ircargs.log)
     {
@@ -186,7 +193,7 @@ void * __irc___thread_loop (void * ptr)
     __circle_ircsock(s);
     s->__irc = irc;
 
-    irc->log(irc, IRC_LOG_NORM, "<%d> Thread started\n", irc->id);
+    irc->log(irc, IRC_LOG_NORM, "Thread started\n");
     while (irc->run)
     {
         if (sleeptime < __CIRCLE_SOCKET_CYCLE_MAX) sleeptime += __CIRCLE_SOCKET_CYCLE_INC;
@@ -194,16 +201,16 @@ void * __irc___thread_loop (void * ptr)
         {
             if (strlen(s->host) == 0) strcpy(s->host, irc->host);
             if (s->port == 0) s->port = irc->port;
-            irc->log(irc, IRC_LOG_NORM, "<%d> Connecting to %s:%d...\n", irc->id, s->host, s->port);
+            irc->log(irc, IRC_LOG_NORM, "Connecting to %s:%d...\n", s->host, s->port);
             if (s->connect(s))
             {
-                if (errno) irc->log(irc, IRC_LOG_ERR, "<%d> Error connecting to %s/%d: %s\n", irc->id, s->host, s->port, strerror(errno));
+                if (errno) irc->log(irc, IRC_LOG_ERR, "Error connecting to %s:%d: %s\n", s->host, s->port, strerror(errno));
                 sleep(sleeptime);
             }
             else
             {
                 if (irc->__ircenv->__ircargs.raw) irc->__open_log(irc, IRC_LOG_RAW);
-                irc->log(irc, IRC_LOG_NORM, "<%d> Connected; Logging in...\n", irc->id);
+                irc->log(irc, IRC_LOG_NORM, "Connected; Logging in...\n");
                 errno = 0;
                 if (s->handshake(s, irc))
                 {
@@ -214,7 +221,7 @@ void * __irc___thread_loop (void * ptr)
                         if (irc->__ircenv->__ircargs.raw) irc->__close_log(irc, IRC_LOG_RAW);
                         continue;
                     }
-                    irc->log(irc, IRC_LOG_ERR, "<%d> Error in authentication\n", irc->id);
+                    irc->log(irc, IRC_LOG_ERR, "Error in authentication\n");
                     s->disconnect(s);
                     if (irc->__ircenv->__ircargs.raw) irc->__close_log(irc, IRC_LOG_RAW);
                 }
@@ -245,7 +252,7 @@ void * __irc___thread_loop (void * ptr)
                     s->disconnect(s);
                     if (irc->__ircenv->__ircargs.raw) irc->__close_log(irc, IRC_LOG_RAW);
                     if (irc->run == 0) break;
-                    else irc->log(irc, IRC_LOG_ERR, "<%d> Socket closed for some reason; restarting\n", irc->id);
+                    else irc->log(irc, IRC_LOG_ERR, "Socket closed for some reason; restarting\n");
                 }
             }
         }
@@ -270,12 +277,12 @@ void __irc___process (IRC * irc, IRCMSG * ircmsg)
     time_t ttime;
     char * servname, *msg;
 
-    irc->log(irc, IRC_LOG_NORM, "<%d> <%s> <%s> <%s> <%s>\n", irc->id, ircmsg->sender, ircmsg->command, ircmsg->target, ircmsg->message);
+    irc->log(irc, IRC_LOG_NORM, "<%s> <%s> <%s> <%s>\n", ircmsg->sender, ircmsg->command, ircmsg->target, ircmsg->message);
 
     if (!strcmp(ircmsg->command, "ERROR"))
     {
         irc->active = 0;
-        irc->log(irc, IRC_LOG_NORM, "<%d> Connection closed:\n", irc->id, ircmsg->message);
+        irc->log(irc, IRC_LOG_NORM, "Connection closed: %s\n", ircmsg->message);
         return;
     }
 
@@ -312,7 +319,7 @@ void __irc___process (IRC * irc, IRCMSG * ircmsg)
             ftime = __circle_time(ttime);
             irc->respond(irc, "NOTICE %s :%s", ptarget.data, ftime.data);
         }
-        else if (!strcmp(ircmsg->message, CIRCLE_SENTINEL))
+        else if (!strncmp(ircmsg->message, CIRCLE_SENTINEL, strlen(CIRCLE_SENTINEL)))
         {
             msg = ircmsg->message + strlen(CIRCLE_SENTINEL);
             if (!strcmp(msg, "beep"))
@@ -320,6 +327,9 @@ void __irc___process (IRC * irc, IRCMSG * ircmsg)
                     irc->respond(irc, "PRIVMSG %s :%cBEEP!%c", ircmsg->target, IRC_TXT_BOLD, IRC_BELL);
         }
     }
+
+    ircmsg->irc = irc;
+    irc->__ircenv->ircq.queue(&irc->__ircenv->ircq, *ircmsg);
 }
 
 IRCMSG __irc_parse (const char * line)
