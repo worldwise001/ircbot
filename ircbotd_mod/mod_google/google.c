@@ -1,14 +1,51 @@
-#include "../../circebot/circebot.h"
-#include "../../circebot/socket.h"
+#include "../../libcircle/circle.h"
 
 #define GOOGLEAPIKEY "ABQIAAAA9bUsRkRSPH0x-_8JU9eFBBSiokulqXNIcez5TPzzzOGQ5XAc6hS9oNprae1b68fJb5zSCS3dxLFYrA"
 #define SITE "circebot.sourceforge.net"
 
 #define RESULT_BUFF 4096
+#define BUFF_SIZE 1024
 
 typedef struct { char field[BUFF_SIZE+1]; } buff_t;
 
 typedef struct { char field[RESULT_BUFF+1]; } resbuff_t;
+
+int google_connect (char * host, int port)
+{
+    struct addrinfo hints;
+    struct addrinfo *result, *res_ptr;
+    int ai_res;
+    char sport[6];
+    int sfd;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    snprintf(sport, 6, "%d", port);
+
+    switch((ai_res = getaddrinfo(host, sport, &hints, &result)))
+    {
+        case 0: break;
+        default: return -1;
+    }
+
+    res_ptr = result;
+    do
+    {
+        if ((sfd = socket(res_ptr->ai_family, res_ptr->ai_socktype, res_ptr->ai_protocol)) != -1)
+        {
+            if (connect(sfd, res_ptr->ai_addr, res_ptr->ai_addrlen) == 0) break;
+            close(sfd);
+            sfd = -1;
+        }
+
+    } while ((res_ptr = res_ptr->ai_next) != NULL);
+
+    freeaddrinfo(result);
+    if (res_ptr == NULL) return -1;
+    return sfd;
+}
 
 buff_t strip_tags(char * data)
 {
@@ -57,71 +94,59 @@ buff_t entities_strip(char * data)
 
 resbuff_t query(int type, char * aquery, char * error)
 {
-        int sfd;
-        char * oldptr, *newptr, *service, c, query[BUFF_SIZE+1];
-        resbuff_t result;
+    int sfd;
+    char * oldptr, *newptr, *service, c, query[BUFF_SIZE+1];
+    resbuff_t result;
+    FILE * stream;
 
-        error[0] = '\0';
-        oldptr = aquery;
-        memset(query, 0, BUFF_SIZE+1);
-        newptr = query;
-        while (*oldptr != '\0' && (newptr - query) < BUFF_SIZE+1)
+    error[0] = '\0';
+    oldptr = aquery;
+    memset(query, 0, BUFF_SIZE+1);
+    newptr = query;
+    while (*oldptr != '\0' && (newptr - query) < BUFF_SIZE+1)
+    {
+        switch (*oldptr)
         {
-            switch (*oldptr)
-            {
-                case ' ': *newptr++ = '%'; *newptr++ = '2'; *newptr++ = '0'; break;
-                case '?': *newptr++ = '%'; *newptr++ = '3'; *newptr++ = 'F'; break;
-                case '&': *newptr++ = '%'; *newptr++ = '2'; *newptr++ = '6'; break;
-                case '=': *newptr++ = '%'; *newptr++ = '3'; *newptr++ = 'D'; break;
-                default: *newptr++ = *oldptr;
-            }
-            *oldptr++;
+            case ' ': *newptr++ = '%'; *newptr++ = '2'; *newptr++ = '0'; break;
+            case '?': *newptr++ = '%'; *newptr++ = '3'; *newptr++ = 'F'; break;
+            case '&': *newptr++ = '%'; *newptr++ = '2'; *newptr++ = '6'; break;
+            case '=': *newptr++ = '%'; *newptr++ = '3'; *newptr++ = 'D'; break;
+            default: *newptr++ = *oldptr;
         }
+        *oldptr++;
+    }
 
-        switch (type)
-        {
-            case 0: service = "web"; break;
-            case 1: service = "images"; break;
-            case 2: service = "video"; break;
-            case 3: service = "blog"; break;
-            default: service = "web";
-        }
+    switch (type)
+    {
+        case 0: service = "web"; break;
+        case 1: service = "images"; break;
+        case 2: service = "video"; break;
+        case 3: service = "blog"; break;
+        default: service = "web";
+    }
 
-        sfd = sock_connect("ajax.googleapis.com", 80);
-        if (sfd == -1)
-        {
-            strcpy(error, "Unable to connect to Google for query");
-            return result;
-        }
-
-        write_data(sfd, "GET /ajax/services/search/");
-        write_data(sfd, service);
-        write_data(sfd, "?v=1.0&q=");
-        write_data(sfd, query);
-        write_data(sfd, "&key=");
-        write_data(sfd, GOOGLEAPIKEY);
-        write_data(sfd, " HTTP/1.1\r\n");
-
-        write_data(sfd, "Referer: ");
-        write_data(sfd, SITE);
-        write_data(sfd, "\r\n");
-
-        write_data(sfd, "Host: ajax.googleapis.com\r\n");
-        write_data(sfd, "Accept: */*\r\n");
-        write_data(sfd, "User-Agent: ");
-        write_data(sfd, NAME);
-        write_data(sfd, " ");
-        write_data(sfd, VERSION);
-        write_data(sfd, "\r\n");
-        write_data(sfd, "Connection: close\r\n");
-        write_data(sfd, "\r\n");
-
-        memset(result.field, 0, RESULT_BUFF+1);
-        oldptr = result.field;
-        while ((c = get_next_char(sfd)) != EOF && (oldptr - result.field) < RESULT_BUFF) *oldptr++ = c;
-        close(sfd);
-
+    if ((sfd = google_connect("ajax.googleapis.com", 80)) == -1)
+    {
+        strcpy(error, "Unable to connect to Google for query");
         return result;
+    }
+
+    stream = fdopen(sfd, "w+");
+
+    fprintf(stream, "GET /ajax/services/search/%s?v=1.0&q=%s&key=%s HTTP/1.1\r\n", service, query, GOOGLEAPIKEY);
+    fprintf(stream, "Referer: %s\r\n", SITE);
+    fprintf(stream, "Host: ajax.googleapis.com\r\n");
+    fprintf(stream, "Accept: */*\r\n");
+    fprintf(stream, "User-Agent: %s\r\n", CIRCLE_VERSION);
+    fprintf(stream, "Connection: close\r\n");
+    fprintf(stream, "\r\n");
+
+    memset(result.field, 0, RESULT_BUFF+1);
+    oldptr = result.field;
+    while ((c = fgetc(stream)) != EOF && (oldptr - result.field) < RESULT_BUFF) *oldptr++ = c;
+    fclose(stream);
+
+    return result;
 }
 
 field_t extract_video_url(char * data, char * error)
@@ -132,9 +157,7 @@ field_t extract_video_url(char * data, char * error)
     memset(&result, 0, sizeof(field_t));
 
     error[0] = '\0';
-    newptr = result.field;
-
-    printf("%s\n", data);
+    newptr = result.data;
     
     oldptr = strstr(data, "?q=");
     if (oldptr == NULL)
@@ -144,7 +167,7 @@ field_t extract_video_url(char * data, char * error)
     }
     else oldptr += 3;
     
-    while (*oldptr != '\0' && *oldptr != '&' && (newptr - result.field) < CFG_FLD+1)
+    while (*oldptr != '\0' && *oldptr != '&' && (newptr - result.data) < CIRCLE_FIELD_DEFAULT+1)
     {
         if (*oldptr == '%')
         {
@@ -162,140 +185,164 @@ field_t extract_video_url(char * data, char * error)
 
 buff_t extract_value(char * data, char * field, char * error)
 {
-        buff_t result;
-        char *rptr, *reptr;
-        char buff[CFG_FLD+1];
+    buff_t result;
+    char *rptr, *reptr;
+    char buff[CIRCLE_FIELD_DEFAULT+1];
 
-        error[0] = '\0';
+    error[0] = '\0';
 
-        memset(buff, 0, CFG_FLD+1);
-        snprintf(buff, CFG_FLD, "\"%s\":", field);
+    memset(buff, 0, CIRCLE_FIELD_DEFAULT+1);
+    snprintf(buff, CIRCLE_FIELD_DEFAULT, "\"%s\":", field);
 
-        rptr = strstr(data, buff);
-        if (rptr == NULL)
-        {
-            strcpy(error, "Invalid response from Google");
-            return result;
-        }
-        else rptr += strlen(buff)+1;
-
-        reptr = index(rptr, '"');
-        if (reptr == NULL)
-        {
-            strcpy(error, "Invalid response from Google");
-            return result;
-        }
-        memset(result.field, 0, sizeof(buff_t));
-        if ((reptr - rptr) > BUFF_SIZE) reptr = rptr + BUFF_SIZE;
-        strncpy(result.field, rptr, reptr-rptr);
-
-        result = strip_tags(result.field);
-        result = entities_strip(result.field);
+    rptr = strstr(data, buff);
+    if (rptr == NULL)
+    {
+        strcpy(error, "Invalid response from Google");
         return result;
+    }
+    else rptr += strlen(buff)+1;
+
+    reptr = index(rptr, '"');
+    if (reptr == NULL)
+    {
+        strcpy(error, "Invalid response from Google");
+        return result;
+    }
+    memset(result.field, 0, sizeof(buff_t));
+    if ((reptr - rptr) > BUFF_SIZE) reptr = rptr + BUFF_SIZE;
+    strncpy(result.field, rptr, reptr-rptr);
+
+    result = strip_tags(result.field);
+    result = entities_strip(result.field);
+    return result;
 }
 
-void parse(irccfg_t * config, msg_t * data)
+void evaluate(IRCMSG * ircmsg)
 {
-        field_t target, error, tmp;
-        buff_t temp, url, title, publisher, rating;
-        resbuff_t result;
-        char *buff;
-        bot_t bot;
+    IRC * irc;
+    field_t target, error, tmp;
+    buff_t temp, url, title, publisher, rating;
+    resbuff_t result;
+    char *buff;
+    IRCCALL irccall;
 
-	if (data->command != NULL && strncmp(data->command, "PRIVMSG", 7) == 0)
-	{
-		target = get_target(data);
-                bot = bot_command(data->message);
-                if (is_value(bot.command, "google"))
-                {
-                    result = query(0, bot.args, error.field);
-                    if (strlen(error.field) > 0)
-                    {
-                        respond(config, "PRIVMSG %s :%s\n", target.field, error.field);
-                        return;
-                    }
+    irc = ircmsg->irc;
 
-                    buff = result.field;
+    if (ircmsg->command != NULL && strncmp(ircmsg->command, "PRIVMSG", 7) == 0)
+    {
+        target = irc->get_target(ircmsg);
+        irccall = irc->get_directive(ircmsg->message);
+        if (!strcmp(irccall.command, "google"))
+        {
+            result = query(0, irccall.line, error.data);
+            if (strlen(error.data) > 0)
+            {
+                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
+                return;
+            }
 
-                    temp = extract_value(buff, "unescapedUrl", error.field);
-                    if (strlen(error.field) > 0)
-                    {
-                        respond(config, "PRIVMSG %s :%s\n", target.field, error.field);
-                        return;
-                    }
-                    strcpy(url.field, temp.field);
+            buff = result.field;
+            if (strstr(buff, "\"results\":[]") != NULL)
+            {
+                irc->respond(irc, "PRIVMSG %s :No results from Google\n", target.data);
+                return;
+            }
 
-                    temp = extract_value(buff, "titleNoFormatting", error.field);
-                    if (strlen(error.field) > 0)
-                    {
-                        respond(config, "PRIVMSG %s :%s\n", target.field, error.field);
-                        return;
-                    }
-                    strcpy(title.field, temp.field);
+            temp = extract_value(buff, "unescapedUrl", error.data);
+            if (strlen(error.data) > 0)
+            {
+                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
+                return;
+            }
+            strcpy(url.field, temp.field);
 
-                    respond(config, "PRIVMSG %s :%s --- (%s)\n", target.field, url.field, title.field);
-                }
-                else if (is_value(bot.command, "video"))
-                {
-                    result = query(2, bot.args, error.field);
-                    if (strlen(error.field) > 0)
-                    {
-                        respond(config, "PRIVMSG %s :%s\n", target.field, error.field);
-                        return;
-                    }
+            temp = extract_value(buff, "titleNoFormatting", error.data);
+            if (strlen(error.data) > 0)
+            {
+                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
+                return;
+            }
+            strcpy(title.field, temp.field);
 
-                    buff = result.field;
+            irc->respond(irc, "PRIVMSG %s :%s --- (%s)\n", target.data, url.field, title.field);
+        }
+        else if (!strcmp(irccall.command, "video"))
+        {
+            result = query(2, irccall.line, error.data);
+            if (strlen(error.data) > 0)
+            {
+                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
+                return;
+            }
 
-                    temp = extract_value(buff, "titleNoFormatting", error.field);
-                    if (strlen(error.field) > 0)
-                    {
-                        respond(config, "PRIVMSG %s :%s\n", target.field, error.field);
-                        return;
-                    }
-                    strcpy(title.field, temp.field);
+            buff = result.field;
+            if (strstr(buff, "\"results\":[]") != NULL)
+            {
+                irc->respond(irc, "PRIVMSG %s :No results from Google\n", target.data);
+                return;
+            }
 
-                    temp = extract_value(buff, "videoType", error.field);
-                    if (strlen(error.field) > 0)
-                    {
-                        respond(config, "PRIVMSG %s :%s\n", target.field, error.field);
-                        return;
-                    }
-                    strcpy(publisher.field, temp.field);
- 
-                    temp = extract_value(buff, "url", error.field);
-                    if (strlen(error.field) > 0)
-                    {
-                        respond(config, "PRIVMSG %s :%s\n", target.field, error.field);
-                        return;
-                    }
-                    tmp = extract_video_url(temp.field, error.field);
-                    if (strlen(error.field) > 0)
-                    {
-                        respond(config, "PRIVMSG %s :%s\n", target.field, error.field);
-                        return;
-                    }
-                    strcpy(url.field, tmp.field);
+            temp = extract_value(buff, "titleNoFormatting", error.data);
+            if (strlen(error.data) > 0)
+            {
+                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
+                return;
+            }
+            strcpy(title.field, temp.field);
 
-                    temp = extract_value(buff, "rating", error.field);
-                    if (strlen(error.field) > 0)
-                    {
-                        respond(config, "PRIVMSG %s :%s\n", target.field, error.field);
-                        return;
-                    }
-                    strcpy(rating.field, temp.field);
+            temp = extract_value(buff, "videoType", error.data);
+            if (strlen(error.data) > 0)
+            {
+                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
+                return;
+            }
+            strcpy(publisher.field, temp.field);
 
-                    respond(config, "PRIVMSG %s :%s --- %s (%s) %s/5\n", target.field, url.field, title.field, publisher.field, rating.field);
-                }
-	}
+            temp = extract_value(buff, "url", error.data);
+            if (strlen(error.data) > 0)
+            {
+                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
+                return;
+            }
+            tmp = extract_video_url(temp.field, error.data);
+            if (strlen(error.data) > 0)
+            {
+                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
+                return;
+            }
+            strcpy(url.field, tmp.data);
+
+            temp = extract_value(buff, "rating", error.data);
+            if (strlen(error.data) > 0)
+            {
+                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
+                return;
+            }
+            strcpy(rating.field, temp.field);
+
+            irc->respond(irc, "PRIVMSG %s :%s --- (%s - %s) %s/5\n", target.data, url.field, publisher.field, title.field, rating.field);
+        }
+    }
 }
 
-void name(char * buffer)
+char * name()
 {
-	strcpy(buffer, "Google Module 1.0");
-
+    static char * modname = "Google Module 1.0";
+    return modname;
 }
 
-void commands(char * string)
+int irc_version()
 {
-	strcpy(string, "google,video");
+    return CIRCLE_VERSION_MODULE;
+}
+
+IRCHELP * commands()
+{
+    static IRCHELP help[] = {
+        {0, "google", "google [query]", "Sends a query to google search", 0},
+        {0, "video", "video [query]", "Sends a query to google video", 0},
+        {0, 0, 0, 0, 0}
+    };
+
+    return help;
 }
