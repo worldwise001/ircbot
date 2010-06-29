@@ -36,6 +36,7 @@ extern "C" {
 #include <pthread.h>
 #include <limits.h>
 #include <ctype.h>
+#include <getopt.h>
 
 #ifdef CIRCLE_USE_DB
     #include <db.h>
@@ -59,9 +60,10 @@ extern "C" {
     /* Copyright information */
 
 #define CIRCLE_VERSION_MAJOR    0           /* major version number */
-#define CIRCLE_VERSION_MINOR    9           /* minor version number */
-#define CIRCLE_REVISION         136         /* revision number */
-#define CIRCLE_VERSION          "circle 0.9"
+#define CIRCLE_VERSION_MINOR    8           /* minor version number */
+#define CIRCLE_REVISION         144         /* revision number */
+#define CIRCLE_VERSION_MODULE   1           /* module version number */
+#define CIRCLE_VERSION          "circle 0.8"
     /* version string */
 
 #define CIRCLE_SENTINEL         "!"         /* default command identifier */
@@ -156,6 +158,8 @@ struct __ircmod;    typedef struct __ircmod     IRCMOD;
 struct __ircenv;    typedef struct __ircenv     IRCENV;
 struct __ircq;      typedef struct __ircq       IRCQ;
 struct __ircsock;   typedef struct __ircsock    IRCSOCK;
+struct __irchelp;   typedef struct __irchelp    IRCHELP;
+struct __irchopt;   typedef struct __irchopt    IRCHOPT;
 
 #ifdef CIRCLE_USE_INTERNAL
 /* internal linked list type and function definitions */
@@ -187,6 +191,22 @@ typedef struct { char data[CIRCLE_FIELD_DEFAULT+1]; } field_t;
 typedef struct { char data[CIRCLE_FIELD_ERROR+1]; } error_t;
     /* error struct */
 
+struct __irchelp {
+    int admin:1;
+    char * command;
+    char * usage;
+    char * description;
+    IRCHOPT * options;
+};
+
+struct __irchopt {
+    int admin:1;
+    char * option;
+    char * usage;
+    char * description;
+    unsigned int arguments;
+};
+
 struct __ircmsg {
     IRC * irc;
     char sender[CIRCLE_FIELD_SENDER+1];
@@ -204,10 +224,13 @@ struct __irccall {
 
 struct __ircmod {
     void * dlhandle;
-    void (*parse)(const IRCMSG * ircmsg);
-    char commands[CIRCLE_FIELD_DEFAULT+1];
-    char name[CIRCLE_FIELD_DEFAULT+1];
     char filename[CIRCLE_FIELD_DEFAULT+1];
+    void (*evaluate)(const IRCMSG * ircmsg);
+    void (*construct) ();
+    void (*destruct) ();
+    IRCHELP * (*commands) ();
+    int (*irc_version) ();
+    char * (*name) ();
 };
 
 struct __ircsock {
@@ -303,6 +326,7 @@ struct __ircq {
     int (*load_all) (IRCQ * ircq);
     int (*unload_all) (IRCQ * ircq);
     void (*commands) (IRCQ * ircq, const IRCMSG * ircmsg);
+    void (*help) (IRCQ * ircq, const IRCMSG * ircmsg);
     void (*list) (IRCQ * ircq, const IRCMSG * ircmsg);
     void (*dir) (IRCQ * ircq, const IRCMSG * ircmsg);
 
@@ -331,7 +355,7 @@ struct __ircq {
     void * (*__thread_loop) (void * ptr);
     void (*__eval) (IRCQ * ircq, const IRCMSG * ircmsg);
     void (*__process) (IRCQ * ircq, const IRCMSG * ircmsg);
-    void (*__gen_commands) (IRCQ * ircq);
+    IRCHELP * (*__help_list) ();
     int (*__empty) (IRCQ * ircq);
 };
 
@@ -355,6 +379,7 @@ struct __ircenv {
     /* administrative functions */
     int (*login) (IRCENV * ircenv, IRC * irc, const char * sender);
     int (*logout) (IRCENV * ircenv, IRC * irc, const char * nick);
+    int (*auth) (IRCENV * ircenv, IRC * irc, const char * sender);
     int (*is_auth) (IRCENV * ircenv, IRC * irc, const char * sender);
     int (*deauth_all) (IRCENV * ircenv);
 

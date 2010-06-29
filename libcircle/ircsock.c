@@ -41,7 +41,7 @@ int __ircsock_connect (IRCSOCK * sock)
     {
         case 0: break;
         default:
-            irc->log(irc, IRC_LOG_ERR, "<%d> getaddrinfo failed: %s\n", irc->id, gai_strerror(ai_res));
+            irc->log(irc, IRC_LOG_ERR, "getaddrinfo failed: %s\n", gai_strerror(ai_res));
             return -1;
             break;
     }
@@ -61,7 +61,7 @@ int __ircsock_connect (IRCSOCK * sock)
     freeaddrinfo(result);
     if (res_ptr == NULL)
     {
-        irc->log(irc, IRC_LOG_ERR, "<%d> Connect failed\n", irc->id);
+        irc->log(irc, IRC_LOG_ERR, "Connect failed\n", irc->id);
         return -1;
     }
     return 0;
@@ -204,6 +204,9 @@ int __ircsock_read (IRCSOCK * sock, __irc_line * line)
 {
     int count;
     char c, * buffer;
+    IRC * irc;
+    
+    irc = sock->__irc;
 
     buffer = line->data;
 
@@ -217,7 +220,7 @@ int __ircsock_read (IRCSOCK * sock, __irc_line * line)
     if (count > 0 && buffer[count-1] == '\r') buffer[count-1] = '\0';
     if (c == EOF && strlen(buffer) == 0) return EOF;
 
-    //printf("%s\n", buffer);
+    irc->log(irc, IRC_LOG_RAW, "%s\n", buffer);
 
     return 0;
 }
@@ -225,6 +228,9 @@ int __ircsock_read (IRCSOCK * sock, __irc_line * line)
 int __ircsock_write (IRCSOCK * sock, char * line)
 {
     ssize_t written, tmp;
+    IRC * irc;
+
+    irc = sock->__irc;
     written = 0;
     
     while (written < strlen(line))
@@ -233,8 +239,6 @@ int __ircsock_write (IRCSOCK * sock, char * line)
         if (tmp == -1) return -1;
         written += tmp;
     }
-
-    //printf("%s", line);
 
     return 0;
 }

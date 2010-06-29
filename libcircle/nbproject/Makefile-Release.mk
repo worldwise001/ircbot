@@ -36,7 +36,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/irclist.o \
 	${OBJECTDIR}/ircsock.o \
 	${OBJECTDIR}/ircenv.o \
-	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/irc.o
 
 # C Compiler Flags
@@ -89,11 +88,6 @@ ${OBJECTDIR}/ircenv.o: nbproject/Makefile-${CND_CONF}.mk ircenv.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircenv.o ircenv.c
-
-${OBJECTDIR}/main.o: nbproject/Makefile-${CND_CONF}.mk main.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.c
 
 ${OBJECTDIR}/irc.o: nbproject/Makefile-${CND_CONF}.mk irc.c 
 	${MKDIR} -p ${OBJECTDIR}

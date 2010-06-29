@@ -20,7 +20,6 @@
       <itemPath>irclist.c</itemPath>
       <itemPath>ircq.c</itemPath>
       <itemPath>ircsock.c</itemPath>
-      <itemPath>main.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -30,7 +29,7 @@
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
-    <conf name="Debug" type="1">
+    <conf name="Debug" type="3">
       <toolsSet>
         <developmentServer>localhost</developmentServer>
         <compilerSet>GNU|GNU</compilerSet>
@@ -38,15 +37,12 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <commandLine>-rdynamic</commandLine>
+          <commandLine>-rdynamic -ldl -lpthread</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
-        <linkerTool>
-          <linkerLibItems>
-            <linkerLibStdlibItem>PosixThreads</linkerLibStdlibItem>
-            <linkerLibStdlibItem>Dynamic Linking</linkerLibStdlibItem>
-          </linkerLibItems>
-        </linkerTool>
+        <archiverTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libcircle.a</output>
+        </archiverTool>
       </compileType>
     </conf>
     <conf name="Release" type="3">

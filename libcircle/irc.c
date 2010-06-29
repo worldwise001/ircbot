@@ -104,11 +104,23 @@ int __irc_log (IRC * irc, __irc_logtype type, const char * format, ...)
 
     if (irc->__ircenv->__ircargs.log)
     {
-        fprintf(*fptr, "[%s] [%d] ", buff, irc->id);
-        vfprintf(*fptr, format, listPointer);
-        fflush(*fptr);
+        if (type != IRC_LOG_RAW)
+        {
+            fprintf(*fptr, "[%s] [%d] ", buff, irc->id);
+            vfprintf(*fptr, format, listPointer);
+            fflush(*fptr);
+        }
     }
-    if (irc->__ircenv->__ircargs.mode == IRC_MODE_NORMAL && std != NULL)
+    if (irc->__ircenv->__ircargs.raw)
+    {
+        if (type == IRC_LOG_RAW)
+        {
+            fprintf(*fptr, "%ld000 ", now);
+            vfprintf(*fptr, format, listPointer);
+            fflush(*fptr);
+        }
+    }
+    if (irc->__ircenv->__ircargs.mode == IRC_MODE_NORMAL && std != NULL && type != IRC_LOG_RAW)
     {
         fprintf(std, "[%s] [%d] ", buff, irc->id);
         vfprintf(std, format, listPointer);
@@ -175,7 +187,6 @@ void * __irc___thread_loop (void * ptr)
     IRCMSG ircmsg;
     int sleeptime, tmpsleep;
     __irc_line line;
-    time_t msgtime;
 
     irc = (IRC *)(ptr);
 
@@ -205,7 +216,12 @@ void * __irc___thread_loop (void * ptr)
             if (s->connect(s))
             {
                 if (errno) irc->log(irc, IRC_LOG_ERR, "Error connecting to %s:%d: %s\n", s->host, s->port, strerror(errno));
-                sleep(sleeptime);
+                tmpsleep = sleeptime;
+                while (tmpsleep--)
+                {
+                    sleep(1);
+                    if (irc->run == 0) break;
+                }
             }
             else
             {
@@ -239,11 +255,6 @@ void * __irc___thread_loop (void * ptr)
                         }
                         else
                         {
-                            if (irc->__ircenv->__ircargs.raw)
-                            {
-                                time(&msgtime);
-                                irc->log(irc, IRC_LOG_RAW, "%ld000 %s\n", msgtime, line.data);
-                            }
                             ircmsg = irc->parse(line.data);
                             irc->__process(irc, &ircmsg);
                         }

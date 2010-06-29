@@ -36,11 +36,10 @@ OBJECTFILES= \
 	${OBJECTDIR}/irclist.o \
 	${OBJECTDIR}/ircsock.o \
 	${OBJECTDIR}/ircenv.o \
-	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/irc.o
 
 # C Compiler Flags
-CFLAGS=-rdynamic
+CFLAGS=-rdynamic -ldl -lpthread
 
 # CC Compiler Flags
 CCFLAGS=
@@ -57,11 +56,13 @@ LDLIBSOPTIONS=-lpthread -ldl
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	${MAKE}  -f nbproject/Makefile-Debug.mk dist/Debug/GNU-Linux-x86/libcircle
+	${MAKE}  -f nbproject/Makefile-Debug.mk dist/Debug/GNU-Linux-x86/libcircle.a
 
-dist/Debug/GNU-Linux-x86/libcircle: ${OBJECTFILES}
+dist/Debug/GNU-Linux-x86/libcircle.a: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libcircle ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${RM} dist/Debug/GNU-Linux-x86/libcircle.a
+	${AR} rv ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libcircle.a ${OBJECTFILES} 
+	$(RANLIB) dist/Debug/GNU-Linux-x86/libcircle.a
 
 ${OBJECTDIR}/ircq.o: nbproject/Makefile-${CND_CONF}.mk ircq.c 
 	${MKDIR} -p ${OBJECTDIR}
@@ -88,11 +89,6 @@ ${OBJECTDIR}/ircenv.o: nbproject/Makefile-${CND_CONF}.mk ircenv.c
 	${RM} $@.d
 	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/ircenv.o ircenv.c
 
-${OBJECTDIR}/main.o: nbproject/Makefile-${CND_CONF}.mk main.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.c
-
 ${OBJECTDIR}/irc.o: nbproject/Makefile-${CND_CONF}.mk irc.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
@@ -104,7 +100,7 @@ ${OBJECTDIR}/irc.o: nbproject/Makefile-${CND_CONF}.mk irc.c
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Debug
-	${RM} dist/Debug/GNU-Linux-x86/libcircle
+	${RM} dist/Debug/GNU-Linux-x86/libcircle.a
 
 # Subprojects
 .clean-subprojects:

@@ -41,6 +41,7 @@ void __circle_ircenv (IRCENV * ircenv)
     ircenv->__list_irc = NULL;
 
     ircenv->clean = &__ircenv_clean_irclist;
+    ircenv->auth = &__ircenv_auth_irclist;
     #endif /* CIRCLE_USE_INTERNAL */
 
     #ifdef CIRCLE_USE_DB
@@ -58,6 +59,7 @@ void __circle_ircenv (IRCENV * ircenv)
     ircenv->__start_all = &__ircenv___start_all_db;
 
     ircenv->clean = &__ircenv_clean_db;
+    ircenv->auth = &__ircenv_auth_db;
     #endif /* CIRCLE_USE_DB */
 }
 
@@ -71,13 +73,13 @@ void __ircenv_usage(IRCENV * ircenv)
     printf("-h, --help                      Print this help\n");
     printf("-l, --log                       Log all output to %s\n", CIRCLE_DIR_LOGS);
     printf("-r, --raw                       Log all raw output to %s\n", CIRCLE_DIR_LOGS);
-    printf("-v[v[v[v...]]]                  Increase verbosity level (for debugging)\n");
+    printf("-v, --version[=value]           Increase verbosity level (for debugging)\n");
     exit(EXIT_SUCCESS);
 }
 
 void __ircenv_version()
 {
-    printf("%s: IRC Bot written in C\n", CIRCLE_NAME);
+    printf("%s: IRC Bot written in C\n", CIRCLE_VERSION);
     printf("%s\n", CIRCLE_COPYRIGHT);
     printf("%s\n", CIRCLE_INFO);
     exit(EXIT_SUCCESS);
@@ -186,6 +188,48 @@ int __ircenv_init(IRCENV * ircenv)
 
 int __ircenv_load_args (IRCENV * ircenv, int argc, char ** argv)
 {
+    int c, oi;
+    struct option long_options[] = {
+        {"raw", 0, NULL, 'r'},
+        {"daemon", 0, NULL, 'd'},
+        {"config", 1, NULL, 'c'},
+        {"verbose", 2, NULL, 'v'},
+        {"version", 0, NULL, 'V'},
+        {"help", 0, NULL, 'h'},
+        {"log", 0, NULL, 'l'},
+        {0, 0, 0, 0}
+    };
+
+    oi = 0;
+    c = 0;
+    while (1)
+    {
+        c = getopt_long(argc, argv, "rdc:v::Vhl", long_options, &oi);
+        if (c == -1) break;
+
+        switch (c)
+        {
+            case 'v': 
+                if (optarg)
+                    ircenv->__ircargs.verbose += atoi(optarg);
+                else
+                    ircenv->__ircargs.verbose++;
+                break;
+            case 'd': ircenv->__ircargs.mode = IRC_MODE_DAEMON; break;
+            case 'c': strncpy(ircenv->__ircargs.conf, optarg, __CIRCLE_LEN_FILENAME);  break;
+            case 'V': ircenv->__ircargs.mode = IRC_MODE_VERSION; break;
+            case 'h': ircenv->__ircargs.mode = IRC_MODE_USAGE; break;
+            case 'l': ircenv->__ircargs.log = 1; break;
+            case 'r': ircenv->__ircargs.raw = 1; break;
+            default: ircenv->__ircargs.mode = IRC_MODE_USAGE;
+        }
+    }
+    return 0;
+}
+
+/*
+int __ircenv_load_args (IRCENV * ircenv, int argc, char ** argv)
+{
     int i, expected_args;
     char * buff;
     argv = &argv[1];
@@ -262,6 +306,7 @@ int __ircenv_load_args (IRCENV * ircenv, int argc, char ** argv)
     }
     return 0;
 }
+ */
 
 int __ircenv___open_log(IRCENV * ircenv, __irc_logtype type)
 {
@@ -359,7 +404,7 @@ int __ircenv_log (IRCENV * ircenv, __irc_logtype type, const char * format, ...)
 #ifdef CIRCLE_USE_INTERNAL
 int __ircenv_clean_irclist(IRCENV * ircenv)
 {
-    return irclist_clear(&ircenv->__list_irc);
+    return irclist_clear(&ircenv->__list_irc) + irclist_clear(&ircenv->__list_auth);
 }
 
 int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
@@ -375,6 +420,7 @@ int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
     iterator = NULL;
 
     if (conf == NULL) conf = "ircbotd.conf";
+    if (strlen(conf) == 0) conf = "ircbotd.conf";
     memset(&ircenv->__default, 0, sizeof(IRC));
 
     __circle_irc(&ircenv->__default);
@@ -449,11 +495,9 @@ int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
                 iterator = iterator->next;
                 j++;
             }
-            printf("went through %d iterations\n", j);
             if (iterator == NULL)
             {
                 irc = malloc(sizeof(IRC));
-                printf("Creating config block\n");
                 if (irc == NULL)
                 {
                     ircenv->log(ircenv, IRC_LOG_ERR, "%s: Unable to create configuration block: %s\n", ircenv->appname, strerror(errno));
@@ -659,6 +703,20 @@ int __ircenv_is_auth_irclist (IRCENV * ircenv, IRC * irc, const char * sender)
         if (strcmp(auth->user, sender) == 0 && auth->id == irc->id) return 1;
         else iterator = iterator->next;
     }
+    return 0;
+}
+
+int __ircenv_auth_irclist (IRCENV * ircenv, IRC * irc, const char * sender)
+{
+    __irc_auth * auth;
+
+    if (ircenv->is_auth(ircenv, irc, sender)) return 1;
+    auth = malloc(sizeof(__irc_auth));
+    if (auth == NULL) return -1;
+
+    auth->id = irc->id;
+    strcpy(auth->user, sender);
+    irclist_append(&ircenv->__list_auth, auth);
     return 0;
 }
 

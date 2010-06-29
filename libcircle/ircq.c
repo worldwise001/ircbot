@@ -9,6 +9,9 @@ void __circle_ircq (IRCQ * ircq)
     ircq->dir = &__ircq_dir;
     ircq->log = &__ircq_log;
 
+    ircq->commands = &__ircq_commands;
+    ircq->help = &__ircq_help;
+
     #ifdef CIRCLE_USE_INTERNAL
     ircq->queue = &__ircq_queue_irclist;
     ircq->get_item = &__ircq_get_item_irclist;
@@ -19,10 +22,9 @@ void __circle_ircq (IRCQ * ircq)
     ircq->reload = &__ircq_reload_irclist;
     ircq->load_all = &__ircq_load_all_irclist;
     ircq->unload_all = &__ircq_unload_all_irclist;
-    ircq->commands = &__ircq_commands_irclist;
     ircq->list = &__ircq_list_irclist;
     ircq->__process = &__ircq___process_irclist;
-    ircq->__gen_commands = &__ircq___gen_commands_irclist;
+    ircq->__help_list = &__ircq___help_list_irclist;
     ircq->__empty = &__ircq___empty_irclist;
     #endif /* CIRCLE_USE_INTERNAL */
 
@@ -38,8 +40,8 @@ void __circle_ircq (IRCQ * ircq)
     ircq->unload_all = &__ircq_unload_all_db;
     ircq->commands = &__ircq_commands_db;
     ircq->list = &__ircq_list_db;
-    ircq->__process = &__ircq___process;
-    ircq->__gen_commands = &__ircq___gen_commands_db;
+    ircq->__process = &__ircq___process_db;
+    ircq->__help_list = &__ircq___help_list_db;
     ircq->__empty = &__ircq___empty_db;
     #endif /* CIRCLE_USE_DB */
 
@@ -147,7 +149,11 @@ void * __ircq___thread_loop (void * ptr)
                 while (!ircq->__empty(ircq))
                 {
                     res = ircq->get_item(ircq, &ircmsg);
-                    if (!res) ircq->__eval(ircq, &ircmsg);
+                    if (!res)
+                    {
+                        ircq->__eval(ircq, &ircmsg);
+                        ircq->__process(ircq, &ircmsg);
+                    }
                 }
             }
             pthread_mutex_unlock( &ircq->__mutex );
@@ -160,6 +166,109 @@ void * __ircq___thread_loop (void * ptr)
     if (ircq->unload_all(ircq)) ircq->log(ircq, IRC_LOG_ERR, "Error unloading modules\n");
 
     return NULL;
+}
+
+void __ircq_help (IRCQ * ircq, const IRCMSG * ircmsg)
+{
+    IRCHELP * iterator;
+    IRCHOPT * optrator;
+    IRC * irc;
+    IRCCALL irccall;
+    field_t target, nick;
+    
+    irc = ircmsg->irc;
+    irccall = irc->get_directive(ircmsg->message);
+
+    if (strcmp(irccall.command, "help")) return;
+
+    nick = irc->get_nick(ircmsg->sender);
+    target = irc->get_target(ircmsg);
+
+    if (!irccall.arg[0].data[0])
+    {
+        irc->respond(irc, "PRIVMSG %s :%s (%s) at your service! For a list of commands, type %c%scommands%c.", target.data, irc->nickname, CIRCLE_NAME, IRC_TXT_BOLD, CIRCLE_SENTINEL, IRC_TXT_NORM);
+        return;
+    }
+
+    iterator = ircq->__help_list();
+    while (iterator->command != NULL)
+    {
+        if (strcmp(iterator->command, irccall.arg[0].data))
+        {
+            iterator++;
+            continue;
+        }
+        if (irccall.arg[1].data[0])
+        {
+            optrator = iterator->options;
+            while (optrator->option != NULL)
+            {
+                if (strcmp(optrator->option, irccall.arg[1].data))
+                {
+                    optrator++;
+                    continue;
+                }
+                irc->respond(irc, "PRIVMSG %s :%s - %c%s%c Syntax: %s (%s)", target.data, nick.data,
+                        IRC_TXT_BOLD, irccall.arg[0].data, IRC_TXT_NORM,
+                        optrator->usage, optrator->description);
+                return;
+            }
+            if (optrator->option == NULL)
+            {
+                irc->respond(irc, "PRIVMSG %s :%s - command %c%s%c does not have option %c%s%c", target.data, nick.data,
+                        IRC_TXT_BOLD, irccall.arg[0].data, IRC_TXT_NORM,
+                        IRC_TXT_BOLD, irccall.arg[1].data, IRC_TXT_NORM);
+            }
+        }
+        else
+        {
+            irc->respond(irc, "PRIVMSG %s :%s - %c%s%c Syntax: %s (%s)", target.data, nick.data,
+                    IRC_TXT_BOLD, irccall.arg[0].data, IRC_TXT_NORM,
+                    iterator->usage, iterator->description);
+        }
+
+        return;
+    }
+    irc->respond(irc, "PRIVMSG %s :%s - no help for command %c%s%c", target.data, nick.data,
+        IRC_TXT_BOLD, irccall.arg[0].data, IRC_TXT_NORM);
+}
+
+void __ircq_commands (IRCQ * ircq, const IRCMSG * ircmsg)
+{
+    IRCHELP * iterator;
+    IRC * irc;
+    char buff[CIRCLE_FIELD_FORMAT+1];
+    int pos;
+    field_t target, nick;
+
+    irc = ircmsg->irc;
+    memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
+    pos = 0;
+    target = irc->get_target(ircmsg);
+    nick = irc->get_nick(ircmsg->sender);
+
+    irc->respond(irc, "PRIVMSG %s :%s - List of %cCommands%c:", target.data, nick.data, IRC_TXT_BOLD, IRC_TXT_NORM);
+    iterator = ircq->__help_list();
+
+    while (iterator->command != NULL)
+    {
+        if (strlen(iterator->command) > (CIRCLE_FIELD_FORMAT - pos - 2))
+        {
+            irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
+            memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
+            pos = 0;
+        }
+        if (strlen(buff))
+        {
+            strcpy(buff+pos, ", ");
+            pos += 2;
+        }
+        strcpy(buff+pos, iterator->command);
+        pos += strlen(iterator->command);
+        iterator++;
+    }
+
+    if (strlen(buff) > 0) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
 }
 
 void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg)
@@ -180,17 +289,20 @@ void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg)
     if (strlen(irccall.command) > 0)
     {
         if (!strcmp(irccall.command, "help"))
-            irc->respond(irc, "PRIVMSG %s :%s (%s) at your service! For a list of commands, type %c%scommands%c.", target.data, irc->nickname, CIRCLE_NAME, IRC_TXT_BOLD, CIRCLE_SENTINEL, IRC_TXT_NORM);
+            ircq->help(ircq, ircmsg);
         else if (!strcmp(irccall.command, "commands"))
             ircq->commands(ircq, ircmsg);
-        else if (!strcmp(irccall.command, "login"))
-            if (!strcmp(irccall.arg[0].data, irc->admin))
-                if (ircq->__ircenv->is_auth(ircq->__ircenv, irc, ircmsg->sender))
-                    irc->respond(irc, "PRIVMSG %s :%s has authenticated as \"%s\"", target.data, nick.data, ircmsg->sender);
+        else if (!strcmp(irccall.command, "admin"))
+            if (!strcmp(irccall.arg[0].data, "login"))
+            {
+                if (!strcmp(irccall.arg[1].data, irc->admin))
+                    if (!ircq->__ircenv->auth(ircq->__ircenv, irc, ircmsg->sender))
+                        irc->respond(irc, "PRIVMSG %s :%s has authenticated as \"%s\"", target.data, nick.data, ircmsg->sender);
+                    else
+                        irc->respond(irc, "PRIVMSG %s :%s - There was a problem authenticating; perhaps you already logged in?", target.data, nick.data);
                 else
-                    irc->respond(irc, "PRIVMSG %s :%s - There was a problem authenticating; perhaps you already logged in?", target.data, nick.data);
-            else
-                irc->respond(irc, "PRIVMSG %s :%s - Invalid password", target.data, nick.data);
+                    irc->respond(irc, "PRIVMSG %s :%s - Invalid password", target.data, nick.data);
+            }
         else if (!strcmp(irccall.command, "info"))
         {
             file = fopen("/proc/loadavg", "r");
@@ -410,7 +522,6 @@ int __ircq_load_irclist (IRCQ * ircq, const IRCMSG * ircmsg, char * file)
     IRCLIST * iterator;
     IRCMOD * mod;
     char mfile[__CIRCLE_LEN_FILENAME+1], *error;
-    void (*func)(char * string);
     field_t nick, target;
     
     iterator = ircq->__list_modules;
@@ -454,7 +565,7 @@ int __ircq_load_irclist (IRCQ * ircq, const IRCMSG * ircmsg, char * file)
     memset(mod, 0, sizeof(IRCMOD));
     strncpy(mod->filename, file, CIRCLE_FIELD_DEFAULT);
 
-    mod->parse = dlsym(mhandle, "parse");
+    mod->evaluate = dlsym(mhandle, "evaluate");
 
     if ((error = dlerror()))
     {
@@ -470,17 +581,54 @@ int __ircq_load_irclist (IRCQ * ircq, const IRCMSG * ircmsg, char * file)
         return -1;
     }
 
-    func = dlsym(mhandle, "commands");
-    if (dlerror()) dlerror();
-    else (*func)(mod->commands);
+    mod->irc_version = dlsym(mhandle, "irc_version");
+    error = NULL;
+    if ((error = dlerror()) || (mod->irc_version() != CIRCLE_VERSION_MODULE))
+    {
+        if (ircmsg != NULL)
+        {
+            irc = ircmsg->irc;
+            target = irc->get_target(ircmsg);
+            nick = irc->get_nick(ircmsg->sender);
+            if (!error) error = "Invalid module version";
+            irc->respond(irc, "PRIVMSG %s :%s - Error binding %c%s%c: %s", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM, error);
 
-    func = dlsym(mhandle, "name");
-    if (dlerror()) dlerror();
-    else (*func)(mod->name);
+        }
+        dlerror();
+        free(mod);
+        return -1;
+    }
+
+    mod->construct = dlsym(mhandle, "construct");
+    if (dlerror())
+    {
+        dlerror();
+        mod->construct = NULL;
+    }
+
+    mod->destruct = dlsym(mhandle, "destruct");
+    if (dlerror())
+    {
+        dlerror();
+        mod->destruct = NULL;
+    }
+
+    mod->commands = dlsym(mhandle, "commands");
+    if (dlerror())
+    {
+        dlerror();
+        mod->commands = NULL;
+    }
+
+    mod->name = dlsym(mhandle, "name");
+    if (dlerror())
+    {
+        dlerror();
+        mod->name = NULL;
+    }
 
     mod->dlhandle = mhandle;
     irclist_append(&ircq->__list_modules, mod);
-    ircq->__gen_commands(ircq);
 
     if (ircmsg != NULL)
     {
@@ -489,6 +637,8 @@ int __ircq_load_irclist (IRCQ * ircq, const IRCMSG * ircmsg, char * file)
         nick = irc->get_nick(ircmsg->sender);
         irc->respond(irc, "PRIVMSG %s :%s - Successfully loaded %c%s%c", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
     }
+
+    if (mod->construct) mod->construct();
 
     return 0;
 }
@@ -511,21 +661,31 @@ int __ircq_unload_irclist (IRCQ * ircq, const IRCMSG * ircmsg, char * file)
         iterator = iterator->next;
     }
 
-    irc = ircmsg->irc;
-    target = irc->get_target(ircmsg);
-    nick = irc->get_nick(ircmsg->sender);
-
     if (iterator == NULL)
     {
-        if (ircmsg != NULL) irc->respond(irc, "PRIVMSG %s :%s - Error unloading %c%s%c: module does not exist", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
+        if (ircmsg != NULL)
+        {
+            irc = ircmsg->irc;
+            target = irc->get_target(ircmsg);
+            nick = irc->get_nick(ircmsg->sender);
+            irc->respond(irc, "PRIVMSG %s :%s - Error unloading %c%s%c: module does not exist", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
+        }
         return 0;
     }
     else
     {
         mod = (IRCMOD *)(irclist_take(&ircq->__list_modules, i));
+        if (mod->destruct) mod->destruct();
         dlclose(mod->dlhandle);
 
-        if (ircmsg != NULL) irc->respond(irc, "PRIVMSG %s :%s - Successfully unloaded %c%s%c", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
+        if (ircmsg != NULL)
+        {
+            irc = ircmsg->irc;
+            target = irc->get_target(ircmsg);
+            nick = irc->get_nick(ircmsg->sender);
+            irc->respond(irc, "PRIVMSG %s :%s - Successfully unloaded %c%s%c", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
+        }
+        free(mod);
         return 0;
     }
 }
@@ -577,48 +737,10 @@ int __ircq_unload_all_irclist (IRCQ * ircq)
     while (iterator != NULL)
     {
         mod = (IRCMOD *)(iterator->item);
-        if ((r = ircq->unload(ircq, NULL, mod->filename))) res = r;
         iterator = iterator->next;
+        if ((r = ircq->unload(ircq, NULL, mod->filename))) res = r;
     }
     return res;
-}
-
-void __ircq_commands_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
-{
-    IRCLIST * iterator;
-    IRC * irc;
-    char buff[CIRCLE_FIELD_FORMAT+1], * str;
-    int pos;
-    field_t target;
-
-    irc = ircmsg->irc;
-    iterator = ircq->__list_commands;
-    memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
-    pos = 0;
-    target = irc->get_target(ircmsg);
-
-    irc->respond(irc, "PRIVMSG %s :%cCommands:%c help, commands, login, network, info, beep", target.data, IRC_TXT_BOLD, IRC_TXT_NORM);
-
-    while (iterator != NULL)
-    {
-        str = (char *)(iterator->item);
-        if (strlen(str) < (CIRCLE_FIELD_FORMAT - pos - 2))
-        {
-            irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
-            memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
-            pos = 0;
-        }
-        if (strlen(buff) > 0)
-        {
-            strcpy(buff+pos, ", ");
-            pos += 2;
-        }
-        strcpy(buff+pos, str);
-        pos += strlen(str);
-        iterator = iterator->next;
-    }
-
-    if (strlen(buff) > 0) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
 }
 
 void __ircq_list_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
@@ -642,10 +764,10 @@ void __ircq_list_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
     {
         mod = (IRCMOD *)(iterator->item);
         memset(buff2, 0, CIRCLE_FIELD_DEFAULT+1);
-        if (strlen(mod->name) > 0)
+        if (strlen(mod->name()) == 0)
             snprintf(buff2, CIRCLE_FIELD_DEFAULT, "%c%s%c", IRC_TXT_BOLD, mod->filename, IRC_TXT_NORM);
         else
-            snprintf(buff2, CIRCLE_FIELD_DEFAULT, "%s (%c%s%c)", mod->name, IRC_TXT_BOLD, mod->filename, IRC_TXT_NORM);
+            snprintf(buff2, CIRCLE_FIELD_DEFAULT, "%s (%c%s%c)", mod->name(), IRC_TXT_BOLD, mod->filename, IRC_TXT_NORM);
         if (strlen(buff2) < (CIRCLE_FIELD_FORMAT - pos - 2))
         {
             irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
@@ -667,45 +789,45 @@ void __ircq_list_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
     if (!res) irc->respond(irc, "PRIVMSG %s :No modules loaded", target.data);
 }
 
-void __ircq___gen_commands_irclist (IRCQ * ircq)
+IRCHELP * __ircq___help_list_irclist ()
 {
-    IRCLIST * iterator;
-    IRCMOD * mod;
-    char * p, * n, * str;
+    static IRCHOPT netopt[] = {
+                {0, "display", "network display [id]", "Displays network information", 1},
+                {0, "list", "network list", "Lists all connected networks", 0},
+                {1, "add", "network add", "Adds a network", 0},
+                {1, "remove", "network remove [id]", "Removes a network", 1},
+                {1, "set", "network set [id] [param]=[value]", "Sets network parameters", 2},
+                {0, 0, 0, 0, 0}
+            };
+    static IRCHOPT modopt[] = {
+                {1, "load", "module load [file]", "Tries to load a module into the process", 1},
+                {1, "unload", "module unload [file]", "Tries to unload a module", 1},
+                {0, "list", "module list", "Lists all loaded modules", 0},
+                {0, "dir", "module dir", "Lists all modules in module directory", 0},
+                {0, 0, 0, 0, 0}
+            };
 
-    irclist_clear(&ircq->__list_commands);
-    iterator = ircq->__list_modules;
-    while (iterator != NULL)
-    {
-        mod = (IRCMOD *)(iterator->item);
-        if (strlen(mod->commands) == 0)
-        {
-            iterator = iterator->next;
-            continue;
-        }
-        p = mod->commands;
-        n = index(mod->commands, ',');
-        while (n != NULL)
-        {
-            str = malloc(n-p+1);
-            if (str)
-            {
-                memset(str, 0, n-p+1);
-                strncpy(str, p, n-p);
-                irclist_append(&ircq->__list_commands, str);
-            }
-            p = n+1;
-            n = index(p, ',');
-        }
-        str = malloc(strlen(p)+1);
-        if (str)
-        {
-            memset(str, 0, strlen(p)+1);
-            strncpy(str, p, strlen(p));
-            irclist_append(&ircq->__list_commands, str);
-        }
-        iterator = iterator->next;
-    }
+    static IRCHOPT adminopt[] = {
+                {1, "login", "admin login [password]", "Authenticates user", 1},
+                {1, "logout", "admin logout [password]", "Deauthenticates user", 1},
+                {0, "list", "admin list", "Lists all authenticated users", 0},
+                {0, 0, 0, 0, 0}
+            };
+
+    static IRCHELP help[] = {
+        {0, "help",     "help [option]", "Displays detailed help on all commands", 0},
+        {0, "commands", "commands", "Displays all the commands", 0},
+        {0, "admin",    "admin [option] [argument]", "Administrative interface", adminopt},
+        {0, "info",     "info", "Display information on the running process", 0},
+        {0, "version",  "version", "Displays the version of the bot", 0},
+        {0, "uptime",   "uptime", "Displays uptime information", 0},
+        {1, "raw",      "raw [IRC protocol data]", "Sends data directly to the IRC network", 0},
+        {0, "network",  "network [option] [arguments..]", "Network information/configuration", netopt},
+        {0, "module",   "module [option] [arguments..]", "Module system configuration", modopt},
+        {0, "beep",     "beep", "Plays system bell", 0},
+        {0, 0, 0, 0, 0}
+    };
+    return help;
 }
 
 void __ircq___process_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
@@ -717,7 +839,7 @@ void __ircq___process_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
     while (iterator != NULL)
     {
         mod = (IRCMOD *)(iterator->item);
-        mod->parse(ircmsg);
+        mod->evaluate(ircmsg);
         iterator = iterator->next;
     }
 }
