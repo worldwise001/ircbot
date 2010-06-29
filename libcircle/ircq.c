@@ -190,12 +190,12 @@ void __ircq_help (IRCQ * ircq, const IRCMSG * ircmsg)
         return;
     }
 
-    iterator = ircq->__help_list();
+    iterator = ircq->__help_list(ircq);
     while (iterator->command != NULL)
     {
         if (strcmp(iterator->command, irccall.arg[0].data))
         {
-            iterator++;
+            iterator = iterator->next;
             continue;
         }
         if (irccall.arg[1].data[0])
@@ -205,7 +205,7 @@ void __ircq_help (IRCQ * ircq, const IRCMSG * ircmsg)
             {
                 if (strcmp(optrator->option, irccall.arg[1].data))
                 {
-                    optrator++;
+                    optrator = optrator->next;
                     continue;
                 }
                 irc->respond(irc, "PRIVMSG %s :%s - %c%s%c Syntax: %s (%s)", target.data, nick.data,
@@ -248,7 +248,7 @@ void __ircq_commands (IRCQ * ircq, const IRCMSG * ircmsg)
     nick = irc->get_nick(ircmsg->sender);
 
     irc->respond(irc, "PRIVMSG %s :%s - List of %cCommands%c:", target.data, nick.data, IRC_TXT_BOLD, IRC_TXT_NORM);
-    iterator = ircq->__help_list();
+    iterator = ircq->__help_list(ircq);
 
     while (iterator->command != NULL)
     {
@@ -265,7 +265,7 @@ void __ircq_commands (IRCQ * ircq, const IRCMSG * ircmsg)
         }
         strcpy(buff+pos, iterator->command);
         pos += strlen(iterator->command);
-        iterator++;
+        iterator = iterator->next;
     }
 
     if (strlen(buff) > 0) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
@@ -440,6 +440,7 @@ void __ircq_dir (IRCQ * ircq, const IRCMSG * ircmsg)
     irc->respond(irc, "PRIVMSG %s :Listing modules directory (%c%s%c):", target.data, IRC_TXT_BOLD, CIRCLE_DIR_MODULES, IRC_TXT_NORM);
 
     res = 0;
+    memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
     while ((dir_entry = readdir(dir)) != NULL)
     {
         if (strcmp(dir_entry->d_name, ".") == 0 || strcmp(dir_entry->d_name, "..") == 0) continue;
@@ -798,44 +799,78 @@ void __ircq_list_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
     if (!res) irc->respond(irc, "PRIVMSG %s :No modules loaded", target.data);
 }
 
-IRCHELP * __ircq___help_list_irclist ()
+IRCHELP * __ircq___help_list_irclist (IRCQ * ircq)
 {
+    IRCLIST * iterator;
+    IRCHELP * imodhelp, **helpptr;
+    IRCMOD * mod;
+
     static IRCHOPT netopt[] = {
-                {0, "display", "network display [id]", "Displays network information", 1},
-                {0, "list", "network list", "Lists all connected networks", 0},
-                /*{1, "add", "network add", "Adds a network", 0},
-                {1, "remove", "network remove [id]", "Removes a network", 1},
-                {1, "set", "network set [id] [param]=[value]", "Sets network parameters", 2},*/
+                {0, "display", "network display [id]", "Displays network information", 1, 0},
+                {0, "list", "network list", "Lists all connected networks", 0, 0},
+                /*{1, "add", "network add", "Adds a network", 0, 0},
+                {1, "remove", "network remove [id]", "Removes a network", 1, 0},
+                {1, "set", "network set [id] [param]=[value]", "Sets network parameters", 2, 0},*/
                 {0, 0, 0, 0, 0}
             };
     static IRCHOPT modopt[] = {
-                {1, "load", "module load [file]", "Tries to load a module into the process", 1},
-                {1, "unload", "module unload [file]", "Tries to unload a module", 1},
-                {0, "list", "module list", "Lists all loaded modules", 0},
-                {0, "dir", "module dir", "Lists all modules in module directory", 0},
-                {0, 0, 0, 0, 0}
+                {1, "load", "module load [file]", "Tries to load a module into the process", 1, 0},
+                {1, "unload", "module unload [file]", "Tries to unload a module", 1, 0},
+                {0, "list", "module list", "Lists all loaded modules", 0, 0},
+                {0, "dir", "module dir", "Lists all modules in module directory", 0, 0},
+                {0, 0, 0, 0, 0, 0}
             };
 
     static IRCHOPT adminopt[] = {
-                {1, "login", "admin login [password]", "Authenticates user", 1},
-                /*{1, "logout", "admin logout [password]", "Deauthenticates user", 1},*/
-                {0, "list", "admin list", "Lists all authenticated users", 0},
-                {0, 0, 0, 0, 0}
+                {1, "login", "admin login [password]", "Authenticates user", 1, 0},
+                /*{1, "logout", "admin logout [password]", "Deauthenticates user", 1, 0},*/
+                {0, "list", "admin list", "Lists all authenticated users", 0, 0},
+                {0, 0, 0, 0, 0, 0}
             };
 
     static IRCHELP help[] = {
-        {0, "help",     "help [option]", "Displays detailed help on all commands", 0},
-        {0, "commands", "commands", "Displays all the commands", 0},
-        {0, "admin",    "admin [option] [argument]", "Administrative interface", adminopt},
-        {0, "info",     "info", "Display information on the running process", 0},
-        {0, "version",  "version", "Displays the version of the bot", 0},
-        {0, "uptime",   "uptime", "Displays uptime information", 0},
-        {1, "raw",      "raw [IRC protocol data]", "Sends data directly to the IRC network", 0},
-        {0, "network",  "network [option] [arguments..]", "Network information/configuration", netopt},
-        {0, "module",   "module [option] [arguments..]", "Module system configuration", modopt},
-        {0, "beep",     "beep", "Plays system bell", 0},
-        {0, 0, 0, 0, 0}
+        {0, "help",     "help [option]", "Displays detailed help on all commands", 0, 0},
+        {0, "commands", "commands", "Displays all the commands", 0, 0},
+        {0, "admin",    "admin [option] [argument]", "Administrative interface", adminopt, 0},
+        {0, "info",     "info", "Display information on the running process", 0, 0},
+        {0, "version",  "version", "Displays the version of the bot", 0, 0},
+        {0, "uptime",   "uptime", "Displays uptime information", 0, 0},
+        {1, "raw",      "raw [IRC protocol data]", "Sends data directly to the IRC network", 0, 0},
+        {0, "network",  "network [option] [arguments..]", "Network information/configuration", netopt, 0},
+        {0, "module",   "module [option] [arguments..]", "Module system configuration", modopt, 0},
+        {0, "beep",     "beep", "Plays system bell", 0, 0},
+        {0, 0, 0, 0, 0, 0}
     };
+
+    __circle_link_help(help);
+    helpptr = __circle_endptr_help(help);
+
+    iterator = ircq->__list_modules;
+    while (iterator != NULL)
+    {
+        mod = (IRCMOD *)(iterator->item);
+        if (mod->commands == NULL)
+        {
+            iterator = iterator->next;
+            continue;
+        }
+        imodhelp = mod->commands();
+        if (imodhelp == NULL)
+        {
+            iterator = iterator->next;
+            continue;
+        }
+        if (imodhelp[0].command == NULL)
+        {
+            iterator = iterator->next;
+            continue;
+        }
+        __circle_link_help(imodhelp);
+        *helpptr = imodhelp;
+        helpptr = __circle_endptr_help(imodhelp);
+        iterator = iterator->next;
+    }
+
     return help;
 }
 

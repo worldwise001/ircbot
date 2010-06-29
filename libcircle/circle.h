@@ -197,6 +197,7 @@ struct __irchelp {
     char * usage;
     char * description;
     IRCHOPT * options;
+    IRCHELP * next;
 };
 
 struct __irchopt {
@@ -205,6 +206,7 @@ struct __irchopt {
     char * usage;
     char * description;
     unsigned int arguments;
+    IRCHOPT * next;
 };
 
 struct __ircmsg {
@@ -355,7 +357,7 @@ struct __ircq {
     void * (*__thread_loop) (void * ptr);
     void (*__eval) (IRCQ * ircq, const IRCMSG * ircmsg);
     void (*__process) (IRCQ * ircq, const IRCMSG * ircmsg);
-    IRCHELP * (*__help_list) ();
+    IRCHELP * (*__help_list) (IRCQ * ircq);
     int (*__empty) (IRCQ * ircq);
 };
 
@@ -423,6 +425,14 @@ struct __ircenv {
  *****************************************************************************/
 
 IRCENV circle_init(char * appname);
+
+/* struct initializers */
+void __circle_ircenv (IRCENV * ircenv);
+void __circle_irc (IRC * irc);
+void __circle_ircq (IRCQ * ircq);
+void __circle_ircsock (IRCSOCK * ircsock);
+
+field_t __circle_time(time_t time);
 
 #ifdef	__cplusplus
 }

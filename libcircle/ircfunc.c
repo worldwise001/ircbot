@@ -49,6 +49,31 @@ field_t  __circle_time(time_t time)
     return result;
 }
 
+void __circle_link_help(IRCHELP * list)
+{
+    int i, j;
+    IRCHOPT * irchopt;
+
+    for (i = 0; list[i].command != NULL; i++)
+    {
+        list[i].next = &list[i+1];
+        if (list[i].options != NULL)
+        {
+            irchopt = list[i].options;
+            for (j = 0; irchopt[j].option != NULL; j++) irchopt[j].next = &irchopt[j+1];
+        }
+    }
+}
+
+IRCHELP ** __circle_endptr_help(IRCHELP * list)
+{
+    int i;
+
+    for (i = 0; list[i].command != NULL; i++);
+    if (i == 0) return NULL;
+    return &(list[i-1].next);
+}
+
 #ifdef CIRCLE_USE_INTERNAL
 int     irclist_get_max_irc_id (IRCLIST ** first)
 {

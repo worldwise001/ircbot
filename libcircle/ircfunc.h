@@ -14,12 +14,6 @@ extern "C" {
 
 #include "circle.h"
 
-/* struct initializers */
-void __circle_ircenv (IRCENV * ircenv);
-void __circle_irc (IRC * irc);
-void __circle_ircq (IRCQ * ircq);
-void __circle_ircsock (IRCSOCK * ircsock);
-
 /* IRCENV function implementations */
 void __ircenv_version (void);
 void __ircenv_usage (IRCENV * ircenv);
@@ -78,8 +72,8 @@ int __ircq_kill (IRCQ * ircq);
 
 int __ircq_log (IRCQ * ircq, __irc_logtype type, const char * format, ...);
 
-IRCHELP * __ircq___help_list_irclist ();
-IRCHELP * __ircq___help_list_db ();
+IRCHELP * __ircq___help_list_irclist (IRCQ * ircq);
+IRCHELP * __ircq___help_list_db (IRCQ * ircq);
 
 void __ircq_commands (IRCQ * ircq, const IRCMSG * ircmsg);
 void __ircq_help (IRCQ * ircq, const IRCMSG * ircmsg);
@@ -152,7 +146,8 @@ int __ircsock___getc (IRCSOCK * sock);
 /* Miscellaneous "hidden" functions */
 __args __circle_parse_args(int argc, char ** argv);
 void __circle_set_field(char * dest, char * src, int maxlen);
-field_t __circle_time(time_t time);
+void __circle_link_help(IRCHELP * list);
+IRCHELP ** __circle_endptr_help(IRCHELP * list);
 
 
 

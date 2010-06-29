@@ -27,10 +27,8 @@ int __ircsock_connect (IRCSOCK * sock)
     int ai_res;
     char sport[6];
     IRC * irc;
-    IRCENV * ircenv;
 
     irc = sock->__irc;
-    ircenv = irc->__ircenv;
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
@@ -41,7 +39,7 @@ int __ircsock_connect (IRCSOCK * sock)
     {
         case 0: break;
         default:
-            irc->log(irc, IRC_LOG_ERR, "getaddrinfo failed: %s\n", gai_strerror(ai_res));
+            if (irc) irc->log(irc, IRC_LOG_ERR, "getaddrinfo failed: %s\n", gai_strerror(ai_res));
             return -1;
             break;
     }
@@ -61,7 +59,7 @@ int __ircsock_connect (IRCSOCK * sock)
     freeaddrinfo(result);
     if (res_ptr == NULL)
     {
-        irc->log(irc, IRC_LOG_ERR, "Connect failed\n", irc->id);
+        if (irc) irc->log(irc, IRC_LOG_ERR, "Connect failed\n", irc->id);
         return -1;
     }
     return 0;
