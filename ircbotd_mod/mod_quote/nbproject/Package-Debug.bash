@@ -11,8 +11,8 @@ CND_CONF=Debug
 CND_DISTDIR=dist
 TMPDIR=build/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libmod_quote.so
-OUTPUT_BASENAME=libmod_quote.so
+OUTPUT_PATH=${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/${LIBNAME}.so
+OUTPUT_BASENAME=${LIBNAME}.so
 PACKAGE_TOP_DIR=libmodquote.so/
 
 # Functions

@@ -34,7 +34,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/quote.o
 
 # C Compiler Flags
-CFLAGS=
+CFLAGS=-shared
 
 # CC Compiler Flags
 CCFLAGS=
@@ -60,7 +60,7 @@ dist/Debug/GNU-Linux-x86/${LIBNAME}.so: ${OBJECTFILES}
 ${OBJECTDIR}/quote.o: nbproject/Makefile-${CND_CONF}.mk quote.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/quote.o quote.c
+	$(COMPILE.c) -g -Wall -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/quote.o quote.c
 
 # Subprojects
 .build-subprojects:

@@ -51,11 +51,11 @@ LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	${MAKE}  -f nbproject/Makefile-Release.mk dist/Release/GNU-Linux-x86/${LIBNAME}.so
+	${MAKE}  -f nbproject/Makefile-Release.mk dist/Release/GNU-Linux-x86/libmod_quote.so
 
-dist/Release/GNU-Linux-x86/${LIBNAME}.so: ${OBJECTFILES}
+dist/Release/GNU-Linux-x86/libmod_quote.so: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
-	${LINK.c} -shared -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/${LIBNAME}.so -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.c} -shared -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libmod_quote.so -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/quote.o: nbproject/Makefile-${CND_CONF}.mk quote.c 
 	${MKDIR} -p ${OBJECTDIR}
@@ -68,7 +68,7 @@ ${OBJECTDIR}/quote.o: nbproject/Makefile-${CND_CONF}.mk quote.c
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Release
-	${RM} dist/Release/GNU-Linux-x86/${LIBNAME}.so
+	${RM} dist/Release/GNU-Linux-x86/libmod_quote.so
 
 # Subprojects
 .clean-subprojects:
