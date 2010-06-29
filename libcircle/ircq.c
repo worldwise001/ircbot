@@ -293,6 +293,7 @@ void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg)
         else if (!strcmp(irccall.command, "commands"))
             ircq->commands(ircq, ircmsg);
         else if (!strcmp(irccall.command, "admin"))
+        {
             if (!strcmp(irccall.arg[0].data, "login"))
             {
                 if (!strcmp(irccall.arg[1].data, irc->admin))
@@ -303,6 +304,7 @@ void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg)
                 else
                     irc->respond(irc, "PRIVMSG %s :%s - Invalid password", target.data, nick.data);
             }
+        }
         else if (!strcmp(irccall.command, "info"))
         {
             file = fopen("/proc/loadavg", "r");
@@ -372,8 +374,6 @@ void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg)
             }
             else if (!strcmp(irccall.arg[0].data, "list"))
                 ircq->__ircenv->irc_display_all(ircq->__ircenv, ircmsg);
-            else if (!strcmp(irccall.arg[0].data, "add"))
-                ircq->__ircenv->irc_create(ircq->__ircenv);
             else
                 irc->respond(irc, "PRIVMSG %s :Invalid network command", target.data);
         }
@@ -389,15 +389,24 @@ void __ircq___eval (IRCQ * ircq, const IRCMSG * ircmsg)
             }
             else if (!strcmp(irccall.arg[0].data, "load"))
             {
-                ircq->load(ircq, ircmsg, irccall.arg[1].data);
+                if (ircq->__ircenv->is_auth(ircq->__ircenv, irc, ircmsg->sender))
+                    ircq->load(ircq, ircmsg, irccall.arg[1].data);
+                else
+                    irc->respond(irc, "PRIVMSG %s :%s - You are not logged in", target.data, nick.data);
             }
             else if (!strcmp(irccall.arg[0].data, "unload"))
             {
-                ircq->unload(ircq, ircmsg, irccall.arg[1].data);
+                if (ircq->__ircenv->is_auth(ircq->__ircenv, irc, ircmsg->sender))
+                    ircq->unload(ircq, ircmsg, irccall.arg[1].data);
+                else
+                    irc->respond(irc, "PRIVMSG %s :%s - You are not logged in", target.data, nick.data);
             }
             else if (!strcmp(irccall.arg[0].data, "reload"))
             {
-                ircq->reload(ircq, ircmsg, irccall.arg[1].data);
+                if (ircq->__ircenv->is_auth(ircq->__ircenv, irc, ircmsg->sender))
+                    ircq->reload(ircq, ircmsg, irccall.arg[1].data);
+                else
+                    irc->respond(irc, "PRIVMSG %s :%s - You are not logged in", target.data, nick.data);
             }
             else
                 irc->respond(irc, "PRIVMSG %s :Invalid module command", target.data);
@@ -439,7 +448,7 @@ void __ircq_dir (IRCQ * ircq, const IRCMSG * ircmsg)
         if (strcmp(ext, CIRCLE_MODULE_EXT) != 0) continue;
 
         str = dir_entry->d_name;
-        if (strlen(str) < (CIRCLE_FIELD_FORMAT - pos - 2))
+        if (strlen(str) > (CIRCLE_FIELD_FORMAT - pos - 2))
         {
             irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
             memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
@@ -458,7 +467,7 @@ void __ircq_dir (IRCQ * ircq, const IRCMSG * ircmsg)
     closedir(dir);
     if (errno) errno = 0;
 
-    if (strlen(buff) > 0 && ++res) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
+    if ((strlen(buff) > 0) && ++res) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
     if (!res) irc->respond(irc, "PRIVMSG %s :Nothing in directory", target.data);
 }
 
@@ -758,7 +767,7 @@ void __ircq_list_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
     pos = 0;
     res = 0;
     target = irc->get_target(ircmsg);
-    irc->respond(irc, "PRIVMSG %s :Listing all loaded modules", target.data);
+    irc->respond(irc, "PRIVMSG %s :Listing all loaded modules:", target.data);
 
     while (iterator != NULL)
     {
@@ -768,7 +777,7 @@ void __ircq_list_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
             snprintf(buff2, CIRCLE_FIELD_DEFAULT, "%c%s%c", IRC_TXT_BOLD, mod->filename, IRC_TXT_NORM);
         else
             snprintf(buff2, CIRCLE_FIELD_DEFAULT, "%s (%c%s%c)", mod->name(), IRC_TXT_BOLD, mod->filename, IRC_TXT_NORM);
-        if (strlen(buff2) < (CIRCLE_FIELD_FORMAT - pos - 2))
+        if (strlen(buff2) > (CIRCLE_FIELD_FORMAT - pos - 2))
         {
             irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
             memset(buff, 0, CIRCLE_FIELD_FORMAT+1);
@@ -785,7 +794,7 @@ void __ircq_list_irclist (IRCQ * ircq, const IRCMSG * ircmsg)
         iterator = iterator->next;
     }
 
-    if (strlen(buff) > 0 && ++res) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
+    if ((strlen(buff) > 0) && ++res) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
     if (!res) irc->respond(irc, "PRIVMSG %s :No modules loaded", target.data);
 }
 
@@ -794,9 +803,9 @@ IRCHELP * __ircq___help_list_irclist ()
     static IRCHOPT netopt[] = {
                 {0, "display", "network display [id]", "Displays network information", 1},
                 {0, "list", "network list", "Lists all connected networks", 0},
-                {1, "add", "network add", "Adds a network", 0},
+                /*{1, "add", "network add", "Adds a network", 0},
                 {1, "remove", "network remove [id]", "Removes a network", 1},
-                {1, "set", "network set [id] [param]=[value]", "Sets network parameters", 2},
+                {1, "set", "network set [id] [param]=[value]", "Sets network parameters", 2},*/
                 {0, 0, 0, 0, 0}
             };
     static IRCHOPT modopt[] = {
@@ -809,7 +818,7 @@ IRCHELP * __ircq___help_list_irclist ()
 
     static IRCHOPT adminopt[] = {
                 {1, "login", "admin login [password]", "Authenticates user", 1},
-                {1, "logout", "admin logout [password]", "Deauthenticates user", 1},
+                /*{1, "logout", "admin logout [password]", "Deauthenticates user", 1},*/
                 {0, "list", "admin list", "Lists all authenticated users", 0},
                 {0, 0, 0, 0, 0}
             };
