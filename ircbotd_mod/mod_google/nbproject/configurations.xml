@@ -31,6 +31,7 @@
       <compileType>
         <cTool>
           <commandLine>-shared</commandLine>
+          <warningLevel>2</warningLevel>
         </cTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/${LIBNAME}.so</output>

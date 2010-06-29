@@ -60,7 +60,7 @@ buff_t strip_tags(char * data)
         {
             memset(unicode, 0, 5);
             strncpy(unicode, oldptr+2, 4);
-            sscanf(unicode, "%X", &c);
+            sscanf(unicode, "%X", (unsigned int *)(&c));
             *newptr++ = c;
             oldptr+=6;
         }
@@ -72,7 +72,7 @@ buff_t strip_tags(char * data)
 buff_t entities_strip(char * data)
 {
     buff_t result;
-    char *oldptr, *newptr, symbol[5], c;
+    char *oldptr, *newptr, symbol[5];
     memset(&result, 0, sizeof(buff_t));
     oldptr = data;
     newptr = result.field;
@@ -113,7 +113,7 @@ resbuff_t query(int type, char * aquery, char * error)
             case '=': *newptr++ = '%'; *newptr++ = '3'; *newptr++ = 'D'; break;
             default: *newptr++ = *oldptr;
         }
-        *oldptr++;
+        oldptr++;
     }
 
     switch (type)
@@ -173,7 +173,7 @@ field_t extract_video_url(char * data, char * error)
         {
             memset(code, 0, 3);
             strncpy(code, oldptr+1, 2);
-            sscanf(code, "%X", &c);
+            sscanf(code, "%X", (unsigned int *)(&c));
             *newptr++ = c;
             oldptr += 3;
         }
