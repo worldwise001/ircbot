@@ -146,6 +146,8 @@ resbuff_t query(int type, char * aquery, char * error)
     while ((c = fgetc(stream)) != EOF && (oldptr - result.field) < RESULT_BUFF) *oldptr++ = c;
     fclose(stream);
 
+    printf("%s\n", result.field);
+
     return result;
 }
 
