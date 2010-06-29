@@ -50,7 +50,7 @@ CP=cp
 CCADMIN=CCadmin
 RANLIB=ranlib
 
-LIBNAME=mod_quote
+LIBNAME=mod_silly
 
 
 # build
