@@ -141,7 +141,7 @@ resbuff_t query(int type, char * aquery, char * error)
     fprintf(stream, "Connection: close\r\n");
     fprintf(stream, "\r\n");
 
-    memset(result, 0, sizeof(resbuff_t));
+    memset(&result, 0, sizeof(resbuff_t));
     oldptr = result.field;
     while ((c = fgetc(stream)) != EOF && (oldptr - result.field) < RESULT_BUFF) *oldptr++ = c;
     fclose(stream);
