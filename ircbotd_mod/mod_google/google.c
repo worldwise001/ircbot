@@ -50,7 +50,8 @@ int google_connect (char * host, int port)
 buff_t strip_tags(char * data)
 {
     buff_t result;
-    char *oldptr, *newptr, unicode[5], c;
+    char *oldptr, *newptr, unicode[5];
+    unsigned int c;
     memset(&result, 0, sizeof(buff_t));
     oldptr = data;
     newptr = result.field;
@@ -60,8 +61,8 @@ buff_t strip_tags(char * data)
         {
             memset(unicode, 0, 5);
             strncpy(unicode, oldptr+2, 4);
-            sscanf(unicode, "%X", (unsigned int *)(&c));
-            *newptr++ = c;
+            sscanf(unicode, "%X", &c);
+            *newptr++ = (char)c;
             oldptr+=6;
         }
         else *newptr++ = *oldptr++;
@@ -140,13 +141,11 @@ resbuff_t query(int type, char * aquery, char * error)
     fprintf(stream, "User-Agent: %s\r\n", CIRCLE_VERSION);
     fprintf(stream, "Connection: close\r\n");
     fprintf(stream, "\r\n");
-
+    
     memset(&result, 0, sizeof(resbuff_t));
     oldptr = result.field;
     while ((c = fgetc(stream)) != EOF && (oldptr - result.field) < RESULT_BUFF) *oldptr++ = c;
     fclose(stream);
-
-    printf("%s\n", result.field);
 
     return result;
 }
@@ -154,7 +153,8 @@ resbuff_t query(int type, char * aquery, char * error)
 field_t extract_video_url(char * data, char * error)
 {
     field_t result;
-    char *oldptr, *newptr, code[3], c;
+    char *oldptr, *newptr, code[3];
+    unsigned int c;
 
     memset(&result, 0, sizeof(field_t));
 
@@ -175,8 +175,8 @@ field_t extract_video_url(char * data, char * error)
         {
             memset(code, 0, 3);
             strncpy(code, oldptr+1, 2);
-            sscanf(code, "%X", (unsigned int *)(&c));
-            *newptr++ = c;
+            sscanf(code, "%X", &c);
+            *newptr++ = (char)c;
             oldptr += 3;
         }
         else *newptr++ = *oldptr++;
@@ -203,7 +203,6 @@ buff_t extract_value(char * data, char * field, char * error)
         return result;
     }
     else rptr += strlen(buff)+1;
-
     reptr = index(rptr, '"');
     if (reptr == NULL)
     {
@@ -213,7 +212,6 @@ buff_t extract_value(char * data, char * field, char * error)
     memset(&result, 0, sizeof(buff_t));
     if ((reptr - rptr) > BUFF_SIZE) reptr = rptr + BUFF_SIZE;
     strncpy(result.field, rptr, reptr-rptr);
-
     result = strip_tags(result.field);
     result = entities_strip(result.field);
     return result;
@@ -257,7 +255,6 @@ void evaluate(IRCMSG * ircmsg)
                 return;
             }
             strcpy(url.field, temp.field);
-            printf("%s %s\n", url.field, temp.field);
 
             temp = extract_value(buff, "titleNoFormatting", error.data);
             if (strlen(error.data) > 0)
