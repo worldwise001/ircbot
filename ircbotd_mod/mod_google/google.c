@@ -210,7 +210,7 @@ buff_t extract_value(char * data, char * field, char * error)
         strcpy(error, "Invalid response from Google");
         return result;
     }
-    memset(result.field, 0, sizeof(buff_t));
+    memset(&result, 0, sizeof(buff_t));
     if ((reptr - rptr) > BUFF_SIZE) reptr = rptr + BUFF_SIZE;
     strncpy(result.field, rptr, reptr-rptr);
 
