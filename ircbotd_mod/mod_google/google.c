@@ -141,7 +141,7 @@ resbuff_t query(int type, char * aquery, char * error)
     fprintf(stream, "Connection: close\r\n");
     fprintf(stream, "\r\n");
 
-    memset(result.field, 0, RESULT_BUFF+1);
+    memset(result, 0, sizeof(resbuff_t));
     oldptr = result.field;
     while ((c = fgetc(stream)) != EOF && (oldptr - result.field) < RESULT_BUFF) *oldptr++ = c;
     fclose(stream);
@@ -257,6 +257,7 @@ void evaluate(IRCMSG * ircmsg)
                 return;
             }
             strcpy(url.field, temp.field);
+            printf("%s %s\n", url.field, temp.field);
 
             temp = extract_value(buff, "titleNoFormatting", error.data);
             if (strlen(error.data) > 0)
