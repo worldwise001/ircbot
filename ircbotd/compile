@@ -1,6 +1,0 @@
-#!/bin/sh
-
-IRCVERSION="svn-unstable rev "`svn info | grep "Revision" | cut -d" " -f2`
-
-gcc -Wall -rdynamic -ldl -lpthread -DVERSION="\"$IRCVERSION\"" *.c -oircbotd
-
