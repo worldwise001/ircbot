@@ -230,6 +230,8 @@ int __ircsock_write (IRCSOCK * sock, char * line)
 
     irc = sock->__irc;
     written = 0;
+
+    if (sock->__sockfd == -1) return -1;
     
     while (written < strlen(line))
     {
