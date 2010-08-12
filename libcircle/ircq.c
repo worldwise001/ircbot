@@ -72,14 +72,19 @@ int __ircq_init (IRCQ * ircq)
 {
     int ret;
     pthread_mutexattr_t mattr;
+    pthread_attr_t attr;
 
     pthread_mutexattr_init(&mattr);
     pthread_mutex_init(&ircq->__mutex, &mattr);
 
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN*2);
+
     ircq->active = 1;
-    ret = pthread_create(&ircq->__pthread_q, NULL, ircq->__thread_loop, ircq);
+    ret = pthread_create(&ircq->__pthread_q, &attr, ircq->__thread_loop, ircq);
     if (ret) ircq->log(ircq, IRC_LOG_ERR, "Creating the library thread returned error code %d\n", ret);
     else ircq->log(ircq, IRC_LOG_NORM, "Module thread created successfully\n");
+    pthread_attr_destroy(&attr);
     return ret;
 }
 

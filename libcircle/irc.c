@@ -47,11 +47,16 @@ int __irc_init (IRC * irc)
 {
     pthread_t tid;
     int ret;
+    pthread_attr_t attr;
+
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN*2);
     
-    ret = pthread_create(&tid, NULL, irc->__thread_loop, irc);
+    ret = pthread_create(&tid, &attr, irc->__thread_loop, irc);
     if (ret) irc->__ircenv->log(irc->__ircenv, IRC_LOG_ERR, "Error in thread creation for id %d\n", irc->id);
     else irc->__ircenv->log(irc->__ircenv, IRC_LOG_NORM, "Child created at id %d\n", irc->id);
     irc->__pthread_irc = tid;
+    pthread_attr_destroy(&attr);
     return ret;
 }
 

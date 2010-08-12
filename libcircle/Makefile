@@ -18,7 +18,7 @@ CFLAGS = $(BASICOPTS)
 TARGETDIR_libcircle=GNU-i386-Linux
 
 
-all: $(TARGETDIR_libcircle)/libcircle
+all: $(TARGETDIR_libcircle)/libcircle.a
 
 ## Target: libcircle
 OBJS_libcircle =  \
@@ -31,7 +31,7 @@ OBJS_libcircle =  \
 
 
 # Link or archive
-$(TARGETDIR_libcircle)/libcircle: $(TARGETDIR_libcircle) $(OBJS_libcircle)
+$(TARGETDIR_libcircle)/libcircle.a: $(TARGETDIR_libcircle) $(OBJS_libcircle)
 	$(AR) $(ARFLAGS) $@ $(OBJS_libcircle)
 
 
@@ -59,7 +59,7 @@ $(TARGETDIR_libcircle)/irclist.o: $(TARGETDIR_libcircle) irclist.c
 #### Clean target deletes all generated files ####
 clean:
 	rm -f \
-		$(TARGETDIR_libcircle)/libcircle \
+		$(TARGETDIR_libcircle)/libcircle.a \
 		$(TARGETDIR_libcircle)/irc.o \
 		$(TARGETDIR_libcircle)/ircq.o \
 		$(TARGETDIR_libcircle)/ircenv.o \
