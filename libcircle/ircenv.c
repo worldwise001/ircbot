@@ -344,7 +344,8 @@ int __ircenv___open_log(IRCENV * ircenv, __irc_logtype type)
             fptr = &ircenv->__irclog;
             break;
     }
-    snprintf(filename, __CIRCLE_LEN_FILENAME, "%s.%s", ircenv->appname, suffix);
+    snprintf(filename, __CIRCLE_LEN_FILENAME, "%s/%s.%s", CIRCLE_DIR_LOGS, ircenv->appname, suffix);
+    if (mkdir(CIRCLE_DIR_LOGS, 0755) && (errno != EEXIST)) return errno;
     *fptr = fopen(filename, "a");
     if (*fptr == NULL) return errno;
     return 0;

@@ -176,7 +176,8 @@ int __irc___open_log(IRC * irc, __irc_logtype type)
             fptr = &irc->__irclog;
             break;
     }
-    snprintf(filename, __CIRCLE_LEN_FILENAME, "%s.%d.%s", irc->__ircenv->appname, irc->id, suffix);
+    snprintf(filename, __CIRCLE_LEN_FILENAME, "%s/%s.%d.%s", CIRCLE_DIR_LOGS, irc->__ircenv->appname, irc->id, suffix);
+    if (mkdir(CIRCLE_DIR_LOGS, 0755) && (errno != EEXIST)) return errno;
     *fptr = fopen(filename, "a");
     if (*fptr == NULL) return errno;
     return 0;
