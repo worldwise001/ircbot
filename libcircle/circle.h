@@ -52,11 +52,11 @@ extern "C" {
 #include <getopt.h>
 
 #ifdef CIRCLE_USE_DB
-    #include <db.h>
+#include <db.h>
 #else
-    #ifndef CIRCLE_USE_INTERNAL
-    #define CIRCLE_USE_INTERNAL
-    #endif
+#ifndef CIRCLE_USE_INTERNAL
+#define CIRCLE_USE_INTERNAL
+#endif
 #endif
 
 /******************************************************************************
@@ -144,308 +144,326 @@ extern "C" {
  * Initial Data Type Definitions
  *****************************************************************************/
 
-typedef struct { char data[__CIRCLE_LEN_LINE+1]; } __irc_line;
+    typedef struct {
+        char data[__CIRCLE_LEN_LINE + 1];
+    } __irc_line;
 
-typedef struct {
-    int id;
-    char user[CIRCLE_FIELD_SENDER + 1];
-} __irc_auth;
+    typedef struct {
+        int id;
+        char user[CIRCLE_FIELD_SENDER + 1];
+    } __irc_auth;
 
-typedef enum {
-    IRC_LOG_NORM = 0,
-    IRC_LOG_ERR = 1,
-    IRC_LOG_RAW = 2
-} __irc_logtype;            /* irc log type */
+    typedef enum {
+        IRC_LOG_NORM = 0,
+        IRC_LOG_ERR = 1,
+        IRC_LOG_RAW = 2
+    } __irc_logtype; /* irc log type */
 
-typedef enum {
-    IRC_MODE_NORMAL = 0,
-    IRC_MODE_DAEMON = 1,
-    IRC_MODE_USAGE = 2,
-    IRC_MODE_VERSION = 3
-} __irc_mode;               /* irc mode */
+    typedef enum {
+        IRC_MODE_NORMAL = 0,
+        IRC_MODE_DAEMON = 1,
+        IRC_MODE_USAGE = 2,
+        IRC_MODE_VERSION = 3
+    } __irc_mode; /* irc mode */
 
-struct __irc;       typedef struct __irc        IRC;
-struct __ircmsg;    typedef struct __ircmsg     IRCMSG;
-struct __irccall;   typedef struct __irccall    IRCCALL;
-struct __ircmod;    typedef struct __ircmod     IRCMOD;
-struct __ircenv;    typedef struct __ircenv     IRCENV;
-struct __ircq;      typedef struct __ircq       IRCQ;
-struct __ircsock;   typedef struct __ircsock    IRCSOCK;
-struct __irchelp;   typedef struct __irchelp    IRCHELP;
-struct __irchopt;   typedef struct __irchopt    IRCHOPT;
+    struct __irc;
+    typedef struct __irc IRC;
+    struct __ircmsg;
+    typedef struct __ircmsg IRCMSG;
+    struct __irccall;
+    typedef struct __irccall IRCCALL;
+    struct __ircmod;
+    typedef struct __ircmod IRCMOD;
+    struct __ircenv;
+    typedef struct __ircenv IRCENV;
+    struct __ircq;
+    typedef struct __ircq IRCQ;
+    struct __ircsock;
+    typedef struct __ircsock IRCSOCK;
+    struct __irchelp;
+    typedef struct __irchelp IRCHELP;
+    struct __irchopt;
+    typedef struct __irchopt IRCHOPT;
 
 #ifdef CIRCLE_USE_INTERNAL
-/* internal linked list type and function definitions */
-struct __irclist;  typedef struct __irclist    IRCLIST;
+    /* internal linked list type and function definitions */
+    struct __irclist;
+    typedef struct __irclist IRCLIST;
 
-struct __irclist {
-    void * item;
-    IRCLIST * next;
-};
+    struct __irclist {
+        void * item;
+        IRCLIST * next;
+    };
 
-int     irclist_append  (IRCLIST ** first, void * item);
-int     irclist_insert  (IRCLIST ** first, void * item, int location);
-int     irclist_remove  (IRCLIST ** first, int location);
-int     irclist_clear   (IRCLIST ** first);
-void *  irclist_get     (IRCLIST ** first, int location);
-void *  irclist_take    (IRCLIST ** first, int location);
-int     irclist_size    (IRCLIST ** first);
+    int irclist_append(IRCLIST ** first, void * item);
+    int irclist_insert(IRCLIST ** first, void * item, int location);
+    int irclist_remove(IRCLIST ** first, int location);
+    int irclist_clear(IRCLIST ** first);
+    void * irclist_get(IRCLIST ** first, int location);
+    void * irclist_take(IRCLIST ** first, int location);
+    int irclist_size(IRCLIST ** first);
 
-int     irclist_get_max_irc_id (IRCLIST ** first);
-int     irclist_get_irc_id (IRCLIST ** first, unsigned int id);
- #endif /* CIRCLE_USE_INTERNAL */
+    int irclist_get_max_irc_id(IRCLIST ** first);
+    int irclist_get_irc_id(IRCLIST ** first, unsigned int id);
+#endif /* CIRCLE_USE_INTERNAL */
 
 /******************************************************************************
  * Data Type Definitions
  *****************************************************************************/
 
-typedef struct { char data[CIRCLE_FIELD_DEFAULT+1]; } field_t;
-    /* field struct */
-typedef struct { char data[CIRCLE_FIELD_ERROR+1]; } error_t;
-    /* error struct */
+    typedef struct {
+        char data[CIRCLE_FIELD_DEFAULT + 1];
+    } field_t;
 
-struct __irchelp {
-    int admin:1;
-    char * command;
-    char * usage;
-    char * description;
-    IRCHOPT * options;
-    IRCHELP * next;
-};
+/* field struct */
+    typedef struct {
+        char data[CIRCLE_FIELD_ERROR + 1];
+    } error_t;
 
-struct __irchopt {
-    int admin:1;
-    char * option;
-    char * usage;
-    char * description;
-    unsigned int arguments;
-    IRCHOPT * next;
-};
+/* error struct */
 
-struct __ircmsg {
-    IRC * irc;
-    char sender[CIRCLE_FIELD_SENDER+1];
-    char target[CIRCLE_FIELD_TARGET+1];
-    char command[CIRCLE_FIELD_COMMAND+1];
-    char message[CIRCLE_FIELD_MESSAGE+1];
-};
+    struct __irchelp {
+        int admin : 1;
+        char * command;
+        char * usage;
+        char * description;
+        IRCHOPT * options;
+        IRCHELP * next;
+    };
 
-struct __irccall {
-    char command[CIRCLE_FIELD_DEFAULT+1];
-    field_t arg[CIRCLE_LEN_BOT_ARGS];
+    struct __irchopt {
+        int admin : 1;
+        char * option;
+        char * usage;
+        char * description;
+        unsigned int arguments;
+        IRCHOPT * next;
+    };
 
-    char line[CIRCLE_FIELD_MESSAGE+1];
-};
+    struct __ircmsg {
+        IRC * irc;
+        char sender[CIRCLE_FIELD_SENDER + 1];
+        char target[CIRCLE_FIELD_TARGET + 1];
+        char command[CIRCLE_FIELD_COMMAND + 1];
+        char message[CIRCLE_FIELD_MESSAGE + 1];
+    };
 
-struct __ircmod {
-    void * dlhandle;
-    char filename[CIRCLE_FIELD_DEFAULT+1];
-    void (*evaluate)(const IRCMSG * ircmsg);
-    void (*construct) ();
-    void (*destruct) ();
-    IRCHELP * (*commands) ();
-    int (*irc_version) ();
-    char * (*name) ();
-};
+    struct __irccall {
+        char command[CIRCLE_FIELD_DEFAULT + 1];
+        field_t arg[CIRCLE_LEN_BOT_ARGS];
 
-struct __ircsock {
-    int (*connect) (IRCSOCK * sock);
-    int (*disconnect) (IRCSOCK * sock);
+        char line[CIRCLE_FIELD_MESSAGE + 1];
+    };
 
-    int (*handshake) (IRCSOCK * sock, IRC * irc);
-    void (*identify) (IRCSOCK * sock, IRC * irc);
-    void (*autojoin) (IRCSOCK * sock, IRC * irc);
-    void (*quit) (IRCSOCK * sock, IRC * irc, char * message);
+    struct __ircmod {
+        void * dlhandle;
+        char filename[CIRCLE_FIELD_DEFAULT + 1];
+        void (*evaluate)(const IRCMSG * ircmsg);
+        void (*construct) ();
+        void (*destruct) ();
+        IRCHELP * (*commands) ();
+        int (*irc_version) ();
+        char * (*name) ();
+    };
 
-    int (*read) (IRCSOCK * sock, __irc_line * line);
-    int (*write) (IRCSOCK * sock, char * line);
-    int (*writef) (IRCSOCK * sock, char * format, ...);
+    struct __ircsock {
+        int (*connect) (IRCSOCK * sock);
+        int (*disconnect) (IRCSOCK * sock);
 
-    char host[CIRCLE_FIELD_DEFAULT+1];
-    unsigned short int port;
+        int (*handshake) (IRCSOCK * sock, IRC * irc);
+        void (*identify) (IRCSOCK * sock, IRC * irc);
+        void (*autojoin) (IRCSOCK * sock, IRC * irc);
+        void (*quit) (IRCSOCK * sock, IRC * irc, char * message);
 
-    IRC * __irc;
-    unsigned int __r;
-    unsigned int __w;
-    int __sockfd;
-    char __buffer[__CIRCLE_BUFF_RECV_STATIC];
-    int __pos;
+        int (*read) (IRCSOCK * sock, __irc_line * line);
+        int (*write) (IRCSOCK * sock, char * line);
+        int (*writef) (IRCSOCK * sock, char * format, ...);
 
-    int (*__getc) (IRCSOCK * sock);
-};
+        char host[CIRCLE_FIELD_DEFAULT + 1];
+        unsigned short int port;
 
-struct __irc {
-    int (*init) (IRC * irc);
-    int (*shutdown) (IRC * irc);
-    void (*respond) (IRC * irc, char * format, ...);
-    int (*kill) (IRC * irc);
+        IRC * __irc;
+        unsigned int __r;
+        unsigned int __w;
+        int __sockfd;
+        char __buffer[__CIRCLE_BUFF_RECV_STATIC];
+        int __pos;
 
-    int (*log) (IRC * irc, __irc_logtype type, const char * message, ...);
+        int (*__getc) (IRCSOCK * sock);
+    };
 
-    IRCMSG (*parse) (const char * raw);
-    IRCCALL (*get_directive) (const char * message);
+    struct __irc {
+        int (*init) (IRC * irc);
+        int (*shutdown) (IRC * irc);
+        void (*respond) (IRC * irc, char * format, ...);
+        int (*kill) (IRC * irc);
 
-    field_t (*get_nick) (const char * sender);
-    field_t (*get_target) (const IRCMSG * ircmsg);
-    field_t (*get_kicked_nick) (const char * message);
+        int (*log) (IRC * irc, __irc_logtype type, const char * message, ...);
 
-    unsigned int id;
-    unsigned int enable:1;
-    volatile sig_atomic_t active;
-    volatile sig_atomic_t run;
-    IRCSOCK socket;
+        IRCMSG(*parse) (const char * raw);
+        IRCCALL(*get_directive) (const char * message);
 
-    char nickname[CIRCLE_FIELD_DEFAULT+1];
-    char username[CIRCLE_FIELD_DEFAULT+1];
-    char realname[CIRCLE_FIELD_DEFAULT+1];
-    char password[CIRCLE_FIELD_DEFAULT+1];
-    field_t channels[CIRCLE_LEN_MAX_CHAN];
+        field_t(*get_nick) (const char * sender);
+        field_t(*get_target) (const IRCMSG * ircmsg);
+        field_t(*get_kicked_nick) (const char * message);
 
-    char admin[CIRCLE_FIELD_DEFAULT+1];
+        unsigned int id;
+        unsigned int enable : 1;
+        volatile sig_atomic_t active;
+        volatile sig_atomic_t run;
+        IRCSOCK socket;
 
-    char name[CIRCLE_FIELD_DEFAULT+1];
-    char host[CIRCLE_FIELD_DEFAULT+1];
-    unsigned short int port;
+        char nickname[CIRCLE_FIELD_DEFAULT + 1];
+        char username[CIRCLE_FIELD_DEFAULT + 1];
+        char realname[CIRCLE_FIELD_DEFAULT + 1];
+        char password[CIRCLE_FIELD_DEFAULT + 1];
+        field_t channels[CIRCLE_LEN_MAX_CHAN];
 
-    IRCENV * __ircenv;
-    FILE * __irclog;
-    FILE * __ircraw;
-    FILE * __ircerr;
-    pthread_t __pthread_irc;
-    pthread_mutex_t __mutex;
+        char admin[CIRCLE_FIELD_DEFAULT + 1];
 
-    int (*__open_log) (IRC * irc, __irc_logtype type);
-    int (*__close_log) (IRC * irc, __irc_logtype type);
-    void * (*__thread_loop) (void * ptr);
-    void (*__process) (IRC * irc, IRCMSG * ircmsg);
-};
+        char name[CIRCLE_FIELD_DEFAULT + 1];
+        char host[CIRCLE_FIELD_DEFAULT + 1];
+        unsigned short int port;
 
-typedef struct {
-    char conf[__CIRCLE_LEN_FILENAME+1];
-    unsigned int verbose:3;
-    unsigned int log:1;
-    unsigned int raw:1;
-    __irc_mode mode;
-} __args;                   /* struct holding circle arguments */
+        IRCENV * __ircenv;
+        FILE * __irclog;
+        FILE * __ircraw;
+        FILE * __ircerr;
+        pthread_t __pthread_irc;
+        pthread_mutex_t __mutex;
 
-struct __ircq {
-    int (*init) (IRCQ * ircq);
-    int (*kill) (IRCQ * ircq);
-    int (*queue) (IRCQ * ircq, IRCMSG ircmsg);
-    int (*get_item) (IRCQ * ircq, IRCMSG * ircmsg);
-    int (*clear) (IRCQ * ircq);
+        int (*__open_log) (IRC * irc, __irc_logtype type);
+        int (*__close_log) (IRC * irc, __irc_logtype type);
+        void * (*__thread_loop) (void * ptr);
+        void (*__process) (IRC * irc, IRCMSG * ircmsg);
+    };
 
-    int (*load) (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
-    int (*unload) (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
-    int (*reload) (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
-    int (*load_all) (IRCQ * ircq);
-    int (*unload_all) (IRCQ * ircq);
-    void (*commands) (IRCQ * ircq, const IRCMSG * ircmsg);
-    void (*help) (IRCQ * ircq, const IRCMSG * ircmsg);
-    void (*list) (IRCQ * ircq, const IRCMSG * ircmsg);
-    void (*dir) (IRCQ * ircq, const IRCMSG * ircmsg);
+    typedef struct {
+        char conf[__CIRCLE_LEN_FILENAME + 1];
+        unsigned int verbose : 3;
+        unsigned int log : 1;
+        unsigned int raw : 1;
+        __irc_mode mode;
+    } __args; /* struct holding circle arguments */
 
-    int (*log) (IRCQ * ircq, __irc_logtype type, const char * format, ...);
+    struct __ircq {
+        int (*init) (IRCQ * ircq);
+        int (*kill) (IRCQ * ircq);
+        int (*queue) (IRCQ * ircq, IRCMSG ircmsg);
+        int (*get_item) (IRCQ * ircq, IRCMSG * ircmsg);
+        int (*clear) (IRCQ * ircq);
 
-    int queue_num;
+        int (*load) (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
+        int (*unload) (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
+        int (*reload) (IRCQ * ircq, const IRCMSG * ircmsg, char * file);
+        int (*load_all) (IRCQ * ircq);
+        int (*unload_all) (IRCQ * ircq);
+        void (*commands) (IRCQ * ircq, const IRCMSG * ircmsg);
+        void (*help) (IRCQ * ircq, const IRCMSG * ircmsg);
+        void (*list) (IRCQ * ircq, const IRCMSG * ircmsg);
+        void (*dir) (IRCQ * ircq, const IRCMSG * ircmsg);
 
-    pthread_t __pthread_q;
-    IRCENV * __ircenv;
-    IRCSOCK __socket;
-    pthread_mutex_t __mutex;
-    sigset_t __sigset;
-    volatile sig_atomic_t active;
+        int (*log) (IRCQ * ircq, __irc_logtype type, const char * format, ...);
 
-    #ifdef CIRCLE_USE_INTERNAL
-    IRCLIST * __list_queue;
-    IRCLIST * __list_modules;
-    IRCLIST * __list_commands;
-    #endif /* CIRCLE_USE_INTERNAL */
-    #ifdef CIRCLE_USE_DB
-    DB * __db_queue;
-    DB * __db_modules;
-    DB * __db_commands;
-    #endif /* CIRCLE_USE_DB */
+        int queue_num;
 
-    void * (*__thread_loop) (void * ptr);
-    void (*__eval) (IRCQ * ircq, const IRCMSG * ircmsg);
-    void (*__process) (IRCQ * ircq, const IRCMSG * ircmsg);
-    IRCHELP * (*__help_list) (IRCQ * ircq);
-    int (*__empty) (IRCQ * ircq);
-};
+        pthread_t __pthread_q;
+        IRCENV * __ircenv;
+        IRCSOCK __socket;
+        pthread_mutex_t __mutex;
+        sigset_t __sigset;
+        volatile sig_atomic_t active;
 
-struct __ircenv {
-    /* version and usage functions (terminates program) */
-    void (*version) (void);
-    void (*usage) (IRCENV * ircenv);
+#ifdef CIRCLE_USE_INTERNAL
+        IRCLIST * __list_queue;
+        IRCLIST * __list_modules;
+        IRCLIST * __list_commands;
+#endif /* CIRCLE_USE_INTERNAL */
+#ifdef CIRCLE_USE_DB
+        DB * __db_queue;
+        DB * __db_modules;
+        DB * __db_commands;
+#endif /* CIRCLE_USE_DB */
 
-    /* starts bot */
-    int (*init) (IRCENV * ircenv);
-    int (*clean) (IRCENV * ircenv);
+        void * (*__thread_loop) (void * ptr);
+        void (*__eval) (IRCQ * ircq, const IRCMSG * ircmsg);
+        void (*__process) (IRCQ * ircq, const IRCMSG * ircmsg);
+        IRCHELP * (*__help_list) (IRCQ * ircq);
+        int (*__empty) (IRCQ * ircq);
+    };
 
-    /* configuration functions */
-    int (*load_args) (IRCENV * ircenv, int argc, char ** argv);
-    int (*load_config) (IRCENV * ircenv, const char * conf);
-    int (*irc_create) (IRCENV * ircenv);
-    int (*irc_destroy) (IRCENV * ircenv, int id);
-    void (*irc_display) (IRCENV * ircenv, int id, const IRCMSG * ircmsg);
-    void (*irc_display_all) (IRCENV * ircenv, const IRCMSG * ircmsg);
+    struct __ircenv {
+        /* version and usage functions (terminates program) */
+        void (*version) (void);
+        void (*usage) (IRCENV * ircenv);
 
-    /* administrative functions */
-    int (*login) (IRCENV * ircenv, IRC * irc, const char * sender);
-    int (*logout) (IRCENV * ircenv, IRC * irc, const char * nick);
-    int (*auth) (IRCENV * ircenv, IRC * irc, const char * sender);
-    int (*is_auth) (IRCENV * ircenv, IRC * irc, const char * sender);
-    int (*deauth_all) (IRCENV * ircenv);
+        /* starts bot */
+        int (*init) (IRCENV * ircenv);
+        int (*clean) (IRCENV * ircenv);
 
-    int (*log) (IRCENV * ircenv, __irc_logtype type, const char * format, ...);
+        /* configuration functions */
+        int (*load_args) (IRCENV * ircenv, int argc, char ** argv);
+        int (*load_config) (IRCENV * ircenv, const char * conf);
+        int (*irc_create) (IRCENV * ircenv);
+        int (*irc_destroy) (IRCENV * ircenv, int id);
+        void (*irc_display) (IRCENV * ircenv, int id, const IRCMSG * ircmsg);
+        void (*irc_display_all) (IRCENV * ircenv, const IRCMSG * ircmsg);
 
-    char * appname;             /* application name (for usage function) */
+        /* administrative functions */
+        int (*login) (IRCENV * ircenv, IRC * irc, const char * sender);
+        int (*logout) (IRCENV * ircenv, IRC * irc, const char * nick);
+        int (*auth) (IRCENV * ircenv, IRC * irc, const char * sender);
+        int (*is_auth) (IRCENV * ircenv, IRC * irc, const char * sender);
+        int (*deauth_all) (IRCENV * ircenv);
 
-    time_t time_start;          /* time of start */
-    IRCQ ircq;                  /* IRC queue */
+        int (*log) (IRCENV * ircenv, __irc_logtype type, const char * format, ...);
 
-    pthread_t __pthread_main;
-    volatile sig_atomic_t __active;
-    IRC __default;
-    error_t __error;
-    sigset_t __sigset;
-    __args __ircargs;
-    FILE * __irclog;
-    FILE * __ircerr;
-    pthread_mutex_t __mutex_log;
+        char * appname; /* application name (for usage function) */
 
-    #ifdef CIRCLE_USE_INTERNAL
-    IRCLIST * __list_irc;
-    IRCLIST * __list_auth;
-    #endif /* CIRCLE_USE_INTERNAL */
-    #ifdef CIRCLE_USE_DB
-    DB_ENV * dbenv;
-    DB * __db_irc;
-    DB * __db_auth;
-    #endif /* CIRCLE_USE_DB */
+        time_t time_start; /* time of start */
+        IRCQ ircq; /* IRC queue */
 
-    int (*__open_log) (IRCENV * ircenv, __irc_logtype type);
-    int (*__close_log) (IRCENV * ircenv, __irc_logtype type);
-    int (*__size) (IRCENV * ircenv);
-    int (*__start_all) (IRCENV * ircenv);
-    int (*__start) (IRCENV * ircenv, int id);
-    int (*__kill_all) (IRCENV * ircenv);
-};
+        pthread_t __pthread_main;
+        volatile sig_atomic_t __active;
+        IRC __default;
+        error_t __error;
+        sigset_t __sigset;
+        __args __ircargs;
+        FILE * __irclog;
+        FILE * __ircerr;
+        pthread_mutex_t __mutex_log;
+
+#ifdef CIRCLE_USE_INTERNAL
+        IRCLIST * __list_irc;
+        IRCLIST * __list_auth;
+#endif /* CIRCLE_USE_INTERNAL */
+#ifdef CIRCLE_USE_DB
+        DB_ENV * dbenv;
+        DB * __db_irc;
+        DB * __db_auth;
+#endif /* CIRCLE_USE_DB */
+
+        int (*__open_log) (IRCENV * ircenv, __irc_logtype type);
+        int (*__close_log) (IRCENV * ircenv, __irc_logtype type);
+        int (*__size) (IRCENV * ircenv);
+        int (*__start_all) (IRCENV * ircenv);
+        int (*__start) (IRCENV * ircenv, int id);
+        int (*__kill_all) (IRCENV * ircenv);
+    };
 
 /******************************************************************************
  * Public Function Definitions
  *****************************************************************************/
 
-IRCENV circle_init(char * appname);
+    IRCENV circle_init(char * appname);
 
-/* struct initializers */
-void __circle_ircenv (IRCENV * ircenv);
-void __circle_irc (IRC * irc);
-void __circle_ircq (IRCQ * ircq);
-void __circle_ircsock (IRCSOCK * ircsock);
+    /* struct initializers */
+    void __circle_ircenv(IRCENV * ircenv);
+    void __circle_irc(IRC * irc);
+    void __circle_ircq(IRCQ * ircq);
+    void __circle_ircsock(IRCSOCK * ircsock);
 
-field_t __circle_time(time_t time);
+    field_t __circle_time(time_t time);
 
 #ifdef	__cplusplus
 }

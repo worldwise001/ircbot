@@ -19,16 +19,14 @@
 
 #include "ircfunc.h"
 
-void __circle_set_field(char * dest, char * src, int maxlen)
-{
+void __circle_set_field(char * dest, char * src, int maxlen) {
     int len = strlen(src);
     if (len > maxlen) len = maxlen;
-    memset(dest, 0, maxlen+1);
+    memset(dest, 0, maxlen + 1);
     strncpy(dest, src, len);
 }
 
-field_t  __circle_time(time_t time)
-{
+field_t __circle_time(time_t time) {
     field_t result;
     int seconds, minutes, hours, days, years, left;
     char * buffer;
@@ -44,7 +42,7 @@ field_t  __circle_time(time_t time)
 
     left = CIRCLE_FIELD_DEFAULT;
     buffer = result.data;
-    memset(buffer, 0, CIRCLE_FIELD_DEFAULT+1);
+    memset(buffer, 0, CIRCLE_FIELD_DEFAULT + 1);
 
     if (years) snprintf(buffer, left, "%dy, ", years);
     left -= strlen(buffer);
@@ -59,43 +57,39 @@ field_t  __circle_time(time_t time)
     left -= strlen(buffer);
     buffer += strlen(buffer);
     if (seconds) snprintf(buffer, left, "%ds, ", seconds);
-    int len = strlen(buffer)-1;
+    int len = strlen(buffer) - 1;
     if (buffer[len] == ' ' || buffer[len] == ',') buffer[len] = '\0';
-    len = strlen(buffer)-1;
+    len = strlen(buffer) - 1;
     if (buffer[len] == ',') buffer[len] = '\0';
     if (strlen(buffer) == 0) snprintf(buffer, CIRCLE_FIELD_DEFAULT, "0s");
 
     return result;
 }
 
-void __circle_link_help(IRCHELP * list)
-{
+void __circle_link_help(IRCHELP * list) {
     int i, j;
     IRCHOPT * irchopt;
 
-    for (i = 0; list[i].command != NULL; i++)
-    {
-        list[i].next = &list[i+1];
-        if (list[i].options != NULL)
-        {
+    for (i = 0; list[i].command != NULL; i++) {
+        list[i].next = &list[i + 1];
+        if (list[i].options != NULL) {
             irchopt = list[i].options;
-            for (j = 0; irchopt[j].option != NULL; j++) irchopt[j].next = &irchopt[j+1];
+            for (j = 0; irchopt[j].option != NULL; j++) irchopt[j].next = &irchopt[j + 1];
         }
     }
 }
 
-IRCHELP ** __circle_endptr_help(IRCHELP * list)
-{
+IRCHELP ** __circle_endptr_help(IRCHELP * list) {
     int i;
 
     for (i = 0; list[i].command != NULL; i++);
     if (i == 0) return NULL;
-    return &(list[i-1].next);
+    return &(list[i - 1].next);
 }
 
 #ifdef CIRCLE_USE_INTERNAL
-int     irclist_get_max_irc_id (IRCLIST ** first)
-{
+
+int irclist_get_max_irc_id(IRCLIST ** first) {
     IRCLIST * iterator;
     IRC * irc;
     unsigned int max;
@@ -103,17 +97,15 @@ int     irclist_get_max_irc_id (IRCLIST ** first)
 
     max = 0;
     iterator = *first;
-    while (iterator != NULL)
-    {
-        irc = (IRC *)(iterator->item);
+    while (iterator != NULL) {
+        irc = (IRC *) (iterator->item);
         if (irc->id > max) max = irc->id;
         iterator = iterator->next;
     }
     return max;
 }
 
-int     irclist_get_irc_id (IRCLIST ** first, unsigned int id)
-{
+int irclist_get_irc_id(IRCLIST ** first, unsigned int id) {
     IRCLIST * iterator;
     IRC * irc;
     int i;
@@ -121,10 +113,9 @@ int     irclist_get_irc_id (IRCLIST ** first, unsigned int id)
 
     i = 0;
     iterator = *first;
-    while (iterator != NULL)
-    {
-        irc = (IRC *)(iterator->item);
-        if (irc->id  == id) break;
+    while (iterator != NULL) {
+        irc = (IRC *) (iterator->item);
+        if (irc->id == id) break;
         iterator = iterator->next;
         i++;
     }

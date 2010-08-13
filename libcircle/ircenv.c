@@ -19,8 +19,7 @@
 
 #include "ircfunc.h"
 
-IRCENV circle_init(char * appname)
-{
+IRCENV circle_init(char * appname) {
     IRCENV ircenv;
     __circle_ircenv(&ircenv);
     if (appname != NULL) ircenv.appname = appname;
@@ -28,9 +27,8 @@ IRCENV circle_init(char * appname)
     return ircenv;
 }
 
-void __circle_ircenv (IRCENV * ircenv)
-{
-    memset(ircenv, 0, sizeof(IRCENV));
+void __circle_ircenv(IRCENV * ircenv) {
+    memset(ircenv, 0, sizeof (IRCENV));
 
     ircenv->version = &__ircenv_version;
     ircenv->usage = &__ircenv_usage;
@@ -41,7 +39,7 @@ void __circle_ircenv (IRCENV * ircenv)
     ircenv->__close_log = &__ircenv___close_log;
     ircenv->log = &__ircenv_log;
 
-    #ifdef CIRCLE_USE_INTERNAL
+#ifdef CIRCLE_USE_INTERNAL
     ircenv->load_config = &__ircenv_load_config_irclist;
     ircenv->irc_create = &__ircenv_irc_create_irclist;
     ircenv->irc_destroy = &__ircenv_irc_destroy_irclist;
@@ -61,9 +59,9 @@ void __circle_ircenv (IRCENV * ircenv)
 
     ircenv->clean = &__ircenv_clean_irclist;
     ircenv->auth = &__ircenv_auth_irclist;
-    #endif /* CIRCLE_USE_INTERNAL */
+#endif /* CIRCLE_USE_INTERNAL */
 
-    #ifdef CIRCLE_USE_DB
+#ifdef CIRCLE_USE_DB
     ircenv->load_config = &__ircenv_load_config_db;
     ircenv->irc_create = &__ircenv_irc_create_db;
     ircenv->irc_destroy = &__ircenv_irc_destroy_db;
@@ -79,11 +77,10 @@ void __circle_ircenv (IRCENV * ircenv)
 
     ircenv->clean = &__ircenv_clean_db;
     ircenv->auth = &__ircenv_auth_db;
-    #endif /* CIRCLE_USE_DB */
+#endif /* CIRCLE_USE_DB */
 }
 
-void __ircenv_usage(IRCENV * ircenv)
-{
+void __ircenv_usage(IRCENV * ircenv) {
     printf("Usage: %s [options]\n", ircenv->appname);
     printf("Options:\n");
     printf("-c, --config config.conf        Use config.conf as configuration\n");
@@ -96,39 +93,35 @@ void __ircenv_usage(IRCENV * ircenv)
     exit(EXIT_SUCCESS);
 }
 
-void __ircenv_version()
-{
+void __ircenv_version() {
     printf("%s: IRC Bot written in C\n", CIRCLE_VERSION);
     printf("%s\n", CIRCLE_COPYRIGHT);
     printf("%s\n", CIRCLE_INFO);
     exit(EXIT_SUCCESS);
 }
 
-int __ircenv_init(IRCENV * ircenv)
-{
+int __ircenv_init(IRCENV * ircenv) {
     pid_t pid, sid;
     int signal;
     char * sigtype;
-    
+
     time(&ircenv->time_start);
-    switch(ircenv->__ircargs.mode)
-    {
-        case IRC_MODE_VERSION: ircenv->version(); break;
-        case IRC_MODE_USAGE: ircenv->usage(ircenv); break;
+    switch (ircenv->__ircargs.mode) {
+        case IRC_MODE_VERSION: ircenv->version();
+            break;
+        case IRC_MODE_USAGE: ircenv->usage(ircenv);
+            break;
         case IRC_MODE_DAEMON:
-            if ((pid = fork()) < 0)
-            {
+            if ((pid = fork()) < 0) {
                 fprintf(stderr, "%s: Unable to daemonize\n", ircenv->appname);
                 return EXIT_FAILURE;
             }
-            if (pid > 0)
-            {
+            if (pid > 0) {
                 printf("%s: Daemon started in background\n", ircenv->appname);
                 return EXIT_SUCCESS;
             }
             umask(0);
-            if ((sid = setsid()) < 0)
-            {
+            if ((sid = setsid()) < 0) {
                 fprintf(stderr, "%s: Could not set session id\n", ircenv->appname);
                 return EXIT_FAILURE;
             }
@@ -145,22 +138,21 @@ int __ircenv_init(IRCENV * ircenv)
     sigaddset(&ircenv->__sigset, SIGINT);
     sigaddset(&ircenv->__sigset, SIGHUP);
     sigaddset(&ircenv->__sigset, SIGQUIT);
-    
+
     pthread_sigmask(SIG_BLOCK, &ircenv->__sigset, NULL);
 
     ircenv->__active = 1;
 
-    if (ircenv->__ircargs.log)
-    {
+    if (ircenv->__ircargs.log) {
         ircenv->__open_log(ircenv, IRC_LOG_NORM);
         ircenv->__open_log(ircenv, IRC_LOG_ERR);
     }
 
     ircenv->log(ircenv, IRC_LOG_NORM, "Started at: %s================================================================================\n%s: IRC Bot written in C\n%s\n%s\n================================================================================\n\n", ctime(&ircenv->time_start), CIRCLE_VERSION, CIRCLE_INFO, CIRCLE_COPYRIGHT);
 
-    #ifdef CIRCLE_USE_DB
+#ifdef CIRCLE_USE_DB
     err = db_env_create(&ircenv->dbenv, 0);
-    #endif /* CIRCLE_USE_DB */
+#endif /* CIRCLE_USE_DB */
 
     __circle_irc(&ircenv->__default);
     ircenv->__default.__ircenv = ircenv;
@@ -175,13 +167,17 @@ int __ircenv_init(IRCENV * ircenv)
 
     ircenv->__active = 0;
 
-    switch (signal)
-    {
-        case SIGINT: sigtype = "SIGINT"; break;
-        case SIGHUP: sigtype = "SIGHUP"; break;
-        case SIGTERM: sigtype = "SIGTERM"; break;
-        case SIGQUIT: sigtype = "SIGQUIT"; break;
-        case SIGABRT: sigtype = "SIGABRT"; break;
+    switch (signal) {
+        case SIGINT: sigtype = "SIGINT";
+            break;
+        case SIGHUP: sigtype = "SIGHUP";
+            break;
+        case SIGTERM: sigtype = "SIGTERM";
+            break;
+        case SIGQUIT: sigtype = "SIGQUIT";
+            break;
+        case SIGABRT: sigtype = "SIGABRT";
+            break;
         default: sigtype = "Unknown signal";
     }
 
@@ -192,12 +188,11 @@ int __ircenv_init(IRCENV * ircenv)
 
     ircenv->clean(ircenv);
 
-    #ifdef CIRCLE_USE_DB
-    err = ircenv->dbenv->close(ircenv->dbenv, DB_FORCESYNC);    
-    #endif /* CIRCLE_USE_DB */
+#ifdef CIRCLE_USE_DB
+    err = ircenv->dbenv->close(ircenv->dbenv, DB_FORCESYNC);
+#endif /* CIRCLE_USE_DB */
 
-    if (ircenv->__ircargs.log)
-    {
+    if (ircenv->__ircargs.log) {
         ircenv->__close_log(ircenv, IRC_LOG_NORM);
         ircenv->__close_log(ircenv, IRC_LOG_ERR);
     }
@@ -205,8 +200,7 @@ int __ircenv_init(IRCENV * ircenv)
     return EXIT_SUCCESS;
 }
 
-int __ircenv_load_args (IRCENV * ircenv, int argc, char ** argv)
-{
+int __ircenv_load_args(IRCENV * ircenv, int argc, char ** argv) {
     int c, oi;
     struct option long_options[] = {
         {"raw", 0, NULL, 'r'},
@@ -221,25 +215,29 @@ int __ircenv_load_args (IRCENV * ircenv, int argc, char ** argv)
 
     oi = 0;
     c = 0;
-    while (1)
-    {
+    while (1) {
         c = getopt_long(argc, argv, "rdc:v::Vhl", long_options, &oi);
         if (c == -1) break;
 
-        switch (c)
-        {
-            case 'v': 
+        switch (c) {
+            case 'v':
                 if (optarg)
                     ircenv->__ircargs.verbose += atoi(optarg);
                 else
                     ircenv->__ircargs.verbose++;
                 break;
-            case 'd': ircenv->__ircargs.mode = IRC_MODE_DAEMON; break;
-            case 'c': strncpy(ircenv->__ircargs.conf, optarg, __CIRCLE_LEN_FILENAME);  break;
-            case 'V': ircenv->__ircargs.mode = IRC_MODE_VERSION; break;
-            case 'h': ircenv->__ircargs.mode = IRC_MODE_USAGE; break;
-            case 'l': ircenv->__ircargs.log = 1; break;
-            case 'r': ircenv->__ircargs.raw = 1; break;
+            case 'd': ircenv->__ircargs.mode = IRC_MODE_DAEMON;
+                break;
+            case 'c': strncpy(ircenv->__ircargs.conf, optarg, __CIRCLE_LEN_FILENAME);
+                break;
+            case 'V': ircenv->__ircargs.mode = IRC_MODE_VERSION;
+                break;
+            case 'h': ircenv->__ircargs.mode = IRC_MODE_USAGE;
+                break;
+            case 'l': ircenv->__ircargs.log = 1;
+                break;
+            case 'r': ircenv->__ircargs.raw = 1;
+                break;
             default: ircenv->__ircargs.mode = IRC_MODE_USAGE;
         }
     }
@@ -327,13 +325,11 @@ int __ircenv_load_args (IRCENV * ircenv, int argc, char ** argv)
 }
  */
 
-int __ircenv___open_log(IRCENV * ircenv, __irc_logtype type)
-{
-    char filename[__CIRCLE_LEN_FILENAME+1], *suffix;
+int __ircenv___open_log(IRCENV * ircenv, __irc_logtype type) {
+    char filename[__CIRCLE_LEN_FILENAME + 1], *suffix;
     FILE ** fptr;
-    memset(filename, 0, __CIRCLE_LEN_FILENAME+1);
-    switch (type)
-    {
+    memset(filename, 0, __CIRCLE_LEN_FILENAME + 1);
+    switch (type) {
         case IRC_LOG_ERR:
             suffix = "err.log";
             fptr = &ircenv->__ircerr;
@@ -351,12 +347,10 @@ int __ircenv___open_log(IRCENV * ircenv, __irc_logtype type)
     return 0;
 }
 
-int __ircenv___close_log(IRCENV * ircenv, __irc_logtype type)
-{
+int __ircenv___close_log(IRCENV * ircenv, __irc_logtype type) {
     FILE ** fptr;
     int ret;
-    switch (type)
-    {
+    switch (type) {
         case IRC_LOG_ERR:
             fptr = &ircenv->__ircerr;
             break;
@@ -370,8 +364,7 @@ int __ircenv___close_log(IRCENV * ircenv, __irc_logtype type)
     return 0;
 }
 
-int __ircenv_log (IRCENV * ircenv, __irc_logtype type, const char * format, ...)
-{
+int __ircenv_log(IRCENV * ircenv, __irc_logtype type, const char * format, ...) {
     pthread_mutexattr_t attr;
     va_list listPointer;
     FILE ** fptr, *std;
@@ -382,16 +375,15 @@ int __ircenv_log (IRCENV * ircenv, __irc_logtype type, const char * format, ...)
 
     time(&now);
     ctime_r(&now, buff);
-    buff[strlen(buff)-1] = '\0';
-    
+    buff[strlen(buff) - 1] = '\0';
+
     pthread_mutexattr_init(&attr);
     pthread_mutex_init(&ircenv->__mutex_log, &attr);
-    pthread_mutex_lock( &ircenv->__mutex_log );
+    pthread_mutex_lock(&ircenv->__mutex_log);
 
-    va_start( listPointer, format );
+    va_start(listPointer, format);
 
-    switch (type)
-    {
+    switch (type) {
         case IRC_LOG_ERR:
             fptr = &ircenv->__ircerr;
             std = stderr;
@@ -403,45 +395,42 @@ int __ircenv_log (IRCENV * ircenv, __irc_logtype type, const char * format, ...)
             break;
     }
 
-    if (ircenv->__ircargs.log)
-    {
+    if (ircenv->__ircargs.log) {
         fprintf(*fptr, "[%s] [M] ", buff);
         vfprintf(*fptr, format, listPointer);
         fflush(*fptr);
     }
-    if (ircenv->__ircargs.mode == IRC_MODE_NORMAL)
-    {
+    if (ircenv->__ircargs.mode == IRC_MODE_NORMAL) {
         fprintf(std, "[%s] [M] ", buff);
         vfprintf(std, format, listPointer);
     }
 
-    va_end( listPointer );
-    pthread_mutex_unlock( &ircenv->__mutex_log );
+    va_end(listPointer);
+    pthread_mutex_unlock(&ircenv->__mutex_log);
 
     return 0;
 }
 
 #ifdef CIRCLE_USE_INTERNAL
-int __ircenv_clean_irclist(IRCENV * ircenv)
-{
+
+int __ircenv_clean_irclist(IRCENV * ircenv) {
     return irclist_clear(&ircenv->__list_irc) + irclist_clear(&ircenv->__list_auth);
 }
 
-int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
-{
+int __ircenv_load_config_irclist(IRCENV * ircenv, const char * conf) {
     IRCLIST * first, * iterator;
     IRC * irc;
     int line, result, len, i, clen, j;
     FILE * file;
-    char buff[__CIRCLE_LEN_LINE+1], str[__CIRCLE_LEN_LINE+1], *cbuff, *istr, *iend, *vstr, *vend, strid[6];
-    char * cstr, *cend, chan[CIRCLE_FIELD_DEFAULT+1];
+    char buff[__CIRCLE_LEN_LINE + 1], str[__CIRCLE_LEN_LINE + 1], *cbuff, *istr, *iend, *vstr, *vend, strid[6];
+    char * cstr, *cend, chan[CIRCLE_FIELD_DEFAULT + 1];
 
     first = NULL;
     iterator = NULL;
 
     if (conf == NULL) conf = "ircbotd.conf";
     if (strlen(conf) == 0) conf = "ircbotd.conf";
-    memset(&ircenv->__default, 0, sizeof(IRC));
+    memset(&ircenv->__default, 0, sizeof (IRC));
 
     __circle_irc(&ircenv->__default);
     ircenv->__default.enable = 1;
@@ -455,16 +444,14 @@ int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
     strcpy(ircenv->__default.name, "SlashNet");
 
     file = fopen(conf, "r");
-    if (file == NULL)
-    {
+    if (file == NULL) {
         ircenv->log(ircenv, IRC_LOG_ERR, "%s: Error opening config file %s: %s\n", ircenv->appname, conf, strerror(errno));
         return -1;
     }
 
     line = 0;
-    memset(buff, 0, __CIRCLE_LEN_LINE+1);
-    while ((cbuff = fgets(buff, __CIRCLE_LEN_LINE, file)) != NULL && ++line)
-    {
+    memset(buff, 0, __CIRCLE_LEN_LINE + 1);
+    while ((cbuff = fgets(buff, __CIRCLE_LEN_LINE, file)) != NULL && ++line) {
         iterator = first;
         istr = NULL;
         iend = NULL;
@@ -472,66 +459,55 @@ int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
         vend = NULL;
         memset(strid, 0, 6);
         if (buff[0] == '\n' || buff[0] == '#') continue;
-        if ((vstr = index(buff, '"')) == NULL)
-        {
+        if ((vstr = index(buff, '"')) == NULL) {
             ircenv->log(ircenv, IRC_LOG_ERR, "%s: Invalid format \" on line %d\n", ircenv->appname, line);
             continue;
         }
         vstr++;
-        if ((vend = rindex(buff, '"')) == (vstr-1))
-        {
+        if ((vend = rindex(buff, '"')) == (vstr - 1)) {
             ircenv->log(ircenv, IRC_LOG_ERR, "%s: Invalid format \" on line %d\n", ircenv->appname, line);
             continue;
         }
-        len = vend-vstr;
+        len = vend - vstr;
         if (len > CIRCLE_FIELD_DEFAULT) len = CIRCLE_FIELD_DEFAULT;
-        memset(str, 0, __CIRCLE_LEN_LINE+1);
+        memset(str, 0, __CIRCLE_LEN_LINE + 1);
         strncpy(str, vstr, len);
         if ((istr = index(buff, '[')) == NULL) iend = NULL;
-        else
-        {
+        else {
             istr++;
             iend = rindex(buff, ']');
         }
-        if (istr != NULL && iend == NULL)
-        {
+        if (istr != NULL && iend == NULL) {
             ircenv->log(ircenv, IRC_LOG_ERR, "%s: Invalid format [] on line %d\n", ircenv->appname, line);
             continue;
-        }
-        else if (istr != NULL)
-        {
-            strncpy(strid, istr, iend-istr);
-            strid[iend-istr] = '\0';
+        } else if (istr != NULL) {
+            strncpy(strid, istr, iend - istr);
+            strid[iend - istr] = '\0';
         }
 
-        if (strid[0] != '\0')
-        {
+        if (strid[0] != '\0') {
             iterator = first;
             j = 0;
-            while (iterator != NULL)
-            {
-                irc = (IRC *)(iterator->item);
+            while (iterator != NULL) {
+                irc = (IRC *) (iterator->item);
                 if (irc->id == atoi(strid)) break;
                 iterator = iterator->next;
                 j++;
             }
-            if (iterator == NULL)
-            {
-                irc = malloc(sizeof(IRC));
-                if (irc == NULL)
-                {
+            if (iterator == NULL) {
+                irc = malloc(sizeof (IRC));
+                if (irc == NULL) {
                     ircenv->log(ircenv, IRC_LOG_ERR, "%s: Unable to create configuration block: %s\n", ircenv->appname, strerror(errno));
                     continue;
                 }
-                memset(irc, 0, sizeof(IRC));
-                memcpy(irc, &ircenv->__default, sizeof(IRC));
+                memset(irc, 0, sizeof (IRC));
+                memcpy(irc, &ircenv->__default, sizeof (IRC));
 
                 irc->id = atoi(strid);
                 irc->__ircenv = ircenv;
 
                 result = irclist_append(&first, irc);
-                if (result)
-                {
+                if (result) {
                     ircenv->log(ircenv, IRC_LOG_ERR, "%s: Unable to add configuration block: %s\n", ircenv->appname, strerror(errno));
                     free(irc);
                     continue;
@@ -539,66 +515,57 @@ int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
             }
         }
 
-        int v_len = vend-vstr;
-        if (strncmp(buff, "NICK", 4) == 0)
-        {
+        int v_len = vend - vstr;
+        if (strncmp(buff, "NICK", 4) == 0) {
             if (strlen(strid) > 0) __circle_set_field(irc->nickname, str, CIRCLE_FIELD_DEFAULT);
             else __circle_set_field(ircenv->__default.nickname, str, CIRCLE_FIELD_DEFAULT);
             continue;
         }
-        if (strncmp(buff, "USER", 4) == 0)
-        {
+        if (strncmp(buff, "USER", 4) == 0) {
             if (strlen(strid) > 0) __circle_set_field(irc->username, str, CIRCLE_FIELD_DEFAULT);
             else __circle_set_field(ircenv->__default.username, str, CIRCLE_FIELD_DEFAULT);
             continue;
         }
-        if (strncmp(buff, "REAL", 4) == 0)
-        {
+        if (strncmp(buff, "REAL", 4) == 0) {
             if (strlen(strid) > 0) __circle_set_field(irc->realname, str, CIRCLE_FIELD_DEFAULT);
             else __circle_set_field(ircenv->__default.realname, str, CIRCLE_FIELD_DEFAULT);
             continue;
         }
-        if (strncmp(buff, "PASS", 4) == 0)
-        {
+        if (strncmp(buff, "PASS", 4) == 0) {
             if (strlen(strid) > 0) __circle_set_field(irc->password, str, CIRCLE_FIELD_DEFAULT);
             else __circle_set_field(ircenv->__default.password, str, CIRCLE_FIELD_DEFAULT);
             continue;
         }
-        if (strncmp(buff, "HOST", 4) == 0)
-        {
+        if (strncmp(buff, "HOST", 4) == 0) {
             if (strlen(strid) > 0) __circle_set_field(irc->host, str, CIRCLE_FIELD_DEFAULT);
             else __circle_set_field(ircenv->__default.host, str, CIRCLE_FIELD_DEFAULT);
             continue;
         }
-        if (strncmp(buff, "PORT", 4) == 0)
-        {
+        if (strncmp(buff, "PORT", 4) == 0) {
             char sport[6];
             memset(sport, 0, 6);
-            strncpy(sport, vstr, (v_len > 5)?5:v_len);
+            strncpy(sport, vstr, (v_len > 5) ? 5 : v_len);
             if (strlen(strid) > 0) irc->port = atoi(sport);
             else ircenv->__default.port = atoi(sport);
             continue;
         }
-        if (strncmp(buff, "CHAN", 4) == 0)
-        {
+        if (strncmp(buff, "CHAN", 4) == 0) {
             i = 0;
             cstr = str;
             cend = index(cstr, ',');
-            while (cend != NULL && i < CIRCLE_LEN_MAX_CHAN)
-            {
-                memset(chan, 0, CIRCLE_FIELD_DEFAULT+1);
+            while (cend != NULL && i < CIRCLE_LEN_MAX_CHAN) {
+                memset(chan, 0, CIRCLE_FIELD_DEFAULT + 1);
                 clen = cend - cstr;
                 if (clen > CIRCLE_FIELD_DEFAULT) clen = CIRCLE_FIELD_DEFAULT;
                 strncpy(chan, cstr, clen);
                 if (strlen(strid) > 0) __circle_set_field(irc->channels[i].data, chan, CIRCLE_FIELD_DEFAULT);
                 else __circle_set_field(ircenv->__default.channels[i].data, chan, CIRCLE_FIELD_DEFAULT);
-                cstr = cend+1;
+                cstr = cend + 1;
                 cend = index(cstr, ',');
                 i++;
             }
-            if (i < CIRCLE_LEN_MAX_CHAN)
-            {
-                memset(chan, 0, CIRCLE_FIELD_DEFAULT+1);
+            if (i < CIRCLE_LEN_MAX_CHAN) {
+                memset(chan, 0, CIRCLE_FIELD_DEFAULT + 1);
                 clen = strlen(cstr);
                 if (clen > CIRCLE_FIELD_DEFAULT) clen = CIRCLE_FIELD_DEFAULT;
                 strncpy(chan, cstr, clen);
@@ -607,17 +574,15 @@ int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
             }
             continue;
         }
-        if (strncmp(buff, "AUTH", 4) == 0)
-        {
+        if (strncmp(buff, "AUTH", 4) == 0) {
             if (strlen(strid) > 0) __circle_set_field(irc->admin, str, CIRCLE_FIELD_DEFAULT);
             else __circle_set_field(ircenv->__default.admin, str, CIRCLE_FIELD_DEFAULT);
             continue;
         }
-        if (strncmp(buff, "SOCKET", 6) == 0)
-        {
+        if (strncmp(buff, "SOCKET", 6) == 0) {
             char sbool[6];
             memset(sbool, 0, 6);
-            strncpy(sbool, vstr, (v_len > 5)?5:v_len);
+            strncpy(sbool, vstr, (v_len > 5) ? 5 : v_len);
             if (strlen(strid) > 0) irc->enable = (strncmp("true", sbool, 4) == 0);
             else ircenv->__default.enable = (strncmp("true", sbool, 4) == 0);
             continue;
@@ -630,24 +595,21 @@ int __ircenv_load_config_irclist (IRCENV * ircenv, const char * conf)
     return 0;
 }
 
-int __ircenv_irc_create_irclist (IRCENV * ircenv)
-{
+int __ircenv_irc_create_irclist(IRCENV * ircenv) {
     IRC * irc;
     int result;
-    
-    irc = malloc(sizeof(IRC));
-    if (irc == NULL)
-    {
+
+    irc = malloc(sizeof (IRC));
+    if (irc == NULL) {
         ircenv->log(ircenv, IRC_LOG_ERR, "%s: Unable to create configuration block: %s\n", ircenv->appname, strerror(errno));
         return -1;
     }
-    memset(irc, 0, sizeof(IRC));
-    memcpy(irc, &ircenv->__default, sizeof(IRC));
+    memset(irc, 0, sizeof (IRC));
+    memcpy(irc, &ircenv->__default, sizeof (IRC));
     irc->id = irclist_get_max_irc_id(&ircenv->__list_irc);
 
     result = irclist_append(&ircenv->__list_irc, irc);
-    if (result)
-    {
+    if (result) {
         ircenv->log(ircenv, IRC_LOG_ERR, "%s: Unable to add configuration block: %s\n", ircenv->appname, strerror(errno));
         free(irc);
         return -1;
@@ -656,8 +618,7 @@ int __ircenv_irc_create_irclist (IRCENV * ircenv)
     return 0;
 }
 
-int __ircenv_irc_destroy_irclist (IRCENV * ircenv, int id)
-{
+int __ircenv_irc_destroy_irclist(IRCENV * ircenv, int id) {
     int i;
 
     i = irclist_get_irc_id(&ircenv->__list_irc, id);
@@ -665,43 +626,37 @@ int __ircenv_irc_destroy_irclist (IRCENV * ircenv, int id)
     return irclist_remove(&ircenv->__list_irc, i);
 }
 
-int __ircenv_login_irclist (IRCENV * ircenv, IRC * irc, const char * sender)
-{
+int __ircenv_login_irclist(IRCENV * ircenv, IRC * irc, const char * sender) {
     __irc_auth * auth;
     if (ircenv->is_auth(ircenv, irc, sender)) return -1;
-    auth = malloc(sizeof(__irc_auth));
+    auth = malloc(sizeof (__irc_auth));
     if (auth == NULL) return -1;
-    memset(auth, 0, sizeof(__irc_auth));
+    memset(auth, 0, sizeof (__irc_auth));
     strncpy(auth->user, sender, CIRCLE_FIELD_SENDER);
     auth->id = irc->id;
     irclist_append(&ircenv->__list_auth, auth);
     return 0;
 }
 
-int __ircenv_logout_irclist (IRCENV * ircenv, IRC * irc, const char * nick)
-{
+int __ircenv_logout_irclist(IRCENV * ircenv, IRC * irc, const char * nick) {
     IRCLIST * iterator;
     __irc_auth * auth;
-    char buff[CIRCLE_FIELD_SENDER+1], *end;
+    char buff[CIRCLE_FIELD_SENDER + 1], *end;
     int i;
 
     i = 0;
     iterator = ircenv->__list_auth;
-    while (iterator != NULL)
-    {
-        auth = (__irc_auth *)(iterator->item);
-        memset(buff, 0, CIRCLE_FIELD_SENDER+1);
+    while (iterator != NULL) {
+        auth = (__irc_auth *) (iterator->item);
+        memset(buff, 0, CIRCLE_FIELD_SENDER + 1);
         end = index(auth->user, '!');
         if (end == NULL) end = auth->user + strlen(auth->user);
         if ((end - auth->user) > CIRCLE_FIELD_SENDER) end = auth->user + CIRCLE_FIELD_SENDER;
         strncpy(buff, auth->user, end - auth->user);
-        if (strcmp(nick, buff) == 0 && auth->id == irc->id)
-        {
+        if (strcmp(nick, buff) == 0 && auth->id == irc->id) {
             iterator = iterator->next;
             irclist_remove(&ircenv->__list_auth, i);
-        }
-        else
-        {
+        } else {
             iterator = iterator->next;
             i++;
         }
@@ -709,16 +664,14 @@ int __ircenv_logout_irclist (IRCENV * ircenv, IRC * irc, const char * nick)
     return 0;
 }
 
-int __ircenv_is_auth_irclist (IRCENV * ircenv, IRC * irc, const char * sender)
-{
+int __ircenv_is_auth_irclist(IRCENV * ircenv, IRC * irc, const char * sender) {
     IRCLIST * iterator;
     __irc_auth * auth;
 
     if (ircenv->__list_auth == NULL) return 0;
     iterator = ircenv->__list_auth;
-    while (iterator != NULL)
-    {
-        auth = (__irc_auth *)(iterator->item);
+    while (iterator != NULL) {
+        auth = (__irc_auth *) (iterator->item);
 
         if (strcmp(auth->user, sender) == 0 && auth->id == irc->id) return 1;
         else iterator = iterator->next;
@@ -726,12 +679,11 @@ int __ircenv_is_auth_irclist (IRCENV * ircenv, IRC * irc, const char * sender)
     return 0;
 }
 
-int __ircenv_auth_irclist (IRCENV * ircenv, IRC * irc, const char * sender)
-{
+int __ircenv_auth_irclist(IRCENV * ircenv, IRC * irc, const char * sender) {
     __irc_auth * auth;
 
     if (ircenv->is_auth(ircenv, irc, sender)) return 1;
-    auth = malloc(sizeof(__irc_auth));
+    auth = malloc(sizeof (__irc_auth));
     if (auth == NULL) return -1;
 
     auth->id = irc->id;
@@ -740,13 +692,11 @@ int __ircenv_auth_irclist (IRCENV * ircenv, IRC * irc, const char * sender)
     return 0;
 }
 
-int __ircenv_deauth_all_irclist (IRCENV * ircenv)
-{
+int __ircenv_deauth_all_irclist(IRCENV * ircenv) {
     return irclist_clear(&ircenv->__list_auth);
 }
 
-void __ircenv_irc_display_irclist (IRCENV * ircenv, int id, const IRCMSG * ircmsg)
-{
+void __ircenv_irc_display_irclist(IRCENV * ircenv, int id, const IRCMSG * ircmsg) {
     int i;
     IRC * irc, * network;
     field_t target, nick;
@@ -755,14 +705,12 @@ void __ircenv_irc_display_irclist (IRCENV * ircenv, int id, const IRCMSG * ircms
     i = irclist_get_irc_id(&ircenv->__list_irc, id);
     target = irc->get_target(ircmsg);
     nick = irc->get_nick(ircmsg->sender);
-    if (i == -1)
-    {
+    if (i == -1) {
         irc->respond(irc, "PRIVMSG %s :%s - No such network at id %c%d%c", target.data, nick.data, IRC_TXT_BOLD, id, IRC_TXT_NORM);
         return;
     }
-    network = (IRC *)(irclist_get(&ircenv->__list_irc, i));
-    if (network == NULL)
-    {
+    network = (IRC *) (irclist_get(&ircenv->__list_irc, i));
+    if (network == NULL) {
         irc->respond(irc, "PRIVMSG %s :%s - Internal id/network mismatch!", target.data, nick.data);
         return;
     }
@@ -774,8 +722,7 @@ void __ircenv_irc_display_irclist (IRCENV * ircenv, int id, const IRCMSG * ircms
     irc->respond(irc, "PRIVMSG %s :       Real: %s", target.data, network->realname);
 }
 
-void __ircenv_irc_display_all_irclist (IRCENV * ircenv, const IRCMSG * ircmsg)
-{
+void __ircenv_irc_display_all_irclist(IRCENV * ircenv, const IRCMSG * ircmsg) {
     IRCLIST * iterator;
     IRC * irc, * network;
     field_t target, nick;
@@ -787,44 +734,38 @@ void __ircenv_irc_display_all_irclist (IRCENV * ircenv, const IRCMSG * ircmsg)
     irc->respond(irc, "PRIVMSG %s :%s - Network List:", target.data, nick.data);
 
     iterator = ircenv->__list_irc;
-    while (iterator != NULL)
-    {
-        network = (IRC *)(iterator->item);
+    while (iterator != NULL) {
+        network = (IRC *) (iterator->item);
         irc->respond(irc, "PRIVMSG %s :       %c%s%c (%d)", target.data, IRC_TXT_BOLD, network->name, IRC_TXT_NORM, network->id);
         iterator = iterator->next;
     }
 }
 
-int __ircenv___size_irclist (IRCENV * ircenv)
-{
+int __ircenv___size_irclist(IRCENV * ircenv) {
     return irclist_size(&ircenv->__list_irc);
 }
 
-int __ircenv___start_all_irclist (IRCENV * ircenv)
-{
+int __ircenv___start_all_irclist(IRCENV * ircenv) {
     IRCLIST * iterator;
     IRC * irc;
 
     iterator = ircenv->__list_irc;
-    while (iterator != NULL)
-    {
-        irc = (IRC *)(iterator->item);
+    while (iterator != NULL) {
+        irc = (IRC *) (iterator->item);
         irc->init(irc);
         iterator = iterator->next;
     }
     return 0;
 }
 
-int __ircenv___kill_all_irclist (IRCENV * ircenv)
-{
+int __ircenv___kill_all_irclist(IRCENV * ircenv) {
     IRCLIST * iterator;
     IRC * irc;
     int ret;
 
     iterator = ircenv->__list_irc;
-    while (iterator != NULL)
-    {
-        irc = (IRC *)(iterator->item);
+    while (iterator != NULL) {
+        irc = (IRC *) (iterator->item);
         ret = irc->shutdown(irc);
         ircenv->log(ircenv, IRC_LOG_NORM, "Thread %d shutdown with status %d\n", irc->id, ret);
         iterator = iterator->next;
@@ -832,20 +773,17 @@ int __ircenv___kill_all_irclist (IRCENV * ircenv)
     return 0;
 }
 
-int __ircenv___start_irclist (IRCENV * ircenv, int id)
-{
+int __ircenv___start_irclist(IRCENV * ircenv, int id) {
     IRCLIST * iterator;
     IRC * irc;
 
     iterator = ircenv->__list_irc;
-    while (iterator != NULL)
-    {
-        irc = (IRC *)(iterator->item);
+    while (iterator != NULL) {
+        irc = (IRC *) (iterator->item);
         if (irc->id == id) break;
         iterator = iterator->next;
     }
-    if (iterator != NULL)
-    {
+    if (iterator != NULL) {
         irc->init(irc);
         return 0;
     }
