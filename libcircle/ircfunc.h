@@ -31,52 +31,33 @@ extern "C" {
     void __ircenv_usage(IRCENV * ircenv);
 
     int __ircenv_init(IRCENV * ircenv);
-    int __ircenv_clean_irclist(IRCENV * ircenv);
-    int __ircenv_clean_db(IRCENV * ircenv);
+    int __ircenv_clean(IRCENV * ircenv);
     int __ircenv_load_args(IRCENV * ircenv, int argc, char ** argv);
 
-    int __ircenv_load_config_irclist(IRCENV * ircenv, const char * conf);
-    int __ircenv_irc_create_irclist(IRCENV * ircenv);
-    int __ircenv_irc_destroy_irclist(IRCENV * ircenv, int id);
+    int __ircenv_load_config(IRCENV * ircenv, const char * conf);
+    int __ircenv_irc_create(IRCENV * ircenv);
+    int __ircenv_irc_destroy(IRCENV * ircenv, int id);
 
-    int __ircenv_load_config_db(IRCENV * ircenv, const char * conf);
-    int __ircenv_irc_create_db(IRCENV * ircenv);
-    int __ircenv_irc_destroy_db(IRCENV * ircenv, int id);
+    int __ircenv_login(IRCENV * ircenv, IRC * irc, const char * sender);
+    int __ircenv_logout(IRCENV * ircenv, IRC * irc, const char * nick);
 
-    int __ircenv_login_irclist(IRCENV * ircenv, IRC * irc, const char * sender);
-    int __ircenv_logout_irclist(IRCENV * ircenv, IRC * irc, const char * nick);
+    int __ircenv_auth(IRCENV * ircenv, IRC * irc, const char * sender);
+    int __ircenv_is_auth(IRCENV * ircenv, IRC * irc, const char * sender);
+    int __ircenv_deauth_all(IRCENV * ircenv);
 
-    int __ircenv_auth_irclist(IRCENV * ircenv, IRC * irc, const char * sender);
-    int __ircenv_is_auth_irclist(IRCENV * ircenv, IRC * irc, const char * sender);
-    int __ircenv_deauth_all_irclist(IRCENV * ircenv);
-
-    int __ircenv_login_db(IRCENV * ircenv, IRC * irc, const char * sender);
-    int __ircenv_logout_db(IRCENV * ircenv, IRC * irc, const char * nick);
-
-    int __ircenv_auth_db(IRCENV * ircenv, IRC * irc, const char * sender);
-    int __ircenv_is_auth_db(IRCENV * ircenv, IRC * irc, const char * sender);
-    int __ircenv_deauth_all_db(IRCENV * ircenv);
-
-    void __ircenv_irc_display_irclist(IRCENV * ircenv, int id, const IRCMSG * ircmsg);
-    void __ircenv_irc_display_all_irclist(IRCENV * ircenv, const IRCMSG * ircmsg);
-
-    void __ircenv_irc_display_db(IRCENV * ircenv, int id, const IRCMSG * ircmsg);
-    void __ircenv_irc_display_all_db(IRCENV * ircenv, const IRCMSG * ircmsg);
+    void __ircenv_irc_display(IRCENV * ircenv, int id, const IRCMSG * ircmsg);
+    void __ircenv_irc_display_all(IRCENV * ircenv, const IRCMSG * ircmsg);
 
     int __ircenv_log(IRCENV * ircenv, __irc_logtype type, const char * format, ...);
 
     int __ircenv___open_log(IRCENV * ircenv, __irc_logtype type);
     int __ircenv___close_log(IRCENV * ircenv, __irc_logtype type);
 
-    int __ircenv___size_irclist(IRCENV * ircenv);
-    int __ircenv___size_db(IRCENV * ircenv);
+    int __ircenv___size(IRCENV * ircenv);
 
-    int __ircenv___start_all_irclist(IRCENV * ircenv);
-    int __ircenv___kill_all_irclist(IRCENV * ircenv);
-    int __ircenv___start_irclist(IRCENV * ircenv, int id);
-
-    int __ircenv___start_all_db(IRCENV * ircenv);
-    int __ircenv___start_db(IRCENV * ircenv, int id);
+    int __ircenv___start_all(IRCENV * ircenv);
+    int __ircenv___kill_all(IRCENV * ircenv);
+    int __ircenv___start(IRCENV * ircenv, int id);
 
     /* IRCQ function implementations */
     int __ircq_init(IRCQ * ircq);
@@ -84,36 +65,23 @@ extern "C" {
 
     int __ircq_log(IRCQ * ircq, __irc_logtype type, const char * format, ...);
 
-    IRCHELP * __ircq___help_list_irclist(IRCQ * ircq);
-    IRCHELP * __ircq___help_list_db(IRCQ * ircq);
+    IRCHELP * __ircq___help_list(IRCQ * ircq);
 
     void __ircq_commands(IRCQ * ircq, const IRCMSG * ircmsg);
     void __ircq_help(IRCQ * ircq, const IRCMSG * ircmsg);
 
-    int __ircq_queue_irclist(IRCQ * ircq, IRCMSG ircmsg);
-    int __ircq_clear_irclist(IRCQ * ircq);
-    int __ircq_get_item_irclist(IRCQ * ircq, IRCMSG * ircmsg);
+    int __ircq_queue(IRCQ * ircq, IRCMSG ircmsg);
+    int __ircq_clear(IRCQ * ircq);
+    int __ircq_get_item(IRCQ * ircq, IRCMSG * ircmsg);
 
-    int __ircq_queue_db(IRCQ * ircq, IRCMSG ircmsg);
-    int __ircq_clear_db(IRCQ * ircq);
-    int __ircq_get_item_db(IRCQ * ircq, IRCMSG * ircmsg);
-
-    int __ircq_load_irclist(IRCQ * ircq, const IRCMSG * ircmsg, char * file);
-    int __ircq_unload_irclist(IRCQ * ircq, const IRCMSG * ircmsg, char * file);
-    int __ircq_reload_irclist(IRCQ * ircq, const IRCMSG * ircmsg, char * file);
-    int __ircq_load_all_irclist(IRCQ * ircq);
-    int __ircq_unload_all_irclist(IRCQ * ircq);
-    void __ircq_list_irclist(IRCQ * ircq, const IRCMSG * ircmsg);
-    void __ircq___process_irclist(IRCQ * ircq, const IRCMSG * ircmsg);
-    int __ircq___empty_irclist(IRCQ * ircq);
-
-    int __ircq_load_db(IRCQ * ircq, const IRCMSG * ircmsg, char * file);
-    int __ircq_unload_db(IRCQ * ircq, const IRCMSG * ircmsg, char * file);
-    int __ircq_reload_db(IRCQ * ircq, const IRCMSG * ircmsg, char * file);
-    int __ircq_load_all_db(IRCQ * ircq);
-    int __ircq_unload_all_db(IRCQ * ircq);
-    void __ircq_list_db(IRCQ * ircq, const IRCMSG * ircmsg);
-    int __ircq___empty_db(IRCQ * ircq);
+    int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file);
+    int __ircq_unload(IRCQ * ircq, const IRCMSG * ircmsg, char * file);
+    int __ircq_reload(IRCQ * ircq, const IRCMSG * ircmsg, char * file);
+    int __ircq_load_all(IRCQ * ircq);
+    int __ircq_unload_all(IRCQ * ircq);
+    void __ircq_list(IRCQ * ircq, const IRCMSG * ircmsg);
+    void __ircq___process(IRCQ * ircq, const IRCMSG * ircmsg);
+    int __ircq___empty(IRCQ * ircq);
 
     void __ircq_dir(IRCQ * ircq, const IRCMSG * ircmsg);
 

@@ -185,7 +185,6 @@ extern "C" {
     struct __irchopt;
     typedef struct __irchopt IRCHOPT;
 
-#ifdef CIRCLE_USE_INTERNAL
     /* internal linked list type and function definitions */
     struct __irclist;
     typedef struct __irclist IRCLIST;
@@ -205,7 +204,6 @@ extern "C" {
 
     int irclist_get_max_irc_id(IRCLIST ** first);
     int irclist_get_irc_id(IRCLIST ** first, unsigned int id);
-#endif /* CIRCLE_USE_INTERNAL */
 
 /******************************************************************************
  * Data Type Definitions

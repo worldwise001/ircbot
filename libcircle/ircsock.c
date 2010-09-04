@@ -212,7 +212,8 @@ int __ircsock_read(IRCSOCK * sock, __irc_line * line) {
     if (count > 0 && buffer[count - 1] == '\r') buffer[count - 1] = '\0';
     if (c == EOF && strlen(buffer) == 0) return EOF;
 
-    irc->log(irc, IRC_LOG_RAW, "%s\n", buffer);
+    if (strncasecmp(buffer, "PING", 4) != 0)
+        irc->log(irc, IRC_LOG_RAW, "%s\n", buffer);
 
     return 0;
 }

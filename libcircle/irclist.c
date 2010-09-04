@@ -18,7 +18,6 @@
  */
 
 #include "ircfunc.h"
-#ifdef CIRCLE_USE_INTERNAL
 
 int irclist_append(IRCLIST ** first, void * item) {
     IRCLIST * node, *iterator;
@@ -166,5 +165,3 @@ int irclist_size(IRCLIST ** first) {
     }
     return i;
 }
-
-#endif /* CIRCLE_USE_INTERNAL */

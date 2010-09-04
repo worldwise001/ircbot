@@ -39,45 +39,25 @@ void __circle_ircenv(IRCENV * ircenv) {
     ircenv->__close_log = &__ircenv___close_log;
     ircenv->log = &__ircenv_log;
 
-#ifdef CIRCLE_USE_INTERNAL
-    ircenv->load_config = &__ircenv_load_config_irclist;
-    ircenv->irc_create = &__ircenv_irc_create_irclist;
-    ircenv->irc_destroy = &__ircenv_irc_destroy_irclist;
-    ircenv->login = &__ircenv_login_irclist;
-    ircenv->logout = &__ircenv_logout_irclist;
-    ircenv->is_auth = &__ircenv_is_auth_irclist;
-    ircenv->deauth_all = &__ircenv_deauth_all_irclist;
-    ircenv->irc_display = &__ircenv_irc_display_irclist;
-    ircenv->irc_display_all = &__ircenv_irc_display_all_irclist;
-    ircenv->__size = &__ircenv___size_irclist;
-    ircenv->__start = &__ircenv___start_irclist;
-    ircenv->__start_all = &__ircenv___start_all_irclist;
-    ircenv->__kill_all = &__ircenv___kill_all_irclist;
+    ircenv->load_config = &__ircenv_load_config;
+    ircenv->irc_create = &__ircenv_irc_create;
+    ircenv->irc_destroy = &__ircenv_irc_destroy;
+    ircenv->login = &__ircenv_login;
+    ircenv->logout = &__ircenv_logout;
+    ircenv->is_auth = &__ircenv_is_auth;
+    ircenv->deauth_all = &__ircenv_deauth_all;
+    ircenv->irc_display = &__ircenv_irc_display;
+    ircenv->irc_display_all = &__ircenv_irc_display_all;
+    ircenv->__size = &__ircenv___size;
+    ircenv->__start = &__ircenv___start;
+    ircenv->__start_all = &__ircenv___start_all;
+    ircenv->__kill_all = &__ircenv___kill_all;
 
     ircenv->__list_auth = NULL;
     ircenv->__list_irc = NULL;
 
-    ircenv->clean = &__ircenv_clean_irclist;
-    ircenv->auth = &__ircenv_auth_irclist;
-#endif /* CIRCLE_USE_INTERNAL */
-
-#ifdef CIRCLE_USE_DB
-    ircenv->load_config = &__ircenv_load_config_db;
-    ircenv->irc_create = &__ircenv_irc_create_db;
-    ircenv->irc_destroy = &__ircenv_irc_destroy_db;
-    ircenv->login = &__ircenv_login_db;
-    ircenv->logout = &__ircenv_logout_db;
-    ircenv->is_auth = &__ircenv_is_auth_db;
-    ircenv->deauth_all = &__ircenv_deauth_all_db;
-    ircenv->irc_display = &__ircenv_irc_display_db;
-    ircenv->irc_display_all = &__ircenv_irc_display_all_db;
-    ircenv->__size = &__ircenv___size_db;
-    ircenv->__start = &__ircenv___start_db;
-    ircenv->__start_all = &__ircenv___start_all_db;
-
-    ircenv->clean = &__ircenv_clean_db;
-    ircenv->auth = &__ircenv_auth_db;
-#endif /* CIRCLE_USE_DB */
+    ircenv->clean = &__ircenv_clean;
+    ircenv->auth = &__ircenv_auth;
 }
 
 void __ircenv_usage(IRCENV * ircenv) {
@@ -150,10 +130,6 @@ int __ircenv_init(IRCENV * ircenv) {
 
     ircenv->log(ircenv, IRC_LOG_NORM, "Started at: %s================================================================================\n%s: IRC Bot written in C\n%s\n%s\n================================================================================\n\n", ctime(&ircenv->time_start), CIRCLE_VERSION, CIRCLE_INFO, CIRCLE_COPYRIGHT);
 
-#ifdef CIRCLE_USE_DB
-    err = db_env_create(&ircenv->dbenv, 0);
-#endif /* CIRCLE_USE_DB */
-
     __circle_irc(&ircenv->__default);
     ircenv->__default.__ircenv = ircenv;
     __circle_ircq(&ircenv->ircq);
@@ -187,10 +163,6 @@ int __ircenv_init(IRCENV * ircenv) {
     ircenv->ircq.kill(&ircenv->ircq);
 
     ircenv->clean(ircenv);
-
-#ifdef CIRCLE_USE_DB
-    err = ircenv->dbenv->close(ircenv->dbenv, DB_FORCESYNC);
-#endif /* CIRCLE_USE_DB */
 
     if (ircenv->__ircargs.log) {
         ircenv->__close_log(ircenv, IRC_LOG_NORM);
@@ -411,13 +383,11 @@ int __ircenv_log(IRCENV * ircenv, __irc_logtype type, const char * format, ...) 
     return 0;
 }
 
-#ifdef CIRCLE_USE_INTERNAL
-
-int __ircenv_clean_irclist(IRCENV * ircenv) {
+int __ircenv_clean(IRCENV * ircenv) {
     return irclist_clear(&ircenv->__list_irc) + irclist_clear(&ircenv->__list_auth);
 }
 
-int __ircenv_load_config_irclist(IRCENV * ircenv, const char * conf) {
+int __ircenv_load_config(IRCENV * ircenv, const char * conf) {
     IRCLIST * first, * iterator;
     IRC * irc;
     int line, result, len, i, clen, j;
@@ -595,7 +565,7 @@ int __ircenv_load_config_irclist(IRCENV * ircenv, const char * conf) {
     return 0;
 }
 
-int __ircenv_irc_create_irclist(IRCENV * ircenv) {
+int __ircenv_irc_create(IRCENV * ircenv) {
     IRC * irc;
     int result;
 
@@ -618,7 +588,7 @@ int __ircenv_irc_create_irclist(IRCENV * ircenv) {
     return 0;
 }
 
-int __ircenv_irc_destroy_irclist(IRCENV * ircenv, int id) {
+int __ircenv_irc_destroy(IRCENV * ircenv, int id) {
     int i;
 
     i = irclist_get_irc_id(&ircenv->__list_irc, id);
@@ -626,7 +596,7 @@ int __ircenv_irc_destroy_irclist(IRCENV * ircenv, int id) {
     return irclist_remove(&ircenv->__list_irc, i);
 }
 
-int __ircenv_login_irclist(IRCENV * ircenv, IRC * irc, const char * sender) {
+int __ircenv_login(IRCENV * ircenv, IRC * irc, const char * sender) {
     __irc_auth * auth;
     if (ircenv->is_auth(ircenv, irc, sender)) return -1;
     auth = malloc(sizeof (__irc_auth));
@@ -638,7 +608,7 @@ int __ircenv_login_irclist(IRCENV * ircenv, IRC * irc, const char * sender) {
     return 0;
 }
 
-int __ircenv_logout_irclist(IRCENV * ircenv, IRC * irc, const char * nick) {
+int __ircenv_logout(IRCENV * ircenv, IRC * irc, const char * nick) {
     IRCLIST * iterator;
     __irc_auth * auth;
     char buff[CIRCLE_FIELD_SENDER + 1], *end;
@@ -664,7 +634,7 @@ int __ircenv_logout_irclist(IRCENV * ircenv, IRC * irc, const char * nick) {
     return 0;
 }
 
-int __ircenv_is_auth_irclist(IRCENV * ircenv, IRC * irc, const char * sender) {
+int __ircenv_is_auth(IRCENV * ircenv, IRC * irc, const char * sender) {
     IRCLIST * iterator;
     __irc_auth * auth;
 
@@ -679,7 +649,7 @@ int __ircenv_is_auth_irclist(IRCENV * ircenv, IRC * irc, const char * sender) {
     return 0;
 }
 
-int __ircenv_auth_irclist(IRCENV * ircenv, IRC * irc, const char * sender) {
+int __ircenv_auth(IRCENV * ircenv, IRC * irc, const char * sender) {
     __irc_auth * auth;
 
     if (ircenv->is_auth(ircenv, irc, sender)) return 1;
@@ -692,11 +662,11 @@ int __ircenv_auth_irclist(IRCENV * ircenv, IRC * irc, const char * sender) {
     return 0;
 }
 
-int __ircenv_deauth_all_irclist(IRCENV * ircenv) {
+int __ircenv_deauth_all(IRCENV * ircenv) {
     return irclist_clear(&ircenv->__list_auth);
 }
 
-void __ircenv_irc_display_irclist(IRCENV * ircenv, int id, const IRCMSG * ircmsg) {
+void __ircenv_irc_display(IRCENV * ircenv, int id, const IRCMSG * ircmsg) {
     int i;
     IRC * irc, * network;
     field_t target, nick;
@@ -722,7 +692,7 @@ void __ircenv_irc_display_irclist(IRCENV * ircenv, int id, const IRCMSG * ircmsg
     irc->respond(irc, "PRIVMSG %s :       Real: %s", target.data, network->realname);
 }
 
-void __ircenv_irc_display_all_irclist(IRCENV * ircenv, const IRCMSG * ircmsg) {
+void __ircenv_irc_display_all(IRCENV * ircenv, const IRCMSG * ircmsg) {
     IRCLIST * iterator;
     IRC * irc, * network;
     field_t target, nick;
@@ -741,11 +711,11 @@ void __ircenv_irc_display_all_irclist(IRCENV * ircenv, const IRCMSG * ircmsg) {
     }
 }
 
-int __ircenv___size_irclist(IRCENV * ircenv) {
+int __ircenv___size(IRCENV * ircenv) {
     return irclist_size(&ircenv->__list_irc);
 }
 
-int __ircenv___start_all_irclist(IRCENV * ircenv) {
+int __ircenv___start_all(IRCENV * ircenv) {
     IRCLIST * iterator;
     IRC * irc;
 
@@ -758,7 +728,7 @@ int __ircenv___start_all_irclist(IRCENV * ircenv) {
     return 0;
 }
 
-int __ircenv___kill_all_irclist(IRCENV * ircenv) {
+int __ircenv___kill_all(IRCENV * ircenv) {
     IRCLIST * iterator;
     IRC * irc;
     int ret;
@@ -773,7 +743,7 @@ int __ircenv___kill_all_irclist(IRCENV * ircenv) {
     return 0;
 }
 
-int __ircenv___start_irclist(IRCENV * ircenv, int id) {
+int __ircenv___start(IRCENV * ircenv, int id) {
     IRCLIST * iterator;
     IRC * irc;
 
@@ -789,5 +759,3 @@ int __ircenv___start_irclist(IRCENV * ircenv, int id) {
     }
     return -1;
 }
-
-#endif /* CIRCLE_USE_INTERNAL */

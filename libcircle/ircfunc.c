@@ -87,8 +87,6 @@ IRCHELP ** __circle_endptr_help(IRCHELP * list) {
     return &(list[i - 1].next);
 }
 
-#ifdef CIRCLE_USE_INTERNAL
-
 int irclist_get_max_irc_id(IRCLIST ** first) {
     IRCLIST * iterator;
     IRC * irc;
@@ -122,4 +120,3 @@ int irclist_get_irc_id(IRCLIST ** first, unsigned int id) {
     if (iterator == NULL) return -1;
     return i;
 }
-#endif /* CIRCLE_USE_INTERNAL */

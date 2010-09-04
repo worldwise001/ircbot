@@ -29,39 +29,20 @@ void __circle_ircq(IRCQ * ircq) {
 
     ircq->commands = &__ircq_commands;
     ircq->help = &__ircq_help;
+    
+    ircq->queue = &__ircq_queue;
+    ircq->get_item = &__ircq_get_item;
+    ircq->clear = &__ircq_clear;
 
-#ifdef CIRCLE_USE_INTERNAL
-    ircq->queue = &__ircq_queue_irclist;
-    ircq->get_item = &__ircq_get_item_irclist;
-    ircq->clear = &__ircq_clear_irclist;
-
-    ircq->load = &__ircq_load_irclist;
-    ircq->unload = &__ircq_unload_irclist;
-    ircq->reload = &__ircq_reload_irclist;
-    ircq->load_all = &__ircq_load_all_irclist;
-    ircq->unload_all = &__ircq_unload_all_irclist;
-    ircq->list = &__ircq_list_irclist;
-    ircq->__process = &__ircq___process_irclist;
-    ircq->__help_list = &__ircq___help_list_irclist;
-    ircq->__empty = &__ircq___empty_irclist;
-#endif /* CIRCLE_USE_INTERNAL */
-
-#ifdef CIRCLE_USE_DB
-    ircq->queue = &__ircq_queue_db;
-    ircq->get_item = &__ircq_get_item_db;
-    ircq->clear = &__ircq_clear_db;
-
-    ircq->load = &__ircq_load_db;
-    ircq->unload = &__ircq_unload_db;
-    ircq->reload = &__ircq_reload_db;
-    ircq->load_all = &__ircq_load_all_db;
-    ircq->unload_all = &__ircq_unload_all_db;
-    ircq->commands = &__ircq_commands_db;
-    ircq->list = &__ircq_list_db;
-    ircq->__process = &__ircq___process_db;
-    ircq->__help_list = &__ircq___help_list_db;
-    ircq->__empty = &__ircq___empty_db;
-#endif /* CIRCLE_USE_DB */
+    ircq->load = &__ircq_load;
+    ircq->unload = &__ircq_unload;
+    ircq->reload = &__ircq_reload;
+    ircq->load_all = &__ircq_load_all;
+    ircq->unload_all = &__ircq_unload_all;
+    ircq->list = &__ircq_list;
+    ircq->__process = &__ircq___process;
+    ircq->__help_list = &__ircq___help_list;
+    ircq->__empty = &__ircq___empty;
 
     ircq->__thread_loop = &__ircq___thread_loop;
     ircq->__eval = &__ircq___eval;
@@ -454,7 +435,7 @@ void __ircq_dir(IRCQ * ircq, const IRCMSG * ircmsg) {
 
 #ifdef CIRCLE_USE_INTERNAL
 
-int __ircq_queue_irclist(IRCQ * ircq, IRCMSG ircmsg) {
+int __ircq_queue(IRCQ * ircq, IRCMSG ircmsg) {
     IRCMSG * q;
     int ret, result;
 
@@ -478,12 +459,12 @@ int __ircq_queue_irclist(IRCQ * ircq, IRCMSG ircmsg) {
     return result;
 }
 
-int __ircq_clear_irclist(IRCQ * ircq) {
+int __ircq_clear(IRCQ * ircq) {
     irclist_clear(&ircq->__list_queue);
     return 0;
 }
 
-int __ircq_get_item_irclist(IRCQ * ircq, IRCMSG * ircmsg) {
+int __ircq_get_item(IRCQ * ircq, IRCMSG * ircmsg) {
     IRCMSG * im;
     int ret;
 
@@ -498,7 +479,7 @@ int __ircq_get_item_irclist(IRCQ * ircq, IRCMSG * ircmsg) {
     return ret;
 }
 
-int __ircq_load_irclist(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
+int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     void * mhandle;
     IRC * irc;
     IRCLIST * iterator;
@@ -611,7 +592,7 @@ int __ircq_load_irclist(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     return 0;
 }
 
-int __ircq_unload_irclist(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
+int __ircq_unload(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     IRC * irc;
     IRCLIST * iterator;
     IRCMOD * mod;
@@ -651,14 +632,14 @@ int __ircq_unload_irclist(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     }
 }
 
-int __ircq_reload_irclist(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
+int __ircq_reload(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     int res;
     res = ircq->unload(ircq, ircmsg, file);
     if (res) return res;
     return ircq->load(ircq, ircmsg, file);
 }
 
-int __ircq_load_all_irclist(IRCQ * ircq) {
+int __ircq_load_all(IRCQ * ircq) {
     DIR * dir;
     struct dirent * dir_entry;
     char *ext;
@@ -683,7 +664,7 @@ int __ircq_load_all_irclist(IRCQ * ircq) {
     return res;
 }
 
-int __ircq_unload_all_irclist(IRCQ * ircq) {
+int __ircq_unload_all(IRCQ * ircq) {
     IRCLIST * iterator;
     IRCMOD * mod;
     int res, r;
@@ -698,7 +679,7 @@ int __ircq_unload_all_irclist(IRCQ * ircq) {
     return res;
 }
 
-void __ircq_list_irclist(IRCQ * ircq, const IRCMSG * ircmsg) {
+void __ircq_list(IRCQ * ircq, const IRCMSG * ircmsg) {
     IRCLIST * iterator;
     IRC * irc;
     IRCMOD * mod;
@@ -740,7 +721,7 @@ void __ircq_list_irclist(IRCQ * ircq, const IRCMSG * ircmsg) {
     if (!res) irc->respond(irc, "PRIVMSG %s :No modules loaded", target.data);
 }
 
-IRCHELP * __ircq___help_list_irclist(IRCQ * ircq) {
+IRCHELP * __ircq___help_list(IRCQ * ircq) {
     IRCLIST * iterator;
     IRCHELP * imodhelp, **helpptr;
     IRCMOD * mod;
@@ -810,7 +791,7 @@ IRCHELP * __ircq___help_list_irclist(IRCQ * ircq) {
     return help;
 }
 
-void __ircq___process_irclist(IRCQ * ircq, const IRCMSG * ircmsg) {
+void __ircq___process(IRCQ * ircq, const IRCMSG * ircmsg) {
     IRCLIST * iterator;
     IRCMOD * mod;
 
@@ -822,7 +803,7 @@ void __ircq___process_irclist(IRCQ * ircq, const IRCMSG * ircmsg) {
     }
 }
 
-int __ircq___empty_irclist(IRCQ * ircq) {
+int __ircq___empty(IRCQ * ircq) {
     return irclist_size(&ircq->__list_queue) == 0;
 }
 
