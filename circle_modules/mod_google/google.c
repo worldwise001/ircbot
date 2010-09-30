@@ -328,17 +328,3 @@ IRCHELP * commands() {
 
     return help;
 }
-
-char ** functions() {
-    static char func[] = {
-        "test",
-        NULL
-    };
-    return func;
-}
-
-void * test(va_list list) {
-    int a = va_arg(list, int);
-    printf("%d\n", a);
-    return NULL;
-}
