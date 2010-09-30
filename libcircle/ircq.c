@@ -28,8 +28,9 @@ void __circle_ircq(IRCQ * ircq) {
     ircq->log = &__ircq_log;
 
     ircq->commands = &__ircq_commands;
+    ircq->run = &__ircq_run;
     ircq->help = &__ircq_help;
-    
+
     ircq->queue = &__ircq_queue;
     ircq->get_item = &__ircq_get_item;
     ircq->clear = &__ircq_clear;
@@ -249,6 +250,18 @@ void __ircq_commands(IRCQ * ircq, const IRCMSG * ircmsg) {
     if (strlen(buff) > 0) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
 }
 
+void __ircq_run(IRCQ * ircq, char * command, void * return_ptr, size_t len, ...) {
+    IRCFUNC * func;
+    va_list vlist;
+    if (irclist_function_exists(&ircq->__list_functions, command) <= 0) return;
+
+    func = irclist_get_function(&ircq->__list_functions, command);
+    if (func == NULL) return;
+    va_start(vlist, len);
+    func->handle(return_ptr, vlist);
+    va_end(vlist);
+}
+
 void __ircq___eval(IRCQ * ircq, const IRCMSG * ircmsg) {
     IRCCALL irccall;
     IRC * irc;
@@ -330,7 +343,7 @@ void __ircq___eval(IRCQ * ircq, const IRCMSG * ircmsg) {
                     int pagesize = sysconf(_SC_PAGESIZE);
                     int vss = atoi(vss_s);
                     int rss = atoi(rss_s);
-                    irc->respond(irc, "PRIVMSG %s :%cVSZ:%c %dkB; %cRSS:%c %dkB; %cThreadNum:%c %d", target.data, IRC_TXT_BOLD, IRC_TXT_NORM, vss * pagesize / 1024, IRC_TXT_BOLD, IRC_TXT_NORM, rss * pagesize / 1024, IRC_TXT_BOLD, IRC_TXT_NORM, ircq->__ircenv->__size(ircq->__ircenv)+2);
+                    irc->respond(irc, "PRIVMSG %s :%cVSZ:%c %dkB; %cRSS:%c %dkB; %cThreadNum:%c %d", target.data, IRC_TXT_BOLD, IRC_TXT_NORM, vss * pagesize / 1024, IRC_TXT_BOLD, IRC_TXT_NORM, rss * pagesize / 1024, IRC_TXT_BOLD, IRC_TXT_NORM, ircq->__ircenv->__size(ircq->__ircenv) + 2);
                 }
             }
         } else if (!strcmp(irccall.command, "uptime")) {
@@ -398,9 +411,7 @@ void __ircq_dir(IRCQ * ircq, const IRCMSG * ircmsg) {
         irc->respond(irc, "PRIVMSG %s :Error opening %c%s%c for listing", target.data, IRC_TXT_BOLD, CIRCLE_DIR_MODULES, IRC_TXT_NORM);
         return;
     }
-
     pos = 0;
-
     irc->respond(irc, "PRIVMSG %s :Listing modules directory (%c%s%c):", target.data, IRC_TXT_BOLD, CIRCLE_DIR_MODULES, IRC_TXT_NORM);
 
     res = 0;
@@ -432,8 +443,6 @@ void __ircq_dir(IRCQ * ircq, const IRCMSG * ircmsg) {
     if ((strlen(buff) > 0) && ++res) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
     if (!res) irc->respond(irc, "PRIVMSG %s :Nothing in directory", target.data);
 }
-
-#ifdef CIRCLE_USE_INTERNAL
 
 int __ircq_queue(IRCQ * ircq, IRCMSG ircmsg) {
     IRCMSG * q;
@@ -481,11 +490,14 @@ int __ircq_get_item(IRCQ * ircq, IRCMSG * ircmsg) {
 
 int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     void * mhandle;
+    char ** (*funchandle)();
     IRC * irc;
     IRCLIST * iterator;
     IRCMOD * mod;
-    char mfile[__CIRCLE_LEN_FILENAME + 1], *error;
+    IRCFUNC * func;
+    char mfile[__CIRCLE_LEN_FILENAME + 1], *error, **funclist;
     field_t nick, target;
+    int i;
 
     iterator = ircq->__list_modules;
     while (iterator != NULL) {
@@ -577,6 +589,32 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
         mod->name = NULL;
     }
 
+    funchandle = dlsym(mhandle, "functions");
+    if (dlerror()) dlerror();
+    else {
+        funclist = (*funchandle)();
+        if (funclist != NULL) {
+            i = -1;
+            while (funclist[++i] != NULL) {
+                if (irclist_function_exists(&ircq->__list_functions, funclist[i])) {
+                    continue;
+                }
+                func = malloc(sizeof (IRCFUNC));
+                if (func == NULL) continue;
+                func->handle = dlsym(mhandle, funclist[i]);
+                if (dlerror()) {
+                    dlerror();
+                    free(func);
+                    func = NULL;
+                    continue;
+                }
+                func->function = funclist[i];
+                func->parent = mod;
+                irclist_append(&ircq->__list_functions, func);
+            }
+        }
+    }
+
     mod->dlhandle = mhandle;
     irclist_append(&ircq->__list_modules, mod);
 
@@ -587,16 +625,17 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
         irc->respond(irc, "PRIVMSG %s :%s - Successfully loaded %c%s%c", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
     }
 
-    if (mod->construct) mod->construct();
+    if (mod->construct) mod->construct(ircq);
 
     return 0;
 }
 
 int __ircq_unload(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     IRC * irc;
-    IRCLIST * iterator;
+    IRCLIST * iterator, * fiterator;
     IRCMOD * mod;
-    int i;
+    IRCFUNC * func;
+    int i, j;
     field_t nick, target;
 
     i = 0;
@@ -618,7 +657,21 @@ int __ircq_unload(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
         return 0;
     } else {
         mod = (IRCMOD *) (irclist_take(&ircq->__list_modules, i));
-        if (mod->destruct) mod->destruct();
+        fiterator = ircq->__list_functions;
+        j = 0;
+        while (fiterator != NULL) {
+            func = (IRCFUNC *) (fiterator->item);
+            if (func->parent == mod) {
+                if (irclist_remove(&ircq->__list_functions, j) == 0)
+                {
+                    free(func);
+                    j--;
+                }
+            }
+            fiterator = fiterator->next;
+            j++;
+        }
+        if (mod->destruct) mod->destruct(ircq);
         dlclose(mod->dlhandle);
 
         if (ircmsg != NULL) {
@@ -806,5 +859,3 @@ void __ircq___process(IRCQ * ircq, const IRCMSG * ircmsg) {
 int __ircq___empty(IRCQ * ircq) {
     return irclist_size(&ircq->__list_queue) == 0;
 }
-
-#endif /* CIRCLE_USE_INTERNAL */

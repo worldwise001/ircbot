@@ -51,14 +51,6 @@ extern "C" {
 #include <ctype.h>
 #include <getopt.h>
 
-#ifdef CIRCLE_USE_DB
-#include <db.h>
-#else
-#ifndef CIRCLE_USE_INTERNAL
-#define CIRCLE_USE_INTERNAL
-#endif
-#endif
-
 /******************************************************************************
  * Public Macro Definitions
  *****************************************************************************/
@@ -74,8 +66,8 @@ extern "C" {
 
 #define CIRCLE_VERSION_MAJOR    0           /* major version number */
 #define CIRCLE_VERSION_MINOR    8           /* minor version number */
-#define CIRCLE_REVISION         144         /* revision number */
-#define CIRCLE_VERSION_MODULE   1           /* module version number */
+#define CIRCLE_REVISION         174         /* revision number */
+#define CIRCLE_VERSION_MODULE   2           /* module version number */
 #define CIRCLE_VERSION          "circle 0.8"
     /* version string */
 
@@ -166,6 +158,13 @@ extern "C" {
         IRC_MODE_VERSION = 3
     } __irc_mode; /* irc mode */
 
+    typedef enum {
+        INT = 0,
+        CHAR = 1,
+                STR = 2,
+                PTR = 3
+    } __irc_type;
+
     struct __irc;
     typedef struct __irc IRC;
     struct __ircmsg;
@@ -184,6 +183,8 @@ extern "C" {
     typedef struct __irchelp IRCHELP;
     struct __irchopt;
     typedef struct __irchopt IRCHOPT;
+    struct __ircfunc;
+    typedef struct __ircfunc IRCFUNC;
 
     /* internal linked list type and function definitions */
     struct __irclist;
@@ -204,6 +205,8 @@ extern "C" {
 
     int irclist_get_max_irc_id(IRCLIST ** first);
     int irclist_get_irc_id(IRCLIST ** first, unsigned int id);
+    int irclist_function_exists(IRCLIST ** first, char * function);
+    IRCFUNC * irclist_get_function(IRCLIST ** first, char * function);
 
 /******************************************************************************
  * Data Type Definitions
@@ -238,6 +241,12 @@ extern "C" {
         IRCHOPT * next;
     };
 
+    struct __ircfunc {
+        char * function;
+        void (*handle) (void * ret, va_list list);
+        IRCMOD * parent;
+    };
+
     struct __ircmsg {
         IRC * irc;
         char sender[CIRCLE_FIELD_SENDER + 1];
@@ -249,7 +258,6 @@ extern "C" {
     struct __irccall {
         char command[CIRCLE_FIELD_DEFAULT + 1];
         field_t arg[CIRCLE_LEN_BOT_ARGS];
-
         char line[CIRCLE_FIELD_MESSAGE + 1];
     };
 
@@ -257,8 +265,8 @@ extern "C" {
         void * dlhandle;
         char filename[CIRCLE_FIELD_DEFAULT + 1];
         void (*evaluate)(const IRCMSG * ircmsg);
-        void (*construct) ();
-        void (*destruct) ();
+        void (*construct) (IRCQ * ircq);
+        void (*destruct) (IRCQ * ircq);
         IRCHELP * (*commands) ();
         int (*irc_version) ();
         char * (*name) ();
@@ -357,6 +365,7 @@ extern "C" {
         int (*load_all) (IRCQ * ircq);
         int (*unload_all) (IRCQ * ircq);
         void (*commands) (IRCQ * ircq, const IRCMSG * ircmsg);
+        void (*run) (IRCQ * ircq, char * command, void * return_ptr, size_t len, ...);
         void (*help) (IRCQ * ircq, const IRCMSG * ircmsg);
         void (*list) (IRCQ * ircq, const IRCMSG * ircmsg);
         void (*dir) (IRCQ * ircq, const IRCMSG * ircmsg);
@@ -372,16 +381,10 @@ extern "C" {
         sigset_t __sigset;
         volatile sig_atomic_t active;
 
-#ifdef CIRCLE_USE_INTERNAL
         IRCLIST * __list_queue;
         IRCLIST * __list_modules;
         IRCLIST * __list_commands;
-#endif /* CIRCLE_USE_INTERNAL */
-#ifdef CIRCLE_USE_DB
-        DB * __db_queue;
-        DB * __db_modules;
-        DB * __db_commands;
-#endif /* CIRCLE_USE_DB */
+        IRCLIST * __list_functions;
 
         void * (*__thread_loop) (void * ptr);
         void (*__eval) (IRCQ * ircq, const IRCMSG * ircmsg);
@@ -431,15 +434,8 @@ extern "C" {
         FILE * __ircerr;
         pthread_mutex_t __mutex_log;
 
-#ifdef CIRCLE_USE_INTERNAL
         IRCLIST * __list_irc;
         IRCLIST * __list_auth;
-#endif /* CIRCLE_USE_INTERNAL */
-#ifdef CIRCLE_USE_DB
-        DB_ENV * dbenv;
-        DB * __db_irc;
-        DB * __db_auth;
-#endif /* CIRCLE_USE_DB */
 
         int (*__open_log) (IRCENV * ircenv, __irc_logtype type);
         int (*__close_log) (IRCENV * ircenv, __irc_logtype type);

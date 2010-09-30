@@ -10,7 +10,7 @@
 
 #### Compiler and tool definitions shared by all build targets #####
 CC = gcc
-BASICOPTS = -g -fno-stack-protector
+BASICOPTS = -g -fno-stack-protector -Wall
 CFLAGS = $(BASICOPTS)
 
 
@@ -27,7 +27,8 @@ OBJS_libcircle =  \
 	$(TARGETDIR_libcircle)/ircenv.o \
 	$(TARGETDIR_libcircle)/ircfunc.o \
 	$(TARGETDIR_libcircle)/ircsock.o \
-	$(TARGETDIR_libcircle)/irclist.o
+	$(TARGETDIR_libcircle)/irclist.o \
+	$(TARGETDIR_libcircle)/ircres.o
 
 
 # Link or archive
@@ -54,7 +55,8 @@ $(TARGETDIR_libcircle)/ircsock.o: $(TARGETDIR_libcircle) ircsock.c
 $(TARGETDIR_libcircle)/irclist.o: $(TARGETDIR_libcircle) irclist.c
 	$(COMPILE.c) $(CFLAGS_libcircle) $(CPPFLAGS_libcircle) -o $@ irclist.c
 
-
+$(TARGETDIR_libcircle)/ircres.o: $(TARGETDIR_libcircle) ircres.c
+	$(COMPILE.c) $(CFLAGS_libcircle) $(CPPFLAGS_libcircle) -o $@ ircres.c
 
 #### Clean target deletes all generated files ####
 clean:
@@ -65,7 +67,8 @@ clean:
 		$(TARGETDIR_libcircle)/ircenv.o \
 		$(TARGETDIR_libcircle)/ircfunc.o \
 		$(TARGETDIR_libcircle)/ircsock.o \
-		$(TARGETDIR_libcircle)/irclist.o
+		$(TARGETDIR_libcircle)/irclist.o \
+		$(TARGETDIR_libcircle)/ircres.o
 	rm -f -r $(TARGETDIR_libcircle)
 
 
