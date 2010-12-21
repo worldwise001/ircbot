@@ -355,7 +355,6 @@ extern "C" {
         int (*load_all) (IRCQ * ircq);
         int (*unload_all) (IRCQ * ircq);
         void (*commands) (IRCQ * ircq, const IRCMSG * ircmsg);
-        void (*run) (IRCQ * ircq, char * command, void * return_ptr, size_t len, ...);
         void (*help) (IRCQ * ircq, const IRCMSG * ircmsg);
         void (*list) (IRCQ * ircq, const IRCMSG * ircmsg);
         void (*dir) (IRCQ * ircq, const IRCMSG * ircmsg);

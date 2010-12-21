@@ -28,7 +28,6 @@ void __circle_ircq(IRCQ * ircq) {
     ircq->log = &__ircq_log;
 
     ircq->commands = &__ircq_commands;
-    ircq->run = &__ircq_run;
     ircq->help = &__ircq_help;
 
     ircq->queue = &__ircq_queue;

@@ -68,7 +68,6 @@ extern "C" {
     IRCHELP * __ircq___help_list(IRCQ * ircq);
 
     void __ircq_commands(IRCQ * ircq, const IRCMSG * ircmsg);
-    void __ircq_run (IRCQ * ircq, char * command, void * return_ptr, size_t size, ...);
     void __ircq_help(IRCQ * ircq, const IRCMSG * ircmsg);
 
     int __ircq_queue(IRCQ * ircq, IRCMSG ircmsg);
