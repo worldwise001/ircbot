@@ -592,7 +592,6 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     funchandle = dlsym(mhandle, "functions");
     if (dlerror()) {
     	dlerror();
-    	mod->functions = NULL;
     }
     else {
         funclist = (*funchandle)();
