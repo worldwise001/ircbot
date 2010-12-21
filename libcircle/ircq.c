@@ -536,7 +536,7 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     strncpy(mod->filename, file, CIRCLE_FIELD_DEFAULT);
 
     mod->evaluate = dlsym(mhandle, "evaluate");
-
+    error = NULL;
     if ((error = dlerror())) {
         if (ircmsg != NULL) {
             irc = ircmsg->irc;
@@ -590,7 +590,10 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     }
 
     funchandle = dlsym(mhandle, "functions");
-    if (dlerror()) dlerror();
+    if (dlerror()) {
+    	dlerror();
+    	mod->functions = NULL;
+    }
     else {
         funclist = (*funchandle)();
         if (funclist != NULL) {
