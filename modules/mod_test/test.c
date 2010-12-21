@@ -182,7 +182,7 @@ void json_parse(resbuff_t result) {
 	JsonReader *reader;
 	GError *error;
 	int array_size = 0;
-	char * url = NULL, * title = NULL, * content = NULL;
+	const char * url = NULL, * title = NULL, * content = NULL;
 
 	 g_type_init();
 
@@ -222,12 +222,12 @@ void json_parse(resbuff_t result) {
 	 json_reader_end_member (reader);
 	 json_reader_end_member (reader);
 
-	 g_object_unref(parser);
-	 g_object_unref(reader);
-
 	 if (url != NULL) {
 		 printf("%s | %s | %s\n", url, title, content);
 	 }
+
+	 g_object_unref(parser);
+	 g_object_unref(reader);
 }
 
 int main(int argc, char** argv) {
