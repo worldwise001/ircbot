@@ -14,6 +14,13 @@ typedef struct {
     char field[RESULT_BUFF + 1];
 } resbuff_t;
 
+typedef struct {
+	int success:1;
+	char url[BUFF_SIZE+1];
+	char title[BUFF_SIZE+1];
+	char content[BUFF_SIZE+1];
+} gsweb_t;
+
 int google_connect(char * host, int port) {
     struct addrinfo hints;
     struct addrinfo *result, *res_ptr;
@@ -47,50 +54,60 @@ int google_connect(char * host, int port) {
     return sfd;
 }
 
-buff_t strip_tags(char * data) {
-    buff_t result;
-    char *oldptr, *newptr, unicode[5];
-    unsigned int c;
-    memset(&result, 0, sizeof (buff_t));
-    oldptr = data;
-    newptr = result.field;
-    while (*oldptr != '\0' && (newptr - result.field) < BUFF_SIZE + 1) {
-        if (*oldptr == '\\') {
-            memset(unicode, 0, 5);
-            strncpy(unicode, oldptr + 2, 4);
-            sscanf(unicode, "%X", &c);
-            *newptr++ = (char) c;
-            oldptr += 6;
-        } else *newptr++ = *oldptr++;
-    }
-    return result;
-}
+gsweb_t json_parse_gsweb(resbuff_t result) {
+	JsonParser *parser;
+	JsonNode *root;
+	JsonReader *reader;
+	GError *error;
+	int array_size = 0;
+	const char * tmp;
+	gsweb_t ret;
+	memset(&ret, 0, sizeof(ret));
 
-buff_t entities_strip(char * data) {
-    buff_t result;
-    char *oldptr, *newptr, symbol[5];
-    memset(&result, 0, sizeof (buff_t));
-    oldptr = data;
-    newptr = result.field;
-    while (*oldptr != '\0' && (newptr - result.field) < BUFF_SIZE + 1) {
-        if (*oldptr == '&') {
-            memset(symbol, 0, 5);
-            if (strncmp(oldptr, "&quot;", 6) == 0) {
-                *newptr++ = '"';
-                oldptr += 6;
-            } else if (strncmp(oldptr, "&amp;", 5) == 0) {
-                *newptr++ = '&';
-                oldptr += 5;
-            } else if (strncmp(oldptr, "&lt;", 4) == 0) {
-                *newptr++ = '<';
-                oldptr += 4;
-            } else if (strncmp(oldptr, "&gt;", 4) == 0) {
-                *newptr++ = '>';
-                oldptr += 4;
-            } else *newptr++ = *oldptr++;
-        } else *newptr++ = *oldptr++;
-    }
-    return result;
+	g_type_init();
+
+	parser = json_parser_new();
+	error = NULL;
+	json_parser_load_from_data(parser, result.field, strlen(result.field), &error);
+	if (error)
+	{
+		g_error_free(error);
+		g_object_unref(parser);
+		return ret;
+	}
+	root = json_parser_get_root(parser);
+	reader = json_reader_new(root);
+
+	json_reader_read_member (reader, "responseData");
+	json_reader_read_member (reader, "results");
+	array_size = json_reader_count_elements(reader);
+	if (array_size > 0) {
+		json_reader_read_element (reader, 0);
+
+		json_reader_read_member (reader, "unescapedUrl");
+		tmp = json_reader_get_string_value (reader);
+		strncpy(ret.url, tmp, (strlen(tmp) < BUFF_SIZE)?strlen(tmp):BUFF_SIZE);
+		json_reader_end_member (reader);
+
+		json_reader_read_member (reader, "titleNoFormatting");
+		tmp = json_reader_get_string_value (reader);
+		strncpy(ret.title, tmp, (strlen(tmp) < BUFF_SIZE)?strlen(tmp):BUFF_SIZE);
+		json_reader_end_member (reader);
+
+		json_reader_read_member (reader, "content");
+		tmp = json_reader_get_string_value (reader);
+		strncpy(ret.content, tmp, (strlen(tmp) < BUFF_SIZE)?strlen(tmp):BUFF_SIZE);
+		json_reader_end_member (reader);
+
+		json_reader_end_element (reader);
+		ret.success = 1;
+	}
+	json_reader_end_member (reader);
+	json_reader_end_member (reader);
+
+	g_object_unref(parser);
+	g_object_unref(reader);
+	return ret;
 }
 
 resbuff_t query(int type, char * aquery, char * error) {
@@ -190,39 +207,12 @@ field_t extract_video_url(char * data, char * error) {
     return result;
 }
 
-buff_t extract_value(char * data, char * field, char * error) {
-    buff_t result;
-    char *rptr, *reptr;
-    char buff[CIRCLE_FIELD_DEFAULT + 1];
-
-    error[0] = '\0';
-
-    memset(buff, 0, CIRCLE_FIELD_DEFAULT + 1);
-    snprintf(buff, CIRCLE_FIELD_DEFAULT, "\"%s\":", field);
-
-    rptr = strstr(data, buff);
-    if (rptr == NULL) {
-        strcpy(error, "Invalid response from Google");
-        return result;
-    } else rptr += strlen(buff) + 1;
-    reptr = index(rptr, '"');
-    if (reptr == NULL) {
-        strcpy(error, "Invalid response from Google");
-        return result;
-    }
-    memset(&result, 0, sizeof (buff_t));
-    if ((reptr - rptr) > BUFF_SIZE) reptr = rptr + BUFF_SIZE;
-    strncpy(result.field, rptr, reptr - rptr);
-    result = strip_tags(result.field);
-    result = entities_strip(result.field);
-    return result;
-}
-
 void evaluate(IRCMSG * ircmsg) {
     IRC * irc;
     field_t target, error, tmp;
     buff_t temp, url, title, publisher, rating;
     resbuff_t result;
+    gsweb_t gsweb;
     char *buff;
     IRCCALL irccall;
 
@@ -237,30 +227,13 @@ void evaluate(IRCMSG * ircmsg) {
                 irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
                 return;
             }
-
-            buff = result.field;
-            if (strstr(buff, "\"results\":[]") != NULL) {
-                irc->respond(irc, "PRIVMSG %s :No results from Google\n", target.data);
-                return;
-            }
-
-            temp = extract_value(buff, "unescapedUrl", error.data);
-            if (strlen(error.data) > 0) {
-                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
-                return;
-            }
-            strcpy(url.field, temp.field);
-
-            temp = extract_value(buff, "titleNoFormatting", error.data);
-            if (strlen(error.data) > 0) {
-                irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
-                return;
-            }
-            strcpy(title.field, temp.field);
-
-            irc->respond(irc, "PRIVMSG %s :%s --- (%s)\n", target.data, url.field, title.field);
+            gsweb = json_parse_gsweb(result);
+            if (gsweb.success)
+            	irc->respond(irc, "PRIVMSG %s :%s --- (%s)\n", target.data, gsweb.url, gsweb.title);
+            else
+            	irc->respond(irc, "PRIVMSG %s :No results from google\n", target.data);
         } else if (!strcmp(irccall.command, "video")) {
-            result = query(2, irccall.line, error.data);
+/*            result = query(2, irccall.line, error.data);
             if (strlen(error.data) > 0) {
                 irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
                 return;
@@ -305,7 +278,7 @@ void evaluate(IRCMSG * ircmsg) {
             }
             strcpy(rating.field, temp.field);
 
-            irc->respond(irc, "PRIVMSG %s :%s --- (%s - %s) %s/5\n", target.data, url.field, publisher.field, title.field, rating.field);
+            irc->respond(irc, "PRIVMSG %s :%s --- (%s - %s) %s/5\n", target.data, url.field, publisher.field, title.field, rating.field);*/
         }
     }
 }
