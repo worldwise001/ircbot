@@ -115,10 +115,12 @@ gsweb_t json_parse_gsweb(resbuff_t result) {
 
 resbuff_t google_query(int type, char * aquery, char * error) {
     int sfd;
-    char * oldptr, *newptr, *service, c = 0, query[BUFF_SIZE + 1];
+    char * oldptr, *newptr, *service, c;
+    char query[BUFF_SIZE + 1];
     resbuff_t result;
     FILE * stream;
 
+    c = 0;
     error[0] = '\0';
     oldptr = aquery;
     memset(query, 0, BUFF_SIZE + 1);
@@ -216,10 +218,6 @@ field_t extract_video_url(char * data, char * error) {
     return result;
 }
 
-int test() {
-	return 2;
-}
-
 void evaluate(IRCMSG * ircmsg) {
     IRC * irc;
     field_t target, error, tmp;
@@ -235,7 +233,6 @@ void evaluate(IRCMSG * ircmsg) {
         target = irc->get_target(ircmsg);
         irccall = irc->get_directive(ircmsg->message);
         if (!strcmp(irccall.command, "google")) {
-        	printf("%d\n", test());
             result = google_query(0, irccall.line, error.data);
             if (strlen(error.data) > 0) {
                 irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
