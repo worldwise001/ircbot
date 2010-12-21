@@ -5,6 +5,8 @@
  *      Author: Sarah
  */
 
+#include <glib-object.h>
+#include <json-glib/json-glib.h>
 #include "../../libcircle/circle.h"
 
 #define GOOGLEAPIKEY "ABQIAAAA9bUsRkRSPH0x-_8JU9eFBBSiokulqXNIcez5TPzzzOGQ5XAc6hS9oNprae1b68fJb5zSCS3dxLFYrA"
@@ -174,68 +176,37 @@ resbuff_t query(int type, char * aquery, char * error) {
     return result;
 }
 
-field_t extract_video_url(char * data, char * error) {
-    field_t result;
-    char *oldptr, *newptr, code[3];
-    unsigned int c;
+void json_parse(resbuff_t result) {
+	JsonParser *parser;
+	JsonNode *root;
+	JsonReader *reader;
+	GError *error;
 
-    memset(&result, 0, sizeof (field_t));
+	 g_type_init();
 
-    error[0] = '\0';
-    newptr = result.data;
+	 parser = json_parser_new();
+	 reader = json_reader_new();
+	 error = NULL;
+	 json_parser_load_from_data(parser, result.field, strlen(result.field), &error);
+	 if (error)
+	 {
+		 g_print("Unable to parse: %s\n", error->message);
+		 g_error_free(error);
+		 g_object_unref(parser);
+		 return;
+	 }
+	 root = json_parser_get_root(parser);
+	 json_reader_set_root(reader, root);
 
-    oldptr = strstr(data, "?q=");
-    if (oldptr == NULL) {
-        strcpy(error, "Malformed video url");
-        return result;
-    } else oldptr += 3;
-
-    while (*oldptr != '\0' && *oldptr != '&' && (newptr - result.data) < CIRCLE_FIELD_DEFAULT + 1) {
-        if (*oldptr == '%') {
-            memset(code, 0, 3);
-            strncpy(code, oldptr + 1, 2);
-            sscanf(code, "%X", &c);
-            *newptr++ = (char) c;
-            oldptr += 3;
-        } else *newptr++ = *oldptr++;
-    }
-
-    return result;
-}
-
-buff_t extract_value(char * data, char * field, char * error) {
-    buff_t result;
-    char *rptr, *reptr;
-    char buff[CIRCLE_FIELD_DEFAULT + 1];
-
-    error[0] = '\0';
-
-    memset(buff, 0, CIRCLE_FIELD_DEFAULT + 1);
-    snprintf(buff, CIRCLE_FIELD_DEFAULT, "\"%s\":", field);
-
-    rptr = strstr(data, buff);
-    if (rptr == NULL) {
-        strcpy(error, "Invalid response from Google");
-        return result;
-    } else rptr += strlen(buff) + 1;
-    reptr = index(rptr, '"');
-    if (reptr == NULL) {
-        strcpy(error, "Invalid response from Google");
-        return result;
-    }
-    memset(&result, 0, sizeof (buff_t));
-    if ((reptr - rptr) > BUFF_SIZE) reptr = rptr + BUFF_SIZE;
-    strncpy(result.field, rptr, reptr - rptr);
-    result = strip_tags(result.field);
-    result = entities_strip(result.field);
-    return result;
+	 g_object_unref(parser);
+	 g_object_unref(reader);
 }
 
 int main(int argc, char** argv) {
 	char error[81];
 	resbuff_t result;
 
-	result = query(0, "test", error);
+	result = query(0, "jahdkhadisauhfladhajhsd", error);
 	printf("%s\n", result.field);
 	return 0;
 }
