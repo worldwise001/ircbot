@@ -164,10 +164,9 @@ resbuff_t query(int type, char * aquery, char * error) {
     memset(result.field, 0, RESULT_BUFF+1);
     oldptr = result.field;
     while (!feof(stream) && c != '{') c = fgetc(stream);
-    *oldptr++ = c;
     while (!feof(stream) && (oldptr - result.field) < RESULT_BUFF) {
-    	c = fgetc(stream);
     	*oldptr++ = c;
+    	c = fgetc(stream);
     }
     *oldptr = '\0';
     fclose(stream);
