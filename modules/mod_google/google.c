@@ -119,6 +119,7 @@ resbuff_t google_query(int type, char * aquery, char * error) {
     resbuff_t result;
     FILE * stream;
 
+    printf("err1\n");
     error[0] = '\0';
     oldptr = aquery;
     memset(query, 0, BUFF_SIZE + 1);
@@ -146,6 +147,7 @@ resbuff_t google_query(int type, char * aquery, char * error) {
         oldptr++;
     }
 
+    printf("err2\n");
     switch (type) {
         case 0: service = "web";
             break;
@@ -158,6 +160,7 @@ resbuff_t google_query(int type, char * aquery, char * error) {
         default: service = "web";
     }
 
+    printf("err3\n");
     if ((sfd = google_connect("ajax.googleapis.com", 80)) == -1) {
         strcpy(error, "Unable to connect to Google for query");
         return result;
@@ -165,6 +168,7 @@ resbuff_t google_query(int type, char * aquery, char * error) {
 
     stream = fdopen(sfd, "w+");
 
+    printf("err4\n");
     fprintf(stream, "GET /ajax/services/search/%s?v=1.0&q=%s&key=%s HTTP/1.1\r\n", service, query, GOOGLEAPIKEY);
     fprintf(stream, "Referer: %s\r\n", SITE);
     fprintf(stream, "Host: ajax.googleapis.com\r\n");
@@ -173,8 +177,8 @@ resbuff_t google_query(int type, char * aquery, char * error) {
     fprintf(stream, "Connection: close\r\n");
     fprintf(stream, "\r\n");
 
+    printf("err5\n");
     memset(&result, 0, sizeof (resbuff_t));
-    memset(result.field, 0, RESULT_BUFF+1);
     oldptr = result.field;
     while (!feof(stream) && c != '{') c = fgetc(stream);
     while (!feof(stream) && (oldptr - result.field) < RESULT_BUFF) {
