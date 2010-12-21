@@ -102,7 +102,7 @@ buff_t entities_strip(char * data) {
 
 resbuff_t query(int type, char * aquery, char * error) {
     int sfd;
-    char * oldptr, *newptr, *service, c, query[BUFF_SIZE + 1];
+    char * oldptr, *newptr, *service, c = 0, query[BUFF_SIZE + 1];
     resbuff_t result;
     FILE * stream;
 
@@ -161,10 +161,14 @@ resbuff_t query(int type, char * aquery, char * error) {
     fprintf(stream, "\r\n");
 
     memset(&result, 0, sizeof (resbuff_t));
+    memset(result.field, 0, RESULT_BUFF+1);
     oldptr = result.field;
-    while ((c = fgetc(stream)) != EOF && c != '{');
+    while (!feof(stream) && c != '{') c = fgetc(stream);
     *oldptr++ = c;
-    while ((c = fgetc(stream)) != EOF && (oldptr - result.field) < RESULT_BUFF) *oldptr++ = c;
+    while (!feof(stream) && (oldptr - result.field) < RESULT_BUFF) {
+    	c = fgetc(stream);
+    	*oldptr++ = c;
+    }
     *oldptr = '\0';
     fclose(stream);
 
