@@ -114,12 +114,14 @@ gsweb_t json_parse_gsweb(resbuff_t result) {
 }
 
 resbuff_t google_query(int type, char * aquery, char * error) {
+	printf("a1\n");
     int sfd;
     char * oldptr, *newptr, *service, c;
     char query[BUFF_SIZE + 1];
     resbuff_t result;
     FILE * stream;
 
+	printf("a2\n");
     c = 0;
     error[0] = '\0';
     oldptr = aquery;
