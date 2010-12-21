@@ -87,37 +87,6 @@ IRCHELP ** __circle_endptr_help(IRCHELP * list) {
     return &(list[i - 1].next);
 }
 
-int irclist_function_exists(IRCLIST ** first, char * function) {
-    IRCLIST * iterator;
-    IRCFUNC * func;
-
-    if (first == NULL) return -1;
-
-    iterator = *first;
-    while (iterator != NULL) {
-        func = (IRCFUNC *) (iterator->item);
-        if (strcmp(func->function, function) == 0) return 1;
-    }
-
-    return 0;
-}
-
-IRCFUNC * irclist_get_function(IRCLIST ** first, char * function) {
-    IRCLIST * iterator;
-    IRCFUNC * func;
-
-    if (first == NULL) return NULL;
-
-    iterator = *first;
-    while (iterator != NULL) {
-        func = (IRCFUNC *) (iterator->item);
-        if (strcmp(func->function, function) == 0) return func;
-        iterator = iterator->next;
-    }
-
-    return NULL;
-}
-
 int irclist_get_max_irc_id(IRCLIST ** first) {
     IRCLIST * iterator;
     IRC * irc;

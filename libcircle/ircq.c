@@ -589,34 +589,6 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
         mod->name = NULL;
     }
 
-    funchandle = dlsym(mhandle, "functions");
-    if (dlerror()) {
-    	dlerror();
-    }
-    else {
-        funclist = (*funchandle)();
-        if (funclist != NULL) {
-            i = -1;
-            while (funclist[++i] != NULL) {
-                if (irclist_function_exists(&ircq->__list_functions, funclist[i])) {
-                    continue;
-                }
-                func = malloc(sizeof (IRCFUNC));
-                if (func == NULL) continue;
-                func->handle = dlsym(mhandle, funclist[i]);
-                if (dlerror()) {
-                    dlerror();
-                    free(func);
-                    func = NULL;
-                    continue;
-                }
-                func->function = funclist[i];
-                func->parent = mod;
-                irclist_append(&ircq->__list_functions, func);
-            }
-        }
-    }
-
     mod->dlhandle = mhandle;
     irclist_append(&ircq->__list_modules, mod);
 

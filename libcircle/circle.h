@@ -183,8 +183,6 @@ extern "C" {
     typedef struct __irchelp IRCHELP;
     struct __irchopt;
     typedef struct __irchopt IRCHOPT;
-    struct __ircfunc;
-    typedef struct __ircfunc IRCFUNC;
 
     /* internal linked list type and function definitions */
     struct __irclist;
@@ -239,12 +237,6 @@ extern "C" {
         char * description;
         unsigned int arguments;
         IRCHOPT * next;
-    };
-
-    struct __ircfunc {
-        char * function;
-        void (*handle) (void * ret, va_list list);
-        IRCMOD * parent;
     };
 
     struct __ircmsg {
