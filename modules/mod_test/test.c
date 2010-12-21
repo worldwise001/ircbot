@@ -181,6 +181,8 @@ void json_parse(resbuff_t result) {
 	JsonNode *root;
 	JsonReader *reader;
 	GError *error;
+	int array_size = 0;
+	char * url = NULL, * title = NULL, * content = NULL;
 
 	 g_type_init();
 
@@ -197,16 +199,50 @@ void json_parse(resbuff_t result) {
 	 root = json_parser_get_root(parser);
 	 reader = json_reader_new(root);
 
+	 json_reader_read_member (reader, "responseData");
+	 json_reader_read_member (reader, "results");
+	 array_size = json_reader_count_elements(reader);
+	 if (array_size > 0) {
+		 json_reader_read_element (reader, 0);
+
+		 json_reader_read_member (reader, "unescapedUrl");
+		 url = json_reader_get_string_value (reader);
+		 json_reader_end_member (reader);
+
+		 json_reader_read_member (reader, "titleNoFormatting");
+		 title = json_reader_get_string_value (reader);
+		 json_reader_end_member (reader);
+
+		 json_reader_read_member (reader, "content");
+		 content = json_reader_get_string_value (reader);
+		 json_reader_end_member (reader);
+
+		 json_reader_end_element (reader);
+	 }
+	 json_reader_end_member (reader);
+	 json_reader_end_member (reader);
+
 	 g_object_unref(parser);
 	 g_object_unref(reader);
+
+	 if (url != NULL) {
+		 printf("%s | %s | %s\n", url, title, content);
+	 }
 }
 
 int main(int argc, char** argv) {
 	char error[81];
 	resbuff_t result;
 
-	result = query(0, "jahdkhadisauhfladhajhsd", error);
+	result = query(0, "test", error);
 	printf("%s\n", result.field);
+	printf("\n\n");
+	json_parse(result);
+
+	result = query(0, "asdkjalsdjsalkdjsal", error);
+	printf("%s\n", result.field);
+	printf("\n\n");
+	json_parse(result);
 	return 0;
 }
 
