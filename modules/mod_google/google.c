@@ -113,7 +113,7 @@ gsweb_t json_parse_gsweb(resbuff_t result) {
 	return ret;
 }
 
-resbuff_t query(int type, char * aquery, char * error) {
+resbuff_t google_query(int type, char * aquery, char * error) {
     int sfd;
     char * oldptr, *newptr, *service, c, query[BUFF_SIZE + 1];
     resbuff_t result;
@@ -231,7 +231,7 @@ void evaluate(IRCMSG * ircmsg) {
         target = irc->get_target(ircmsg);
         irccall = irc->get_directive(ircmsg->message);
         if (!strcmp(irccall.command, "google")) {
-            result = query(0, irccall.line, error.data);
+            result = google_query(0, irccall.line, error.data);
             if (strlen(error.data) > 0) {
                 irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
                 return;
