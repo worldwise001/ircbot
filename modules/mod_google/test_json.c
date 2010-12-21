@@ -5,7 +5,7 @@
  *      Author: Sarah
  */
 
-#include <glib-object.h>
+#include <glib-2.0/glib-object.h>
 #include <json-glib/json-glib.h>
 #include "../../libcircle/circle.h"
 
