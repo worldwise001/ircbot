@@ -203,8 +203,6 @@ extern "C" {
 
     int irclist_get_max_irc_id(IRCLIST ** first);
     int irclist_get_irc_id(IRCLIST ** first, unsigned int id);
-    int irclist_function_exists(IRCLIST ** first, char * function);
-    IRCFUNC * irclist_get_function(IRCLIST ** first, char * function);
 
 /******************************************************************************
  * Data Type Definitions
