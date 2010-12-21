@@ -478,13 +478,11 @@ int __ircq_get_item(IRCQ * ircq, IRCMSG * ircmsg) {
 
 int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     void * mhandle;
-    char ** (*funchandle)();
     IRC * irc;
     IRCLIST * iterator;
     IRCMOD * mod;
-    char mfile[__CIRCLE_LEN_FILENAME + 1], *error, **funclist;
+    char mfile[__CIRCLE_LEN_FILENAME + 1], *error;
     field_t nick, target;
-    int i;
 
     iterator = ircq->__list_modules;
     while (iterator != NULL) {
@@ -593,9 +591,9 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
 
 int __ircq_unload(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     IRC * irc;
-    IRCLIST * iterator, * fiterator;
+    IRCLIST * iterator;
     IRCMOD * mod;
-    int i, j;
+    int i;
     field_t nick, target;
 
     i = 0;
