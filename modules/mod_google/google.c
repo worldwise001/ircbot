@@ -216,6 +216,10 @@ field_t extract_video_url(char * data, char * error) {
     return result;
 }
 
+int test() {
+	return 2;
+}
+
 void evaluate(IRCMSG * ircmsg) {
     IRC * irc;
     field_t target, error, tmp;
@@ -231,6 +235,7 @@ void evaluate(IRCMSG * ircmsg) {
         target = irc->get_target(ircmsg);
         irccall = irc->get_directive(ircmsg->message);
         if (!strcmp(irccall.command, "google")) {
+        	printf("%d\n", test());
             result = google_query(0, irccall.line, error.data);
             if (strlen(error.data) > 0) {
                 irc->respond(irc, "PRIVMSG %s :%s\n", target.data, error.data);
