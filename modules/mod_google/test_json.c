@@ -5,6 +5,8 @@
  *      Author: Sarah
  */
 
+#include "../../libcircle/circle.h"
+
 #define GOOGLEAPIKEY "ABQIAAAA9bUsRkRSPH0x-_8JU9eFBBSiokulqXNIcez5TPzzzOGQ5XAc6hS9oNprae1b68fJb5zSCS3dxLFYrA"
 #define SITE "circebot.sourceforge.net"
 
