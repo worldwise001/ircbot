@@ -374,7 +374,6 @@ extern "C" {
         IRCLIST * __list_queue;
         IRCLIST * __list_modules;
         IRCLIST * __list_commands;
-        IRCLIST * __list_functions;
 
         void * (*__thread_loop) (void * ptr);
         void (*__eval) (IRCQ * ircq, const IRCMSG * ircmsg);

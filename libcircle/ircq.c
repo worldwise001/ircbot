@@ -250,18 +250,6 @@ void __ircq_commands(IRCQ * ircq, const IRCMSG * ircmsg) {
     if (strlen(buff) > 0) irc->respond(irc, "PRIVMSG %s :%s", target.data, buff);
 }
 
-void __ircq_run(IRCQ * ircq, char * command, void * return_ptr, size_t len, ...) {
-    IRCFUNC * func;
-    va_list vlist;
-    if (irclist_function_exists(&ircq->__list_functions, command) <= 0) return;
-
-    func = irclist_get_function(&ircq->__list_functions, command);
-    if (func == NULL) return;
-    va_start(vlist, len);
-    func->handle(return_ptr, vlist);
-    va_end(vlist);
-}
-
 void __ircq___eval(IRCQ * ircq, const IRCMSG * ircmsg) {
     IRCCALL irccall;
     IRC * irc;
@@ -494,7 +482,6 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     IRC * irc;
     IRCLIST * iterator;
     IRCMOD * mod;
-    IRCFUNC * func;
     char mfile[__CIRCLE_LEN_FILENAME + 1], *error, **funclist;
     field_t nick, target;
     int i;
@@ -608,7 +595,6 @@ int __ircq_unload(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     IRC * irc;
     IRCLIST * iterator, * fiterator;
     IRCMOD * mod;
-    IRCFUNC * func;
     int i, j;
     field_t nick, target;
 
@@ -631,20 +617,6 @@ int __ircq_unload(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
         return 0;
     } else {
         mod = (IRCMOD *) (irclist_take(&ircq->__list_modules, i));
-        fiterator = ircq->__list_functions;
-        j = 0;
-        while (fiterator != NULL) {
-            func = (IRCFUNC *) (fiterator->item);
-            if (func->parent == mod) {
-                if (irclist_remove(&ircq->__list_functions, j) == 0)
-                {
-                    free(func);
-                    j--;
-                }
-            }
-            fiterator = fiterator->next;
-            j++;
-        }
         if (mod->destruct) mod->destruct(ircq);
         dlclose(mod->dlhandle);
 
