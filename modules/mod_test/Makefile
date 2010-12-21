@@ -23,7 +23,7 @@ all: $(TARGETDIR)/mod_$(NAME).so
 ## Target: mod_$(NAME).so
 CFLAGS = 
 CPPFLAGS = \
-	-I../../libcircle/
+	-I../../libcircle/ \
 	-I/usr/include/glib-2.0/ \
 	-I/usr/include/json-glib-1.0/ \
 	-I/usr/lib/glib-2.0/include/
