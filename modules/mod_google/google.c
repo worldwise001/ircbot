@@ -103,6 +103,7 @@ gsweb_t json_parse_gsweb(resbuff_t result) {
 
 		json_reader_end_element (reader);
 		ret.success = 1;
+		printf("%s | %s | %s\n", ret.url, ret.title, ret.content);
 	}
 	json_reader_end_member (reader);
 	json_reader_end_member (reader);
