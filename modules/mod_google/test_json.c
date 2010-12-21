@@ -185,7 +185,6 @@ void json_parse(resbuff_t result) {
 	 g_type_init();
 
 	 parser = json_parser_new();
-	 reader = json_reader_new();
 	 error = NULL;
 	 json_parser_load_from_data(parser, result.field, strlen(result.field), &error);
 	 if (error)
@@ -196,7 +195,7 @@ void json_parse(resbuff_t result) {
 		 return;
 	 }
 	 root = json_parser_get_root(parser);
-	 json_reader_set_root(reader, root);
+	 reader = json_reader_new(root);
 
 	 g_object_unref(parser);
 	 g_object_unref(reader);
