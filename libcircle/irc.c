@@ -66,15 +66,15 @@ int __irc_shutdown(IRC * irc) {
 }
 
 void __irc_respond(IRC * irc, char * format, ...) {
-    char buffer[__CIRCLE_BUFF_SIZE_INITIAL + 1];
+    char buffer[__CIRCLE_BUFF_SIZE_WRITE + 1];
 
     pthread_mutex_lock(&irc->__mutex);
 
     va_list listPointer;
     va_start(listPointer, format);
 
-    memset(buffer, 0, __CIRCLE_BUFF_SIZE_INITIAL + 1);
-    vsnprintf(buffer, __CIRCLE_BUFF_SIZE_INITIAL - 2, format, listPointer);
+    memset(buffer, 0, __CIRCLE_BUFF_SIZE_WRITE + 1);
+    vsnprintf(buffer, __CIRCLE_BUFF_SIZE_WRITE - 2, format, listPointer);
     buffer[strlen(buffer)] = '\r';
     buffer[strlen(buffer)] = '\n';
     irc->socket.write(&irc->socket, buffer);

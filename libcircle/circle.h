@@ -128,6 +128,8 @@ extern "C" {
 #define __CIRCLE_BUFF_SIZE_INCREMENT    32   /* buffer increment amount */
 #define __CIRCLE_BUFF_RECV_STATIC       1024 /* size of static buffer */
 
+#define __CIRCLE_BUFF_SIZE_WRITE        512  /* write buffer size */
+
 #define __CIRCLE_LEN_FILENAME           256  /* filename length */
 
 #define __CIRCLE_LEN_LINE               256  /* line length */
