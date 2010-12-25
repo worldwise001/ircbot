@@ -113,9 +113,8 @@ gsweb_t json_parse_gsweb(resbuff_t result) {
 	return ret;
 }
 
-resbuff_t google_query(int type, char * aquery, char * error) {
+resbuff_t query(int type, char * aquery, char * error) {
     resbuff_t result;
-    memset(&result, 0, sizeof (resbuff_t));
     return result;
 }
 

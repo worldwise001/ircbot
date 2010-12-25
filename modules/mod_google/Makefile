@@ -30,14 +30,12 @@ CPPFLAGS = \
 	-lglib-2.0 -ljson-glib-1.0
 OBJS =  \
 	$(TARGETDIR)/$(NAME).o
-USERLIBS = ../../libcircle/GNU-i386-Linux/libcircle.a 
-DEPLIBS = ../../libcircle/GNU-i386-Linux/libcircle.a  
-LDLIBS = $(USERLIBS)
+LDLIBS = ../../libcircle/GNU-i386-Linux/libcircle.a 
 
 
 # Link or archive
-SHAREDLIB_FLAGS = -shared 
-$(TARGETDIR)/mod_$(NAME).so: $(TARGETDIR) $(OBJS) $(DEPLIBS)
+SHAREDLIB_FLAGS = -shared -fPIC
+$(TARGETDIR)/mod_$(NAME).so: $(TARGETDIR) $(OBJS)
 	$(LINK.c) $(CFLAGS) $(CPPFLAGS) -o $@ $(OBJS) $(SHAREDLIB_FLAGS) $(LDLIBS)
 
 
