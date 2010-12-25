@@ -493,6 +493,7 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
                 nick = irc->get_nick(ircmsg->sender);
                 irc->respond(irc, "PRIVMSG %s :%s - Error loading %c%s%c: file already loaded", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM);
             }
+            ircq->log(ircq, IRC_LOG_ERR, "Error loading %s: file already loaded\n", file);
             return -1;
         }
         iterator = iterator->next;
@@ -510,7 +511,7 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
             nick = irc->get_nick(ircmsg->sender);
             irc->respond(irc, "PRIVMSG %s :%s - Error opening %c%s%c: %s", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM, error);
         }
-
+        ircq->log(ircq, IRC_LOG_ERR, "Error opening %s: %s\n", file, error);
         dlerror();
         return -1;
     }
@@ -528,6 +529,7 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
             nick = irc->get_nick(ircmsg->sender);
             irc->respond(irc, "PRIVMSG %s :%s - Error binding %c%s%c: %s", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM, error);
         }
+        ircq->log(ircq, IRC_LOG_ERR, "Error binding %s: %s\n", file, error);
         dlerror();
         free(mod);
         return -1;
@@ -536,14 +538,14 @@ int __ircq_load(IRCQ * ircq, const IRCMSG * ircmsg, char * file) {
     mod->irc_version = dlsym(mhandle, "irc_version");
     error = NULL;
     if ((error = dlerror()) || (mod->irc_version() != CIRCLE_VERSION_MODULE)) {
+        if (!error) error = "Invalid module version";
         if (ircmsg != NULL) {
             irc = ircmsg->irc;
             target = irc->get_target(ircmsg);
             nick = irc->get_nick(ircmsg->sender);
-            if (!error) error = "Invalid module version";
             irc->respond(irc, "PRIVMSG %s :%s - Error binding %c%s%c: %s", target.data, nick.data, IRC_TXT_BOLD, file, IRC_TXT_NORM, error);
-
         }
+        ircq->log(ircq, IRC_LOG_ERR, "Error binding %s: %s\n", file, error);
         dlerror();
         free(mod);
         return -1;
