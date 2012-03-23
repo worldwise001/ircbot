@@ -27,8 +27,7 @@ OBJS_libcircle =  \
 	$(TARGETDIR_libcircle)/ircenv.o \
 	$(TARGETDIR_libcircle)/ircfunc.o \
 	$(TARGETDIR_libcircle)/ircsock.o \
-	$(TARGETDIR_libcircle)/irclist.o \
-	$(TARGETDIR_libcircle)/ircres.o
+	$(TARGETDIR_libcircle)/irclist.o
 
 
 # Link or archive
@@ -55,9 +54,6 @@ $(TARGETDIR_libcircle)/ircsock.o: $(TARGETDIR_libcircle) ircsock.c
 $(TARGETDIR_libcircle)/irclist.o: $(TARGETDIR_libcircle) irclist.c
 	$(COMPILE.c) $(CFLAGS_libcircle) $(CPPFLAGS_libcircle) -o $@ irclist.c
 
-$(TARGETDIR_libcircle)/ircres.o: $(TARGETDIR_libcircle) ircres.c
-	$(COMPILE.c) $(CFLAGS_libcircle) $(CPPFLAGS_libcircle) -o $@ ircres.c
-
 #### Clean target deletes all generated files ####
 clean:
 	rm -f \
@@ -67,8 +63,7 @@ clean:
 		$(TARGETDIR_libcircle)/ircenv.o \
 		$(TARGETDIR_libcircle)/ircfunc.o \
 		$(TARGETDIR_libcircle)/ircsock.o \
-		$(TARGETDIR_libcircle)/irclist.o \
-		$(TARGETDIR_libcircle)/ircres.o
+		$(TARGETDIR_libcircle)/irclist.o
 	rm -f -r $(TARGETDIR_libcircle)
 
 
