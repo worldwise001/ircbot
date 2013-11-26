@@ -1,4 +1,4 @@
-#include "ircfunc.h"
+#include <circle.h>
 
 int main(int argc, char ** argv)
 {
