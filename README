@@ -1,0 +1,11 @@
+ircbot written in C
+===================
+
+circle apparently stands for C IRC Library/Executable (which arguably is a bit
+of a stretch...)
+
+There are several distinct components:
+
+- libcircle (C library for connecting to IRC)
+- circle (executable that uses the library)
+- modules (dynamic libraries that extend the functionality of circle)
