@@ -334,8 +334,6 @@ int __ircenv_log(IRCENV * ircenv, __irc_logtype type, const char * format, ...) 
     pthread_mutex_init(&ircenv->__mutex_log, &attr);
     pthread_mutex_lock(&ircenv->__mutex_log);
 
-    va_start(listPointer, format);
-
     switch (type) {
         case IRC_LOG_ERR:
             fptr = &ircenv->__ircerr;
@@ -350,15 +348,18 @@ int __ircenv_log(IRCENV * ircenv, __irc_logtype type, const char * format, ...) 
 
     if (ircenv->__ircargs.log) {
         fprintf(*fptr, "[%s] [M] ", buff);
+        va_start(listPointer, format);
         vfprintf(*fptr, format, listPointer);
+        va_end(listPointer);
         fflush(*fptr);
     }
     if (ircenv->__ircargs.mode == IRC_MODE_NORMAL) {
         fprintf(std, "[%s] [M] ", buff);
+        va_start(listPointer, format);
         vfprintf(std, format, listPointer);
+        va_end(listPointer);
     }
 
-    va_end(listPointer);
     pthread_mutex_unlock(&ircenv->__mutex_log);
 
     return 0;

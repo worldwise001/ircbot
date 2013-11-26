@@ -82,8 +82,6 @@ int __irc_log(IRC * irc, __irc_logtype type, const char * format, ...) {
     ctime_r(&now, buff);
     buff[strlen(buff) - 1] = '\0';
 
-    va_start(listPointer, format);
-
     switch (type) {
         case IRC_LOG_ERR:
             fptr = &irc->__ircerr;
@@ -103,23 +101,27 @@ int __irc_log(IRC * irc, __irc_logtype type, const char * format, ...) {
     if (irc->__ircenv->__ircargs.log) {
         if (type != IRC_LOG_RAW) {
             fprintf(*fptr, "[%s] [%d] ", buff, irc->id);
+            va_start(listPointer, format);
             vfprintf(*fptr, format, listPointer);
+            va_end(listPointer);
             fflush(*fptr);
         }
     }
     if (irc->__ircenv->__ircargs.raw) {
         if (type == IRC_LOG_RAW) {
             fprintf(*fptr, "%ld000 ", now);
+            va_start(listPointer, format);
             vfprintf(*fptr, format, listPointer);
+            va_end(listPointer);
             fflush(*fptr);
         }
     }
     if (irc->__ircenv->__ircargs.mode == IRC_MODE_NORMAL && std != NULL && type != IRC_LOG_RAW) {
         fprintf(std, "[%s] [%d] ", buff, irc->id);
+        va_start(listPointer, format);
         vfprintf(std, format, listPointer);
+        va_end(listPointer);
     }
-
-    va_end(listPointer);
 
     return 0;
 }

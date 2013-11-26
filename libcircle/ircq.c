@@ -72,8 +72,6 @@ int __ircq_log(IRCQ * ircq, __irc_logtype type, const char * format, ...) {
     pthread_mutex_init(&ircq->__ircenv->__mutex_log, &attr);
     pthread_mutex_lock(&ircq->__ircenv->__mutex_log);
 
-    va_start(listPointer, format);
-
     switch (type) {
         case IRC_LOG_ERR:
             fptr = &ircq->__ircenv->__ircerr;
@@ -88,15 +86,18 @@ int __ircq_log(IRCQ * ircq, __irc_logtype type, const char * format, ...) {
 
     if (ircq->__ircenv->__ircargs.log) {
         fprintf(*fptr, "[%s] [Q] ", buff);
+        va_start(listPointer, format);
         vfprintf(*fptr, format, listPointer);
+        va_end(listPointer);
         fflush(*fptr);
     }
     if (ircq->__ircenv->__ircargs.mode == IRC_MODE_NORMAL) {
         fprintf(std, "[%s] [Q] ", buff);
+        va_start(listPointer, format);
         vfprintf(std, format, listPointer);
+        va_end(listPointer);
     }
 
-    va_end(listPointer);
     pthread_mutex_unlock(&ircq->__ircenv->__mutex_log);
 
     return 0;
