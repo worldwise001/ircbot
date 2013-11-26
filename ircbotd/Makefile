@@ -8,6 +8,7 @@ OBJECTS=$(COMMON:.c=.o)
 all: ircbotd
 
 clean:
+	make -C ../libcircle clean
 	rm -rf *.o ircbotd
 
 ircbotd: $(OBJECTS)
