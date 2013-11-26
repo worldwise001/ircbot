@@ -3,6 +3,9 @@ README
 To compile library:
     gcc -Wall -c *.c
     ar -cvq libcircle.a *.o
+Or use the Makefile:
+    make clean
+    make
 (this creates libcircle.a in your current working directory)
 
 To link library with another program:

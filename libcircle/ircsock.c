@@ -201,9 +201,6 @@ int __ircsock_read(IRCSOCK * sock, __irc_line * line) {
 
 int __ircsock_write(IRCSOCK * sock, char * line) {
     ssize_t written, tmp;
-    IRC * irc;
-
-    irc = sock->__irc;
     written = 0;
 
     if (sock->__sockfd == -1) return -1;
